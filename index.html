@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crew Health Monitor</title>
+<style>
+:root{
+  --bg:#0a0f14; --panel:#141c25; --panel2:#1d2835; --line:#30404f;
+  --text:#eef3f7; --dim:#aab7c4;
+  --nominal:#4ade80; --watch:#fbbf24; --act:#ff6b5e; --nodata:#9aa7b4; --focus:#7cc4ff;
+}
+*{box-sizing:border-box}
+html{font-size:clamp(14px,min(1.5vw,2.6vh),32px)}
+body{margin:0;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;
+  font-family:system-ui,-apple-system,"Segoe UI","DejaVu Sans","Liberation Sans",Arial,sans-serif;line-height:1.25}
+.st-nominal{--c:var(--nominal)} .st-watch{--c:var(--watch)} .st-act{--c:var(--act)} .st-nodata{--c:var(--nodata)}
+#app{display:flex;flex-direction:column;height:100vh}
+header{display:flex;align-items:center;gap:1.2rem;height:2.6rem;padding:0 1rem;background:var(--panel);border-bottom:2px solid var(--line);flex:none}
+header .brand{font-weight:700;letter-spacing:.06em}
+header .who{font-weight:700}
+header .sp{flex:1}
+header .dim{color:var(--dim)}
+.chip{display:inline-flex;align-items:center;gap:.4rem;padding:.1rem .7rem;border:2px solid var(--c);border-radius:1rem;color:var(--c);font-weight:700;text-transform:uppercase}
+.ico{width:1.3em;height:1.3em;flex:none;vertical-align:middle}
+.alarm{display:flex;flex-wrap:wrap;align-items:center;gap:.1rem .8rem;padding:.25rem 1rem;border:3px solid var(--c);background:#000;color:var(--c);font-weight:700;font-size:1.05rem;flex:none}
+.alarm.live{cursor:pointer}
+.alarm.live.st-act{animation:blink 1s steps(2,start) infinite}
+.alarm .do{color:var(--text);font-weight:600;font-size:.95rem}
+@keyframes blink{50%{border-color:#000}}
+.alarm .sp{flex:1}
+.notice{padding:.25rem 1rem;background:var(--panel2);border-bottom:1px solid var(--line);color:var(--text);flex:none}
+.notice b{color:var(--watch)}
+main{flex:1;min-height:0;padding:.6rem 1rem;display:flex;flex-direction:column;gap:.5rem}
+footer{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem 1rem;min-height:2.2rem;padding:.2rem 1rem;background:var(--panel);border-top:2px solid var(--line);font-size:.82rem;color:var(--dim);flex:none}
+footer span{cursor:pointer;white-space:nowrap}
+footer .on{color:var(--text);font-weight:700}
+footer .sep{flex:1}
+kbd{display:inline-block;min-width:1.5em;text-align:center;padding:0 .35em;border:1px solid var(--dim);border-radius:.3em;color:var(--text);font-family:inherit;font-size:.9em;margin-right:.25em}
+h1{font-size:1.5rem;margin:0}
+h2{font-size:1rem;margin:0;color:var(--dim);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.hero{display:flex;align-items:center;gap:1.2rem;padding:.8rem 1.2rem;background:var(--panel);border-left:.7rem solid var(--c);border-radius:.4rem;flex:none}
+.hero .ico{width:5rem;height:5rem}
+.hero-title{font-size:2.6rem;font-weight:800;color:var(--c);line-height:1.05}
+.hero-sub{font-size:1.3rem;font-weight:600}
+.hero-do{font-size:1.3rem;margin-top:.2rem}
+.hero-who{color:var(--dim)}
+.cols{display:flex;gap:1rem;flex:1;min-height:0}
+.cols>.list{flex:1.6}
+.cols>aside,.cols>.side{flex:1;min-width:0;display:flex;flex-direction:column;gap:.5rem}
+.list{overflow:auto;min-height:0}
+.row{display:flex;align-items:center;gap:.6rem;padding:.12rem .5rem;border:2px solid transparent;border-radius:.35rem;cursor:pointer;font-size:.95rem}
+.row.sel{border-color:var(--focus);background:var(--panel2)}
+.row .r-label{flex:1.2;font-weight:600;min-width:0}
+.row .r-word{flex:1.5;color:var(--c);font-weight:700;min-width:0}
+.row .r-val{flex:.8;color:var(--dim);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row.big{font-size:1.15rem;padding:.45rem .7rem}
+.compact .row{font-size:.9rem}
+.compact .r-val{display:none}
+.compact .r-label,.compact .r-word{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grp{display:flex;align-items:center;gap:.5rem;padding:.25rem .3rem .05rem;color:var(--dim);font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--line)}
+.grp .g-word{color:var(--c)}
+.box{background:var(--panel);border-radius:.4rem;padding:.6rem .8rem}
+.count{display:flex;align-items:center;gap:.5rem;font-size:1.05rem;color:var(--c);font-weight:700}
+.count span{color:var(--text);font-weight:400}
+.card{flex:1;min-height:0;display:flex;flex-direction:column;gap:.5rem}
+.card-top{display:flex;align-items:center;gap:.8rem;padding:.5rem .9rem;background:var(--panel);border-left:.7rem solid var(--c);border-radius:.4rem}
+.card-top .ico{width:3rem;height:3rem}
+.card-status{font-size:2rem;font-weight:800;color:var(--c);text-transform:uppercase}
+.card-name{font-size:1.4rem;font-weight:700}
+.card-risk{color:var(--dim);font-size:.85rem}
+.card-grid{display:flex;gap:1rem;flex:1;min-height:0}
+.card-grid>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:.45rem}
+.level{font-size:2.2rem;font-weight:800;color:var(--c);line-height:1.1}
+.value{font-size:1.5rem;font-weight:600}
+.value small{font-size:.95rem;color:var(--dim);font-weight:400}
+.meta{font-size:1.05rem;display:flex;align-items:center;gap:.4rem}
+.why{color:var(--dim);font-size:1rem}
+.action{border:3px solid var(--c);border-radius:.4rem;padding:.5rem .8rem;background:var(--panel)}
+.action-h{font-size:.8rem;font-weight:800;letter-spacing:.08em;color:var(--c)}
+.action-t{font-size:1.35rem;font-weight:700}
+.action-w{font-size:1rem;margin-top:.15rem}
+.delay{margin-top:.35rem;padding-top:.35rem;border-top:1px solid var(--line);font-size:.92rem}
+.chart{background:var(--panel);border-radius:.4rem;padding:.3rem;flex:1;min-height:0;display:flex;flex-direction:column}
+.chart svg{width:100%;flex:1;min-height:0}
+.chart-cap{font-size:.78rem;color:var(--dim);padding:0 .4rem}
+.nochart{color:var(--dim);padding:1rem;font-size:1.1rem}
+.center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.7rem;text-align:center;min-height:0}
+.center .list{width:min(46rem,92vw);flex:none;max-height:55vh;text-align:left}
+.title-xl{font-size:2.4rem;font-weight:800;letter-spacing:.04em}
+.lead{font-size:1.25rem;color:var(--dim);max-width:44rem}
+.how{font-size:1.4rem;max-width:44rem}
+.step{color:var(--dim);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.inp{font:inherit;font-size:2.4rem;font-weight:700;width:9em;text-align:center;background:#000;color:var(--text);border:3px solid var(--focus);border-radius:.4rem;padding:.2rem .4rem}
+.inp:focus{outline:none;box-shadow:0 0 0 3px #7cc4ff55}
+.unit{font-size:1.6rem;color:var(--dim)}
+.err{color:var(--watch);font-size:1.15rem;font-weight:700;min-height:1.5em}
+.msg{padding:.3rem .8rem;border-left:.4rem solid var(--focus);background:var(--panel2);font-size:1rem;flex:none}
+.msg.bad{border-color:var(--watch)}
+.veil{position:fixed;inset:0;background:#000c;display:flex;align-items:center;justify-content:center;z-index:5}
+.dialog{background:var(--panel);border:3px solid var(--focus);border-radius:.5rem;padding:1.2rem 1.5rem;width:min(40rem,92vw);display:flex;flex-direction:column;gap:.7rem;align-items:flex-start}
+.dialog .inp{font-size:1.6rem;width:100%;text-align:left}
+.body-svg{height:100%;max-height:100%;flex:none}
+.body-wrap{flex:.55;display:flex;align-items:center;justify-content:center;min-height:0}
+.reg{fill:var(--c);fill-opacity:.3;stroke:var(--c);stroke-width:3}
+.reg.on{stroke:#fff;stroke-width:6;fill-opacity:.55}
+#crash{position:fixed;inset:0;z-index:9;background:#000;color:var(--text);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;font-size:1.5rem;text-align:center;padding:2rem}
+#crash[hidden]{display:none}
+/* multi-line prose gets more leading; single-line rows and headlines stay compact to fit 720p */
+.why,.how,.lead,.delay,.box,.hero-do,.dialog>div,.msg,.notice{line-height:1.45}
+</style>
+</head>
+<body>
+<div id="app"><noscript>This tool needs JavaScript. Enable it in the browser settings.</noscript></div>
+<div id="crash" hidden>
+  <div style="font-size:2.2rem;font-weight:800">The screen had a problem</div>
+  <div>Your saved measurements are safe.</div>
+  <div>Press <kbd>R</kbd> to reload the page (or F5).</div>
+  <div style="color:#aab7c4;font-size:1rem">If this keeps happening, follow the backup procedure and use the spare device.</div>
+</div>
+<input type="file" id="file" accept=".json,application/json" style="display:none">
+<script>
+'use strict';
+/*==CORE-BEGIN==  Pure data and rules. No DOM. Checked separately in Node. */
+var APP = 'crew-health-monitor';
+var VERSION = 1;
+var STATUS = {
+  nominal: {word: 'Nominal', rank: 1},
+  watch:   {word: 'Watch',   rank: 2},
+  act:     {word: 'Act',     rank: 3},
+  nodata:  {word: 'No data', rank: 0}
+};
+var OWNERS = {you: 'You', cmo: 'Crew medical officer', earth: 'Flight surgeons on Earth'};
+var REGIONS = [
+  {id: 'head',    name: 'Head and eyes'},
+  {id: 'heart',   name: 'Heart and lungs'},
+  {id: 'muscles', name: 'Muscles, bones and joints'},
+  {id: 'immune',  name: 'Immunity, food and gut'}
+];
+var HAZARDS = [
+  {id: 'radiation', name: 'Space radiation'},
+  {id: 'closed',    name: 'Hostile closed environment'},
+  {id: 'isolation', name: 'Isolation and confinement'},
+  {id: 'distance',  name: 'Distance from Earth'},
+  {id: 'gravity',   name: 'Altered gravity'}
+];
+function B(max, s, w) { return {max: max, s: s, w: w}; }
+function O(label, s, w) { return {label: label, s: s, w: w}; }
+/* Thresholds are ILLUSTRATIVE design values, not validated clinical limits.
+   The flight surgeons must replace them before any real use.
+   metric: 'abs' = the value itself, 'delta' = value minus baseline, 'pct' = % change from baseline.
+   every: how often it is measured (days). eps: smallest change shown as a trend. */
+var INDICATORS = [
+  {id: 'spo2', label: 'Blood oxygen', region: 'heart', hazard: 'closed', risk: 'Hypoxia',
+   type: 'number', unit: '%', dec: 0, min: 50, max: 100, metric: 'abs', every: 1, eps: 1.5,
+   bands: [B(89, 'act', 'Very low'), B(93, 'watch', 'Slightly low'), B(Infinity, 'nominal', 'Normal')],
+   how: 'Clip the sensor on a warm finger. Stay still for 30 seconds. Type the % number.',
+   why: 'Low blood oxygen means the cabin air or your lungs are not giving your body enough oxygen.',
+   actions: {watch: {t: 'Move the sensor to another finger and measure again.', who: 'you'},
+             act: {t: 'Put on an oxygen mask now, then call the crew.', who: 'you'}}},
+  {id: 'hr', label: 'Resting heart rate', region: 'heart', hazard: 'gravity', risk: 'Cardiovascular adaptation',
+   type: 'number', unit: 'bpm', dec: 0, min: 25, max: 220, metric: 'delta', every: 1, eps: 4,
+   bands: [B(-21, 'act', 'Much lower than your normal'), B(-11, 'watch', 'Lower than your normal'),
+           B(10, 'nominal', 'Normal for you'), B(20, 'watch', 'Higher than your normal'),
+           B(Infinity, 'act', 'Much higher than your normal')],
+   how: 'Rest for 5 minutes first. Read the beats per minute on the finger sensor.',
+   why: 'Without gravity the heart and blood vessels change, and a shifted resting pulse is an early sign.',
+   actions: {watch: {t: 'Rest for 10 minutes, drink water, then measure again.', who: 'you'},
+             act: {t: 'Stop exercise and see the crew medical officer now.', who: 'cmo'}}},
+  {id: 'bp', label: 'Blood pressure (top number)', region: 'heart', hazard: 'gravity', risk: 'Cardiovascular adaptation',
+   type: 'number', unit: 'mmHg', dec: 0, min: 50, max: 260, metric: 'abs', every: 1, eps: 5,
+   bands: [B(89, 'act', 'Very low'), B(99, 'watch', 'Slightly low'), B(134, 'nominal', 'Normal'),
+           B(159, 'watch', 'Slightly high'), B(Infinity, 'act', 'Very high')],
+   how: 'Put the cuff on your upper arm and press Start. Type the top (larger) number.',
+   why: 'Body fluids move toward the head in space, which changes the pressure your heart works against.',
+   actions: {watch: {t: 'Stay still and calm for 5 minutes, then measure again.', who: 'you'},
+             act: {t: 'See the crew medical officer now.', who: 'cmo'}}},
+  {id: 'temp', label: 'Body temperature', region: 'immune', hazard: 'closed', risk: 'Altered immune system',
+   type: 'number', unit: '°C', dec: 1, min: 30, max: 43, metric: 'abs', every: 1, eps: 0.3,
+   bands: [B(34.9, 'act', 'Very low'), B(35.9, 'watch', 'Slightly low'), B(37.5, 'nominal', 'Normal'),
+           B(38.4, 'watch', 'Slight fever'), B(Infinity, 'act', 'High fever')],
+   how: 'Use the ear thermometer. Type the number in degrees Celsius, for example 36.8.',
+   why: 'The immune system is weaker in space, so a fever can mean an infection is starting.',
+   actions: {watch: {t: 'Rest, drink water and measure again in 2 hours.', who: 'you'},
+             act: {t: 'See the crew medical officer now and keep away from shared food.', who: 'cmo'}}},
+  {id: 'mass', label: 'Body mass', region: 'immune', hazard: 'distance', risk: 'Inadequate food and nutrition',
+   type: 'number', unit: 'kg', dec: 1, min: 30, max: 150, metric: 'pct', every: 1, eps: 0.5,
+   bands: [B(-10, 'act', 'Much lower than your normal'), B(-5, 'watch', 'Lower than your normal'),
+           B(5, 'nominal', 'Normal for you'), B(Infinity, 'watch', 'Higher than your normal')],
+   how: 'Use the body mass device before breakfast. Type the number in kilograms.',
+   why: 'Losing body mass means you are not eating enough, and no new food can be sent from Earth.',
+   actions: {watch: {t: 'Eat every planned meal and add one snack today.', who: 'you'},
+             act: {t: 'Send your food log to the flight surgeons.', who: 'earth',
+                   wait: 'eat all planned meals plus two snacks a day, and weigh again tomorrow.'}}},
+  {id: 'exercise', label: 'Exercise (last 24 hours)', region: 'muscles', hazard: 'gravity',
+   risk: 'Cardiorespiratory and musculoskeletal fitness',
+   type: 'number', unit: 'min', dec: 0, min: 0, max: 300, metric: 'abs', every: 1, eps: 15,
+   bands: [B(59, 'watch', 'Too little'), B(Infinity, 'nominal', 'Enough')],
+   how: 'Add up your bike, treadmill and resistance minutes since the last check-in.',
+   why: 'Daily exercise is the main protection against losing muscle, bone and heart fitness in space.',
+   actions: {watch: {t: 'Plan a full exercise session in the next 24 hours.', who: 'you'}}},
+  {id: 'sleep', label: 'Sleep last night', hazard: 'isolation', risk: 'Isolation and confinement',
+   type: 'number', unit: 'hours', dec: 1, min: 0, max: 16, metric: 'abs', every: 1, eps: 0.7,
+   bands: [B(4.9, 'act', 'Far too little'), B(5.9, 'watch', 'Too little'), B(Infinity, 'nominal', 'Enough')],
+   how: 'How many hours did you really sleep? For example 6.5.',
+   why: 'Poor sleep in a closed, isolated ship quickly leads to mistakes and low mood.',
+   actions: {watch: {t: 'Dim the lights and stop screen use 1 hour before sleep tonight.', who: 'you'},
+             act: {t: 'See the crew medical officer before any critical task.', who: 'cmo'}}},
+  {id: 'dizzy', label: 'Dizziness and balance', region: 'head', hazard: 'gravity',
+   risk: 'Altered sensorimotor and vestibular function', type: 'choice', every: 1, eps: 0.5,
+   options: [O('No dizziness', 'nominal', 'None'), O('Some dizziness or clumsy hands', 'watch', 'Mild'),
+             O('Strong dizziness, nausea or cannot aim movements', 'act', 'Strong')],
+   how: 'Turn your head left and right, then touch your nose with each hand. How do you feel?',
+   why: 'The balance organs and movement control re-tune in altered gravity, which can make precise tasks unsafe.',
+   actions: {watch: {t: 'Move slowly and avoid quick head turns today.', who: 'you'},
+             act: {t: 'Stop precision tasks and see the crew medical officer.', who: 'cmo'}}},
+  {id: 'mood', label: 'Mood', hazard: 'isolation', risk: 'Isolation and confinement', type: 'choice', every: 1, eps: 0.5,
+   options: [O('Good or normal', 'nominal', 'Good'), O('Low, irritable or withdrawn', 'watch', 'Low'),
+             O('Very low or hopeless', 'act', 'Very low')],
+   how: 'Think about the last 24 hours. Which line fits best?',
+   why: 'Months of isolation and confinement wear down mood, and low mood affects the whole crew.',
+   actions: {watch: {t: 'Talk with a crewmate or record a message home today.', who: 'you'},
+             act: {t: 'Talk to the crew medical officer today.', who: 'cmo'}}},
+  {id: 'immune', label: 'Skin, mouth and wounds', region: 'immune', hazard: 'closed', risk: 'Altered immune system',
+   type: 'choice', every: 1, eps: 0.5,
+   options: [O('Nothing unusual', 'nominal', 'Clear'), O('Cold sore, rash or a slow-healing cut', 'watch', 'Mild signs'),
+             O('Spreading rash, or a hot, swollen wound', 'act', 'Strong signs')],
+   how: 'Look at your lips, skin and any cuts. Which line fits best?',
+   why: 'A weaker immune system lets old viruses wake up and makes wounds heal slowly.',
+   actions: {watch: {t: 'Show it to the crew medical officer at the next meal.', who: 'cmo'},
+             act: {t: 'See the crew medical officer today.', who: 'cmo'}}},
+  {id: 'gut', label: 'Stomach and gut', region: 'immune', hazard: 'closed', risk: 'Host–microorganism interactions',
+   type: 'choice', every: 1, eps: 0.5,
+   options: [O('Normal', 'nominal', 'Normal'), O('Bloating, cramps or loose stools', 'watch', 'Upset'),
+             O('Vomiting or diarrhoea more than once', 'act', 'Sick')],
+   how: 'How has your stomach and gut been in the last 24 hours?',
+   why: 'Microbes behave differently in a sealed ship and can upset the balance between you and your gut bacteria.',
+   actions: {watch: {t: 'Drink water, eat plain food and wash your hands often.', who: 'you'},
+             act: {t: 'See the crew medical officer and use your own hygiene kit.', who: 'cmo'}}},
+  {id: 'dcs', label: 'Pressure-change symptoms', region: 'muscles', hazard: 'closed', risk: 'Decompression sickness',
+   type: 'choice', every: 1, eps: 0.5,
+   options: [O('No symptoms', 'nominal', 'None'), O('Joint ache, tingling or itchy skin', 'watch', 'Mild'),
+             O('Strong joint pain, chest pain, trouble breathing or confusion', 'act', 'Severe')],
+   how: 'After any suit work or cabin pressure change: do you feel any of these?',
+   why: 'When pressure drops, gas bubbles can form in the body and cause decompression sickness.',
+   actions: {watch: {t: 'Tell the crew medical officer and check again in 1 hour.', who: 'cmo'},
+             act: {t: 'Breathe pure oxygen now and call the crew medical officer.', who: 'cmo'}}},
+  {id: 'eva', label: 'Spacewalk and suit injuries', region: 'muscles', hazard: 'closed',
+   risk: 'Injury and compromised performance from spacewalks (EVA)', type: 'choice', every: 1, eps: 0.5,
+   options: [O('No suit work, or no pain', 'nominal', 'None'), O('Sore hands, shoulders or skin, but able to work', 'watch', 'Minor'),
+             O('Pain or injury that limits your work', 'act', 'Limiting')],
+   how: 'Check your hands, fingernails, shoulders and skin after suit work.',
+   why: 'The stiff pressurised suit strains hands and shoulders, and small injuries get worse with every spacewalk.',
+   actions: {watch: {t: 'Show the sore area to the crew medical officer.', who: 'cmo'},
+             act: {t: 'Stop suit work and get treated by the crew medical officer.', who: 'cmo'}}},
+  {id: 'rad', label: 'Radiation dose (last 24 hours)', hazard: 'radiation', risk: 'Space radiation',
+   type: 'number', unit: 'mSv', dec: 1, min: 0, max: 1000, metric: 'abs', every: 1, eps: 0.4,
+   bands: [B(2.5, 'nominal', 'Normal for deep space'), B(10, 'watch', 'Elevated'), B(Infinity, 'act', 'Solar storm level')],
+   how: 'Read the 24-hour dose on your personal dosimeter. Type the number in mSv.',
+   why: 'Outside Earth’s magnetic field you are exposed to radiation that raises long-term health risk.',
+   actions: {watch: {t: 'Spend your rest time in the best-shielded area today.', who: 'you'},
+             act: {t: 'Go to the storm shelter now and stay until the level drops.', who: 'you'}}},
+  {id: 'co2', label: 'Cabin air CO2', hazard: 'closed', risk: 'Hostile closed environment',
+   type: 'number', unit: 'mmHg', dec: 1, min: 0, max: 40, metric: 'abs', every: 1, eps: 0.5,
+   bands: [B(4, 'nominal', 'Normal'), B(6, 'watch', 'Slightly high'), B(Infinity, 'act', 'Too high')],
+   how: 'Read the CO2 number on the cabin air monitor in this room. Type it in mmHg.',
+   why: 'In a sealed cabin, carbon dioxide builds up and causes headaches and poor thinking.',
+   actions: {watch: {t: 'Check the air scrubber and move to another module.', who: 'you'},
+             act: {t: 'Leave this module now and alert the crew.', who: 'you'}}},
+  {id: 'vision', label: 'Eyesight', region: 'head', hazard: 'gravity', risk: 'Spaceflight-Associated Neuro-ocular Syndrome (SANS)',
+   type: 'choice', every: 7, eps: 0.5,
+   options: [O('Same as usual', 'nominal', 'Same as usual'), O('Slightly blurry, near or far', 'watch', 'Slightly worse'),
+             O('Much worse, or blind spots', 'act', 'Much worse')],
+   how: 'Read the eye chart card at arm’s length, one eye at a time.',
+   why: 'Fluid shifting toward the head presses on the back of the eye and can change your vision.',
+   actions: {watch: {t: 'Repeat the eye chart tomorrow at the same time.', who: 'you'},
+             act: {t: 'Send your eye test and eye scan to the flight surgeons.', who: 'earth',
+                   wait: 'rest your eyes, avoid fine close-up work and tell the crew medical officer.'}}},
+  {id: 'grip', label: 'Grip strength', region: 'muscles', hazard: 'gravity', risk: 'Cardiorespiratory and musculoskeletal fitness',
+   type: 'number', unit: 'kg', dec: 0, min: 5, max: 90, metric: 'pct', every: 7, eps: 2,
+   bands: [B(-20, 'act', 'Much weaker than your normal'), B(-10, 'watch', 'Weaker than your normal'),
+           B(Infinity, 'nominal', 'Normal for you')],
+   how: 'Squeeze the hand grip meter as hard as you can with your stronger hand. Type the kg number.',
+   why: 'Muscles shrink when they do not work against gravity, and grip strength shows it early.',
+   actions: {watch: {t: 'Add the hand and arm resistance set to your next session.', who: 'you'},
+             act: {t: 'Ask the flight surgeons for a new exercise plan.', who: 'earth',
+                   wait: 'keep doing your normal exercise sessions and do not add heavy loads on your own.'}}},
+  {id: 'ucal', label: 'Urine calcium strip', region: 'muscles', hazard: 'gravity', risk: 'Spaceflight-induced bone changes',
+   type: 'choice', every: 7, eps: 0.5,
+   options: [O('Strip shows normal', 'nominal', 'Normal'), O('Strip shows high', 'watch', 'High'),
+             O('Strip shows very high', 'act', 'Very high')],
+   how: 'Dip a calcium test strip in your first urine of the day. Compare it with the colour card.',
+   why: 'Bones lose calcium without gravity, and the lost calcium leaves the body in urine.',
+   actions: {watch: {t: 'Drink one extra litre of water today.', who: 'you'},
+             act: {t: 'Report the strip result to the flight surgeons.', who: 'earth',
+                   wait: 'drink extra water and keep doing your resistance exercise.'}}},
+  {id: 'medkit', label: 'Medical kit check', hazard: 'distance', risk: 'Distance from Earth',
+   type: 'choice', every: 7, eps: 0.5,
+   options: [O('Complete', 'nominal', 'Complete'), O('Some items running low', 'watch', 'Running low'),
+             O('A critical item is missing or expired', 'act', 'Item missing')],
+   how: 'Open your personal medical kit and compare it with the list inside the lid.',
+   why: 'Nothing can be resupplied and help from Earth is delayed, so the kit on board is all you have.',
+   actions: {watch: {t: 'Tell the crew medical officer which items are low.', who: 'cmo'},
+             act: {t: 'Report the missing item to the flight surgeons.', who: 'earth',
+                   wait: 'ask the crew medical officer for the on-board substitute list.'}}}
+];
+function validValue(ind, v) {
+  if (typeof v !== 'number' || !isFinite(v)) return false;
+  if (ind.type === 'choice') return Math.floor(v) === v && v >= 0 && v < ind.options.length;
+  return v >= ind.min && v <= ind.max;
+}
+/* The single place where a value becomes a status. Never throws. */
+function evaluate(ind, value, baseline) {
+  var none = {status: 'nodata', word: 'No data'};
+  try {
+    if (!ind || !validValue(ind, value)) return none;
+    if (ind.type === 'choice') { var o = ind.options[value]; return {status: o.s, word: o.w}; }
+    var x = value;
+    if (ind.metric !== 'abs') {
+      if (!validValue(ind, baseline) || baseline === 0) return {status: 'nodata', word: 'No baseline yet'};
+      x = ind.metric === 'pct' ? (value - baseline) / baseline * 100 : value - baseline;
+    }
+    for (var i = 0; i < ind.bands.length; i++) {
+      if (x <= ind.bands[i].max) return {status: ind.bands[i].s, word: ind.bands[i].w};
+    }
+    return none;
+  } catch (e) { return none; }
+}
+/*==CORE-END==*/
+
+/* ---------- small helpers ---------- */
+var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function isoOf(d) { var x = new Date(d * 864e5); return x.getUTCFullYear() + '-' + pad(x.getUTCMonth() + 1) + '-' + pad(x.getUTCDate()); }
+var dayCache = {};
+function dayOf(iso) {
+  if (typeof iso !== 'string') return NaN;
+  if (dayCache[iso] !== undefined) return dayCache[iso];
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso), d = NaN;
+  if (m) { d = Date.UTC(+m[1], +m[2] - 1, +m[3]) / 864e5; if (isoOf(d) !== iso) d = NaN; }
+  dayCache[iso] = d; return d;
+}
+function systemDay() { var n = new Date(); return Math.floor(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate()) / 864e5); }
+function todayNum() { return systemDay() + (store.dateOffset || 0); }
+function niceDate(d) { var x = new Date(d * 864e5); return DOW[x.getUTCDay()] + ' ' + x.getUTCDate() + ' ' + MON[x.getUTCMonth()] + ' ' + x.getUTCFullYear(); }
+function ago(n) { return n === 0 ? 'today' : n === 1 ? 'yesterday' : n + ' days ago'; }
+function indById(id) { for (var i = 0; i < INDICATORS.length; i++) if (INDICATORS[i].id === id) return INDICATORS[i]; return null; }
+function newId() { return 'a' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36); }
+
+/* ---------- storage (never throws) ---------- */
+var KEY = 'crewHealth.v1';
+var store = {app: APP, version: VERSION, profiles: {}, lastExport: {}, dateOffset: 0};
+var saveFailed = false, loadWarning = '';
+
+function sanitizeProfile(r) {
+  if (!r || typeof r !== 'object' || Array.isArray(r)) return null;
+  var name = typeof r.name === 'string' ? r.name.trim().slice(0, 40) : '';
+  if (!name) return null;
+  var p = {id: (typeof r.id === 'string' && /^[\w-]{1,40}$/.test(r.id)) ? r.id : newId(), name: name,
+           role: typeof r.role === 'string' ? r.role.trim().slice(0, 40) : '', baselines: {}, entries: []};
+  var b = (r.baselines && typeof r.baselines === 'object') ? r.baselines : {};
+  INDICATORS.forEach(function (ind) { if (ind.type === 'number' && validValue(ind, b[ind.id])) p.baselines[ind.id] = b[ind.id]; });
+  var byDate = {};
+  if (Array.isArray(r.entries)) r.entries.forEach(function (e) {
+    if (!e || typeof e !== 'object' || isNaN(dayOf(e.date))) return;
+    var vals = {}, src = (e.values && typeof e.values === 'object') ? e.values : {};
+    INDICATORS.forEach(function (ind) { if (validValue(ind, src[ind.id])) vals[ind.id] = src[ind.id]; });
+    byDate[e.date] = {date: e.date, values: vals};
+  });
+  p.entries = Object.keys(byDate).sort().map(function (k) { return byDate[k]; });
+  return p;
+}
+function loadStore() {
+  var raw = null;
+  try { raw = localStorage.getItem(KEY); } catch (e) { saveFailed = true; return; }
+  if (!raw) return;
+  try {
+    var o = JSON.parse(raw);
+    if (!o || typeof o !== 'object' || typeof o.profiles !== 'object' || !o.profiles) throw new Error('shape');
+    Object.keys(o.profiles).forEach(function (k) { var p = sanitizeProfile(o.profiles[k]); if (p) store.profiles[p.id] = p; });
+    if (o.lastExport && typeof o.lastExport === 'object') Object.keys(o.lastExport).forEach(function (k) {
+      if (!isNaN(dayOf(o.lastExport[k]))) store.lastExport[k] = o.lastExport[k]; });
+    if (typeof o.dateOffset === 'number' && isFinite(o.dateOffset)) store.dateOffset = Math.round(o.dateOffset);
+  } catch (e) {
+    try { localStorage.setItem(KEY + '.damaged', raw); } catch (e2) {}
+    loadWarning = 'Saved data on this device could not be read. Import your latest backup file (key 6).';
+  }
+}
+function saveStore() {
+  try { localStorage.setItem(KEY, JSON.stringify(store)); saveFailed = false; }
+  catch (e) { saveFailed = true; }
+}
+
+/* ---------- reading data ---------- */
+/* Entries are kept sorted by date, so these scans stop early and stay fast after years of data. */
+function series(p, ind, endDay, days) {
+  var out = [];
+  for (var i = p.entries.length - 1; i >= 0; i--) {
+    var d = dayOf(p.entries[i].date), v = p.entries[i].values[ind.id];
+    if (d <= endDay - days) break;
+    if (d <= endDay && validValue(ind, v)) out.push({d: d, v: v});
+  }
+  return out.reverse();
+}
+function lastReading(p, ind, endDay) {
+  for (var i = p.entries.length - 1; i >= 0; i--) {
+    var d = dayOf(p.entries[i].date), v = p.entries[i].values[ind.id];
+    if (d <= endDay && validValue(ind, v)) return {d: d, v: v};
+  }
+  return null;
+}
+function baselineOf(p, ind) {
+  if (ind.type === 'choice') return 0;
+  if (validValue(ind, p.baselines[ind.id])) return p.baselines[ind.id];
+  var t = todayNum(), n = 0, sum = 0;          /* automatic baseline: mean of the first 7 readings (needs at least 3) */
+  for (var i = 0; i < p.entries.length && n < 7; i++) {
+    var v = p.entries[i].values[ind.id];
+    if (dayOf(p.entries[i].date) <= t && validValue(ind, v)) { sum += v; n++; }
+  }
+  return n < 3 ? null : sum / n;
+}
+function fmtValue(ind, v) {
+  if (!validValue(ind, v)) return 'No data';
+  return ind.type === 'choice' ? ind.options[v].label : v.toFixed(ind.dec) + ' ' + ind.unit;
+}
+function staleAfter(ind) { return ind.every > 1 ? ind.every + 1 : 1; }
+/* True when the newest reading is dated after "today": the device clock is behind, so no age can be trusted. */
+function clockWrong(p) { var e = p.entries[p.entries.length - 1]; return !!e && dayOf(e.date) > todayNum(); }
+function assess(p, ind) {
+  var t = todayNum(), last = lastReading(p, ind, t), base = baselineOf(p, ind);
+  var a = {ind: ind, status: 'nodata', word: 'No data', note: 'Never measured', value: null, valueText: '', age: null, day: null, baseline: base, trend: null};
+  if (clockWrong(p)) { a.word = 'Date is wrong'; a.note = 'Set today’s date first (key 6)'; return a; }
+  if (!last) return a;
+  a.age = t - last.d; a.day = last.d; a.value = last.v; a.valueText = fmtValue(ind, last.v);
+  if (a.age > staleAfter(ind)) { a.word = 'No recent data'; a.note = 'Last measured ' + ago(a.age); return a; }
+  var e = evaluate(ind, last.v, base);
+  a.status = e.status; a.word = e.word; a.note = '';
+  if (e.status === 'nodata') a.note = 'Needs 3 readings to set your baseline';
+  var s = series(p, ind, t, 30);
+  if (s.length >= 3) {
+    var prev = s.slice(Math.max(0, s.length - 6), s.length - 1), m = 0;
+    prev.forEach(function (x) { m += x.v; }); m /= prev.length;
+    var diff = last.v - m;
+    a.trend = diff > ind.eps ? 'up' : diff < -ind.eps ? 'down' : 'flat';
+  }
+  return a;
+}
+function assessAll(p) { return INDICATORS.map(function (ind) { return assess(p, ind); }); }
+function worst(list) {
+  var w = 'nominal', any = false;
+  list.forEach(function (a) {
+    any = true;
+    if (a.status === 'act') w = 'act';
+    else if (a.status === 'watch' && w !== 'act') w = 'watch';
+    else if (a.status === 'nodata' && w === 'nominal') w = 'nodata';
+  });
+  return any ? w : 'nodata';
+}
+function alertsOf(list) {
+  return list.filter(function (a) { return a.status === 'act'; }).concat(list.filter(function (a) { return a.status === 'watch'; }));
+}
+function actionFor(a) {
+  if (a.status === 'act' || a.status === 'watch') {
+    var x = a.ind.actions[a.status] || a.ind.actions.watch || a.ind.actions.act;
+    if (x) return x;
+  }
+  if (a.status === 'nominal') return {t: 'Nothing to do. Keep your normal routine.', who: 'you'};
+  if (a.word === 'Date is wrong') return {t: 'Set today’s date (key 6), then look again.', who: 'you'};
+  return {t: 'Measure this in the daily check-in (key 2).', who: 'you'};
+}
+function dueSteps(p) {
+  var t = todayNum();
+  return INDICATORS.filter(function (ind) {
+    var last = lastReading(p, ind, t);
+    return !last || (t - last.d) >= ind.every;
+  }).map(function (ind) { return ind.id; });
+}
+function setValue(p, ind, v) {
+  if (!validValue(ind, v)) return;
+  var date = isoOf(todayNum()), e = null;
+  for (var i = 0; i < p.entries.length; i++) if (p.entries[i].date === date) e = p.entries[i];
+  if (!e) { e = {date: date, values: {}}; p.entries.push(e); p.entries.sort(function (x, y) { return x.date < y.date ? -1 : x.date > y.date ? 1 : 0; }); }
+  e.values[ind.id] = v;
+  saveStore();
+}
+
+/* ---------- icons (inline SVG: shape + colour + word, never colour alone) ---------- */
+function icon(st) {
+  var c = 'var(--' + st + ')', s = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">';
+  if (st === 'nominal') s += '<circle cx="12" cy="12" r="10" fill="' + c + '"/><path d="M7 12.5l3.5 3.5L17 9" fill="none" stroke="#000" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>';
+  else if (st === 'watch') s += '<path d="M12 2.5L23 21.5H1Z" fill="' + c + '"/><rect x="10.8" y="9" width="2.4" height="6.5" fill="#000"/><circle cx="12" cy="18.2" r="1.4" fill="#000"/>';
+  else if (st === 'act') s += '<path d="M7.5 1.5h9l6 6v9l-6 6h-9l-6-6v-9z" fill="' + c + '"/><rect x="10.6" y="5.5" width="2.8" height="8.5" fill="#000"/><circle cx="12" cy="17.6" r="1.7" fill="#000"/>';
+  else s += '<circle cx="12" cy="12" r="9.5" fill="none" stroke="' + c + '" stroke-width="2.2" stroke-dasharray="4 3"/><rect x="7" y="10.8" width="10" height="2.4" fill="' + c + '"/>';
+  return s + '</svg>';
+}
+function trendHtml(t) {
+  if (!t) return 'Trend: not enough data yet';
+  var rot = t === 'up' ? -40 : t === 'down' ? 40 : 0, word = t === 'up' ? 'Rising' : t === 'down' ? 'Falling' : 'Steady';
+  return '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(' + rot + ' 12 12)"><path d="M3 12h15M12.5 5.5L19 12l-6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g></svg>Trend: ' + word;
+}
+
+/* ---------- audio (Web Audio API, no files) ---------- */
+var audio = {ctx: null, ok: false};
+function initAudio() {
+  try {
+    var C = window.AudioContext || window.webkitAudioContext;
+    if (!C) { audio.ok = false; return; }
+    if (!audio.ctx) audio.ctx = new C();
+    if (audio.ctx.state === 'suspended') audio.ctx.resume();
+    audio.ok = true;
+  } catch (e) { audio.ok = false; }
+}
+function beep(f, at, dur, type, vol) {
+  var c = audio.ctx, o = c.createOscillator(), g = c.createGain();
+  o.type = type; o.frequency.value = f;
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.linearRampToValueAtTime(vol, at + 0.02);
+  g.gain.setValueAtTime(vol, at + dur - 0.03);
+  g.gain.linearRampToValueAtTime(0.0001, at + dur);
+  o.connect(g); g.connect(c.destination); o.start(at); o.stop(at + dur + 0.02);
+}
+/* Watch = two slow, soft rising notes. Act = six fast, harsh alternating pulses. Different rhythm AND pitch. */
+function playWatch() {
+  if (!audio.ok) return;
+  try { var t = audio.ctx.currentTime + 0.05; beep(523, t, 0.35, 'sine', 0.25); beep(659, t + 0.45, 0.45, 'sine', 0.25); } catch (e) {}
+}
+function playAct() {
+  if (!audio.ok) return;
+  try { var t = audio.ctx.currentTime + 0.05; for (var i = 0; i < 3; i++) { beep(988, t + i * 0.42, 0.14, 'square', 0.18); beep(740, t + i * 0.42 + 0.17, 0.14, 'square', 0.18); } } catch (e) {}
+}
+
+/* ---------- UI state ---------- */
+var VIEWS = [{id: 'overview', name: 'Overview'}, {id: 'checkin', name: 'Check-in'}, {id: 'body', name: 'Body'},
+             {id: 'hazards', name: 'Hazards'}, {id: 'trends', name: 'Trends'}, {id: 'backup', name: 'Backup'}];
+var ui = {screen: 'start', activeId: null, view: 'overview', sel: 0, items: [], card: null, ci: null,
+          modal: null, prompt: null, msg: null, pending: []};
+var acked = {}, announced = {}, actTimer = null, crashed = false;
+var app = document.getElementById('app'), fileInput = document.getElementById('file');
+function active() { return store.profiles[ui.activeId] || null; }
+function say(text, bad) { ui.msg = {text: text, bad: !!bad}; }
+
+/* ---------- alarms ---------- */
+function refreshAlarms() {
+  var p = active(); ui.pending = [];
+  if (!p || ui.screen !== 'main') { stopActLoop(); return; }
+  var newAct = false, newWatch = false, hasAct = false;
+  alertsOf(assessAll(p)).forEach(function (a) {
+    var key = p.id + '|' + a.ind.id + '|' + a.status + '|' + a.day;
+    if (acked[key]) return;
+    ui.pending.push({a: a, key: key});
+    if (a.status === 'act') hasAct = true;
+    if (!announced[key]) { announced[key] = true; if (a.status === 'act') newAct = true; else newWatch = true; }
+  });
+  if (hasAct) {
+    if (newAct) playAct();
+    if (!actTimer) actTimer = setInterval(function () {
+      if (ui.pending.some(function (x) { return x.a.status === 'act'; })) playAct(); else stopActLoop();
+    }, 8000);
+  } else { stopActLoop(); if (newWatch) playWatch(); }
+}
+function stopActLoop() { if (actTimer) { clearInterval(actTimer); actTimer = null; } }
+function acknowledge() { ui.pending.forEach(function (x) { acked[x.key] = true; }); ui.pending = []; stopActLoop(); }
+
+/* ---------- session and profile actions ---------- */
+function startSession(id) {
+  initAudio();
+  acked = {}; announced = {};                 /* a new session re-announces every alert that is still there */
+  ui.screen = 'main'; ui.activeId = id; ui.view = 'overview'; ui.sel = 0; ui.card = null; ui.ci = null; ui.msg = null;
+  refreshAlarms();
+}
+function endSession() { stopActLoop(); ui.pending = []; ui.screen = 'start'; ui.activeId = null; ui.sel = 0; ui.card = null; ui.ci = null; ui.msg = null; }
+function askNewAstronaut() {
+  ui.prompt = {title: 'New astronaut', help: 'Type your name, then press Enter.', value: '', err: '', ok: function (v) {
+    var name = String(v).trim().slice(0, 40);
+    if (!name) return 'Type a name first.';
+    var p = {id: newId(), name: name, role: '', baselines: {}, entries: []};
+    store.profiles[p.id] = p; saveStore();
+    if (ui.screen === 'start') ui.sel = Object.keys(store.profiles).indexOf(p.id);
+    say('Added ' + name + '. Baselines are set automatically after 3 readings.');
+    return '';
+  }};
+}
+function askDate() {
+  ui.prompt = {title: 'Set today’s date', help: 'Type the date as YEAR-MONTH-DAY, for example 2031-04-09.', value: isoOf(todayNum()), err: '', ok: function (v) {
+    var d = dayOf(String(v).trim());
+    if (isNaN(d)) return 'That is not a date. Use YEAR-MONTH-DAY, for example 2031-04-09.';
+    store.dateOffset = d - systemDay(); saveStore(); refreshAlarms();
+    say('Date set to ' + niceDate(d) + '.');
+    return '';
+  }};
+}
+function exportProfile() {
+  var p = active(); if (!p) return;
+  try {
+    var day = isoOf(todayNum());
+    var name = 'crew-health-' + (p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'astronaut') + '-' + day + '.json';
+    var data = JSON.stringify({app: APP, version: VERSION, exportedAt: day, profile: p}, null, 1);
+    var url = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
+    var a = document.createElement('a'); a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { try { URL.revokeObjectURL(url); } catch (e) {} }, 3000);
+    store.lastExport[p.id] = day; saveStore();
+    say('Backup file made: ' + name + '. Save or copy it to the USB stick.');
+  } catch (e) { say('The backup file could not be made. Try again, or use the spare device.', true); }
+}
+function importText(text) {
+  var o;
+  try { o = JSON.parse(text); } catch (e) { return say('That file is damaged or is not a backup file. Nothing was changed.', true); }
+  if (!o || typeof o !== 'object' || o.app !== APP) return say('That file is not a Crew Health backup. Nothing was changed.', true);
+  if (o.version !== VERSION) return say('That backup was made by a different version of this tool. Nothing was changed.', true);
+  if (!o.profile || !Array.isArray(o.profile.entries)) return say('That backup has no measurements in it. Nothing was changed.', true);
+  var p = sanitizeProfile(o.profile);
+  if (!p) return say('That backup has no astronaut name in it. Nothing was changed.', true);
+  if (o.sample === true && p.entries.length) {   /* demo file: move its dates so that the last day is today */
+    var shift = todayNum() - dayOf(p.entries[p.entries.length - 1].date);
+    p.entries.forEach(function (e) { e.date = isoOf(dayOf(e.date) + shift); });
+  }
+  var commit = function () {
+    store.profiles[p.id] = p; saveStore();
+    if (ui.screen === 'start') ui.sel = Object.keys(store.profiles).indexOf(p.id);
+    say('Imported ' + p.name + ': ' + p.entries.length + ' days of data.' + (saveFailed ? ' WARNING: it could not be saved on this device.' : ''));
+    refreshAlarms();
+  };
+  var old = store.profiles[p.id];
+  if (old) ui.modal = {title: 'Replace the data on this device?',
+    text: p.name + ' is already on this device with ' + old.entries.length + ' days of data. The file has ' + p.entries.length + ' days. Replacing cannot be undone.',
+    sel: 0, options: [{label: 'Cancel – keep current data'}, {label: 'Replace with the file', fn: commit}]};
+  else commit();
+}
+fileInput.addEventListener('change', function () {
+  var f = fileInput.files && fileInput.files[0];
+  if (!f) return;
+  if (f.size > 5e6) { say('That file is too big to be a backup. Nothing was changed.', true); fileInput.value = ''; render(); return; }
+  var r = new FileReader();
+  r.onload = function () { guard(function () { importText(String(r.result)); }); fileInput.value = ''; render(); };
+  r.onerror = function () { say('The file could not be read. Nothing was changed.', true); fileInput.value = ''; render(); };
+  r.readAsText(f);
+});
+
+/* ---------- check-in ---------- */
+function startCheckin() {
+  var p = active(), steps = dueSteps(p);
+  if (clockWrong(p)) { ui.ci = null; say('The date on this device is wrong. Set today’s date first (key 6). No measurement was changed.', true); return; }
+  if (!steps.length) steps = INDICATORS.filter(function (i) { return i.every === 1; }).map(function (i) { return i.id; });
+  ui.ci = {steps: steps, i: 0, phase: 'ask', sel: 0, err: '', skipArmed: false, text: ''};
+}
+function ciNext() {
+  var c = ui.ci; c.i++; c.sel = 0; c.err = ''; c.skipArmed = false; c.text = '';
+  c.phase = c.i >= c.steps.length ? 'done' : 'ask';
+}
+function ciConfirm() {
+  var c = ui.ci, ind = indById(c.steps[c.i]), p = active();
+  if (ind.type === 'choice') {
+    if (c.sel >= ind.options.length) return ciNext();           /* "Skip" */
+    setValue(p, ind, c.sel);
+  } else {
+    var el = document.getElementById('ci-inp'), raw = (el ? el.value : '').trim().replace(',', '.');
+    c.text = raw;
+    if (raw === '') {
+      if (c.skipArmed) return ciNext();
+      c.skipArmed = true; c.err = 'Nothing typed. Press Enter again to skip (it will show as "No data").'; return;
+    }
+    c.skipArmed = false;
+    var v = /^\d+(\.\d+)?$/.test(raw) ? parseFloat(raw) : NaN;
+    if (!validValue(ind, v)) { c.err = 'That does not look right. Expected a number between ' + ind.min + ' and ' + ind.max + ' ' + ind.unit + '. Check and type it again.'; return; }
+    setValue(p, ind, Math.round(v * Math.pow(10, ind.dec)) / Math.pow(10, ind.dec));
+  }
+  c.phase = 'result'; c.err = '';
+  refreshAlarms();
+}
+
+/* ---------- rendering ---------- */
+function rowHtml(a, i, big) {
+  var st = a.status;
+  var word = st === 'nodata' ? a.word : STATUS[st].word + ' · ' + a.word;
+  var val = st === 'nodata' ? a.note : (a.ind.type === 'choice' ? ago(a.age) : a.valueText);
+  return '<div class="row st-' + st + (i === ui.sel ? ' sel' : '') + (big ? ' big' : '') + '" data-click="pick:' + i + '">' + icon(st) +
+    '<span class="r-label">' + esc(a.ind.label) + '</span><span class="r-word">' + esc(word) + '</span><span class="r-val">' + esc(val) + '</span></div>';
+}
+function groupHtml(name, list) {
+  var w = worst(list);
+  return '<div class="grp st-' + w + '">' + icon(w) + '<span>' + esc(name) + '</span><span class="g-word">' + STATUS[w].word + '</span></div>';
+}
+function chartSvg(p, ind) {
+  var W = 640, H = 240, L = ind.type === 'choice' ? 118 : 70, R = 16, T = 16, Bm = 30;
+  var t = todayNum(), s = series(p, ind, t, 30), base = baselineOf(p, ind);
+  if (!s.length) return '<div class="nochart">No data in the last 30 days.</div>';
+  var lo, hi, i;
+  if (ind.type === 'choice') { lo = 0; hi = ind.options.length - 1; }
+  else {
+    lo = Infinity; hi = -Infinity;
+    s.forEach(function (x) { lo = Math.min(lo, x.v); hi = Math.max(hi, x.v); });
+    if (base != null) { lo = Math.min(lo, base); hi = Math.max(hi, base); }
+    var padv = (hi - lo) * 0.12 || Math.max(1, Math.abs(hi) * 0.05);
+    lo -= padv; hi += padv;
+  }
+  var X = function (d) { return L + (d - (t - 29)) / 29 * (W - L - R); };
+  var Y = function (v) { return T + (hi - v) / (hi - lo) * (H - T - Bm); };
+  var o = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="30 day trend"><g font-size="15" fill="#aab7c4">';
+  o += '<rect x="' + L + '" y="' + T + '" width="' + (W - L - R) + '" height="' + (H - T - Bm) + '" fill="#0a0f14" stroke="#30404f"/>';
+  if (ind.type === 'choice') {
+    for (i = 0; i <= hi; i++) o += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(i) + '" y2="' + Y(i) + '" stroke="#30404f"/><text x="' + (L - 8) + '" y="' + (Y(i) + 5) + '" text-anchor="end">' + esc(ind.options[i].w) + '</text>';
+  } else {
+    [hi - (hi - lo) * 0.08, (hi + lo) / 2, lo + (hi - lo) * 0.08].forEach(function (v) {
+      o += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="#1d2835"/><text x="' + (L - 8) + '" y="' + (Y(v) + 5) + '" text-anchor="end">' + v.toFixed(ind.dec) + '</text>';
+    });
+    if (base != null) o += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(base) + '" y2="' + Y(base) + '" stroke="#7cc4ff" stroke-width="2" stroke-dasharray="7 5"/><text x="' + (W - R - 6) + '" y="' + (Y(base) - 6) + '" text-anchor="end" fill="#7cc4ff">your baseline</text>';
+  }
+  o += '<text x="' + L + '" y="' + (H - 8) + '">30 days ago</text><text x="' + (W - R) + '" y="' + (H - 8) + '" text-anchor="end">Today</text></g>';
+  var path = '';
+  s.forEach(function (x, k) { path += (k && x.d - s[k - 1].d <= ind.every * 2 ? 'L' : 'M') + X(x.d).toFixed(1) + ' ' + Y(x.v).toFixed(1); });
+  o += '<path d="' + path + '" fill="none" stroke="#eef3f7" stroke-width="2"/>';
+  s.forEach(function (x) {   /* point shape = status: circle nominal, triangle watch, square act, ring no data */
+    var st = evaluate(ind, x.v, base).status, cx = X(x.d), cy = Y(x.v), c = 'var(--' + st + ')';
+    if (st === 'watch') o += '<path d="M' + cx + ' ' + (cy - 8) + 'l8 14h-16z" fill="' + c + '" stroke="#000"/>';
+    else if (st === 'act') o += '<rect x="' + (cx - 7) + '" y="' + (cy - 7) + '" width="14" height="14" fill="' + c + '" stroke="#000"/>';
+    else if (st === 'nominal') o += '<circle cx="' + cx + '" cy="' + cy + '" r="5" fill="' + c + '" stroke="#000"/>';
+    else o += '<circle cx="' + cx + '" cy="' + cy + '" r="5" fill="#000" stroke="' + c + '" stroke-width="2"/>';
+  });
+  return o + '</svg><div class="chart-cap">Last 30 days. Circle = Nominal, triangle = Watch, square = Act.</div>';
+}
+function cardHtml(p, a, withChart) {
+  var ind = a.ind, act = actionFor(a), st = a.status;
+  var baseTxt = ind.type === 'choice' ? 'Your normal: ' + ind.options[0].w
+    : (a.baseline != null ? 'Your baseline: ' + a.baseline.toFixed(ind.dec) + ' ' + ind.unit : 'Your baseline: not set yet (needs 3 readings)');
+  var left = '<div class="level">' + esc(a.word) + '</div>' +
+    '<div class="value">' + (a.value == null ? 'No data' : esc(a.valueText) + ' <small>measured ' + ago(a.age) + '</small>') + '</div>' +
+    (a.note ? '<div class="meta">' + esc(a.note) + '</div>' : '') +
+    '<div class="meta">' + esc(baseTxt) + '</div><div class="meta">' + trendHtml(a.trend) + '</div>' +
+    '<div class="why">' + esc(ind.why) + '</div>';
+  var right = '<div class="action"><div class="action-h">WHAT TO DO NOW</div><div class="action-t">' + esc(act.t) + '</div>' +
+    '<div class="action-w">Who handles it: <b>' + OWNERS[act.who] + '</b></div>' +
+    (act.who === 'earth' ? '<div class="delay">Earth is far away: a message takes up to about 20 minutes each way, so expect 40 minutes or more for an answer. <b>While you wait:</b> ' + esc(act.wait || 'tell the crew medical officer.') + '</div>' : '') +
+    '</div>' + (withChart ? '<div class="chart">' + chartSvg(p, ind) + '</div>' : '');
+  return '<div class="card st-' + st + '"><div class="card-top">' + icon(st) + '<div class="card-status">' + STATUS[st].word + '</div>' +
+    '<div><div class="card-name">' + esc(ind.label) + '</div><div class="card-risk">Risk: ' + esc(ind.risk) + '</div></div></div>' +
+    '<div class="card-grid"><div>' + left + '</div><div>' + right + '</div></div></div>';
+}
+function keysHtml(list) {
+  return list.map(function (k) { return k === '|' ? '<span class="sep"></span>' : '<span data-click="key:' + k[2] + '"' + (k[3] ? ' class="on"' : '') + '><kbd>' + k[0] + '</kbd>' + esc(k[1]) + '</span>'; }).join('');
+}
+function navKeys() { return VIEWS.map(function (v, i) { return [String(i + 1), v.name, String(i + 1), ui.view === v.id && !ui.card]; }); }
+
+function renderStart() {
+  var ids = Object.keys(store.profiles), items = [], rows = '';
+  ids.forEach(function (id) { items.push({kind: 'profile', id: id}); });
+  items.push({kind: 'new'}); items.push({kind: 'import'});
+  if (ui.sel >= items.length) ui.sel = items.length - 1;
+  items.forEach(function (it, i) {
+    var label = it.kind === 'profile' ? store.profiles[it.id].name : it.kind === 'new' ? 'Add a new astronaut' : 'Import an astronaut from a backup file';
+    var sub = it.kind === 'profile' ? (store.profiles[it.id].entries.length + ' days of data') : '';
+    rows += '<div class="row big' + (i === ui.sel ? ' sel' : '') + '" data-click="pick:' + i + '"><span class="r-label">' + esc(label) + '</span><span class="r-val">' + esc(sub) + '</span></div>';
+  });
+  ui.items = items;
+  return '<main><div class="center"><div class="title-xl">CREW HEALTH MONITOR</div>' +
+    '<div class="lead">' + (ids.length ? 'Who are you? Choose your name and press Enter to start. Starting also turns the alarm sound on.' : 'No astronaut on this device yet. Add one, or import a backup file.') + '</div>' +
+    '<div class="list">' + rows + '</div>' + msgHtml() +
+    '<div class="lead" style="font-size:1rem">Today is ' + niceDate(todayNum()) + '. ' + storageNote() + '</div></div></main>' +
+    '<footer>' + keysHtml([['↑ ↓', 'Choose', 'ArrowDown'], ['Enter', 'Start session', 'Enter']]) + '</footer>';
+}
+function storageNote() { return saveFailed ? '<b style="color:var(--watch)">This device is NOT saving data.</b>' : 'Data is saved on this device.'; }
+function msgHtml() { return ui.msg ? '<div class="msg' + (ui.msg.bad ? ' bad' : '') + '">' + esc(ui.msg.text) + '</div>' : ''; }
+
+function renderOverview(p, all) {
+  var w = worst(all), alerts = alertsOf(all), due = dueSteps(p), items = [], rows = '';
+  var missing = all.filter(function (a) { return a.status === 'nodata'; }).length;
+  var title, sub = '', todo = '', who = '';
+  if (w === 'act' || w === 'watch') {
+    var a = alerts[0], act = actionFor(a);
+    title = w === 'act' ? 'ACT NOW' : 'KEEP WATCH';
+    sub = a.ind.label + ': ' + a.word + (alerts.length > 1 ? '  (+' + (alerts.length - 1) + ' more below)' : '');
+    todo = act.t; who = 'Who handles it: ' + OWNERS[act.who];
+    if (act.who === 'earth') who += '. A message takes up to about 20 minutes each way. While you wait: ' + (act.wait || 'tell the crew medical officer.');
+  } else if (w === 'nominal') { title = 'YOU ARE OK'; sub = 'Every check is normal.'; todo = 'Nothing to do. Next check-in tomorrow.'; }
+  else if (clockWrong(p)) { title = 'NO DATA'; sub = 'The date on this device is wrong, so no reading can be trusted.'; todo = 'Set today’s date (key 6).'; }
+  else if (missing === all.length) { title = 'NO DATA YET'; sub = 'Nothing has been measured recently.'; todo = 'Do the daily check-in now (key 2).'; }
+  else { title = 'NO PROBLEM FOUND SO FAR'; sub = missing + ' of ' + all.length + ' checks have no data.'; todo = 'Do the daily check-in to complete them (key 2).'; }
+  if (due.length && !clockWrong(p)) { items.push({kind: 'checkin'}); }
+  alerts.forEach(function (x) { items.push({kind: 'ind', id: x.ind.id}); });
+  if (ui.sel >= items.length) ui.sel = Math.max(0, items.length - 1);
+  items.forEach(function (it, i) {
+    if (it.kind === 'checkin') rows += '<div class="row big st-nodata' + (i === ui.sel ? ' sel' : '') + '" data-click="pick:' + i + '">' + icon('nodata') + '<span class="r-label">Daily check-in</span><span class="r-word">' + due.length + ' to measure</span><span class="r-val">Enter to start</span></div>';
+    else rows += rowHtml(all[INDICATORS.indexOf(indById(it.id))], i, true);
+  });
+  if (!items.length) rows = '<div class="box">No alerts. Check-in is done for today.</div>';
+  ui.items = items;
+  var counts = '';
+  ['act', 'watch', 'nominal', 'nodata'].forEach(function (s) {
+    counts += '<div class="count st-' + s + '">' + icon(s) + STATUS[s].word + ' <span>' + all.filter(function (a) { return a.status === s; }).length + '</span></div>';
+  });
+  var le = store.lastExport[p.id], bk = le ? ago(Math.max(0, todayNum() - dayOf(le))) : 'never';
+  var overdue = p.entries.length && (!le || todayNum() - dayOf(le) > 7);
+  return '<div class="hero st-' + w + '">' + icon(w) + '<div><div class="hero-title">' + title + '</div><div class="hero-sub">' + esc(sub) + '</div>' +
+    '<div class="hero-do">' + esc(todo) + '</div><div class="hero-who">' + esc(who) + '</div></div></div>' +
+    '<div class="cols"><div class="list">' + rows + '</div><aside><div class="box"><h2>All ' + all.length + ' checks</h2>' + counts + '</div>' +
+    '<div class="box"><h2>Backup</h2>Last backup file: <b>' + bk + '</b>' + (overdue ? '<br><b style="color:var(--watch)">Make a backup this week (key 6).</b>' : '') + '</div></aside></div>';
+}
+function renderGrouped(p, all, groups, field, withBody) {
+  var items = [], html = '', regSt = {}, selGroup = null;
+  groups.forEach(function (g) {
+    var list = all.filter(function (a) { return a.ind[field] === g.id; });
+    regSt[g.id] = worst(list);
+    html += groupHtml(g.name, list);
+    list.forEach(function (a) { if (items.length === ui.sel) selGroup = g.id; html += rowHtml(a, items.length); items.push({kind: 'ind', id: a.ind.id}); });
+  });
+  if (ui.sel >= items.length) ui.sel = items.length - 1;
+  ui.items = items;
+  var side = '';
+  if (withBody) {
+    var r = function (id, shape) { return shape.replace('<', '<' ) .replace('/>', ' class="reg st-' + regSt[id] + (selGroup === id ? ' on' : '') + '"/>'); };
+    side = '<div class="body-wrap"><svg class="body-svg" viewBox="0 0 200 420" aria-hidden="true">' +
+      r('head', '<circle cx="100" cy="42" r="32"/>') +
+      r('heart', '<rect x="58" y="84" width="84" height="82" rx="14"/>') +
+      r('immune', '<rect x="62" y="172" width="76" height="70" rx="12"/>') +
+      r('muscles', '<rect x="24" y="88" width="26" height="150" rx="13"/>') + r('muscles', '<rect x="150" y="88" width="26" height="150" rx="13"/>') +
+      r('muscles', '<rect x="62" y="250" width="34" height="162" rx="14"/>') + r('muscles', '<rect x="104" y="250" width="34" height="162" rx="14"/>') +
+      '</svg></div>';
+  }
+  return '<div class="cols">' + side + '<div class="list">' + html + '</div></div>';
+}
+function renderTrends(p, all) {
+  var items = [], rows = '';
+  all.forEach(function (a, i) { rows += rowHtml(a, i); items.push({kind: 'ind', id: a.ind.id}); });
+  if (ui.sel >= items.length) ui.sel = items.length - 1;
+  ui.items = items;
+  var a = all[ui.sel];
+  return '<div class="cols"><div class="list compact" style="flex:1.1">' + rows + '</div><div class="side"><div class="box st-' + a.status + '"><div class="count">' + icon(a.status) + STATUS[a.status].word + ' · ' + esc(a.word) + '</div>' +
+    '<div style="font-size:1.2rem;font-weight:700">' + esc(a.ind.label) + '</div><div class="meta">' + trendHtml(a.trend) + '</div></div><div class="chart">' + chartSvg(p, a.ind) + '</div></div></div>';
+}
+var BACKUP_ITEMS = [
+  {cmd: 'export', label: 'Make a backup file (save it to the USB stick)'},
+  {cmd: 'import', label: 'Load a backup file'},
+  {cmd: 'switch', label: 'End session / switch astronaut'},
+  {cmd: 'new', label: 'Add a new astronaut'},
+  {cmd: 'date', label: 'Set today’s date'},
+  {cmd: 'tw', label: 'Test the Watch sound (two soft notes)'},
+  {cmd: 'ta', label: 'Test the Act sound (fast harsh beeps)'}
+];
+function renderBackup(p) {
+  var rows = '';
+  if (ui.sel >= BACKUP_ITEMS.length) ui.sel = BACKUP_ITEMS.length - 1;
+  BACKUP_ITEMS.forEach(function (it, i) { rows += '<div class="row big' + (i === ui.sel ? ' sel' : '') + '" data-click="pick:' + i + '"><span class="r-label">' + esc(it.label) + '</span></div>'; });
+  ui.items = BACKUP_ITEMS;
+  var le = store.lastExport[p.id];
+  return '<h1>Backup and settings</h1><div class="cols"><div class="list">' + rows + '</div><aside><div class="box"><h2>This device</h2>' +
+    'Astronaut: <b>' + esc(p.name) + '</b><br>Days of data: <b>' + p.entries.length + '</b><br>Last backup file: <b>' + (le ? niceDate(dayOf(le)) : 'never') + '</b><br>' +
+    'Today: <b>' + niceDate(todayNum()) + '</b><br>' + storageNote() + '<br>Sound: <b>' + (audio.ok ? 'on' : 'not available – alerts are shown on screen only') + '</b></div>' +
+    '<div class="box"><h2>If hardware breaks</h2>Open index.html on the spare device, choose “Import”, and pick your newest backup file from the USB stick.</div></aside></div>';
+}
+function renderCheckin(p) {
+  var c = ui.ci;
+  if (!c) {
+    var due = dueSteps(p);
+    ui.items = [];
+    if (clockWrong(p)) return '<div class="center"><div class="title-xl">Daily check-in</div><div class="lead">The date on this device is wrong. Set today’s date first.</div><div class="how">Press <kbd>6</kbd>, then choose “Set today’s date”.</div></div>';
+    return '<div class="center"><div class="title-xl">Daily check-in</div><div class="lead">' +
+      (due.length ? due.length + ' measurements to do. About ' + Math.max(1, Math.round(due.length / 3)) + ' minutes. One question per screen.' : 'Today’s check-in is done. You can measure again if something feels different.') +
+      '</div><div class="how">Press <kbd>Enter</kbd> to ' + (due.length ? 'start' : 'measure again') + '.</div></div>';
+  }
+  if (c.phase === 'done') {
+    var all = assessAll(p), w = worst(all), n = alertsOf(all).length;
+    return '<div class="center st-' + w + '"><div class="title-xl">Check-in finished</div><div class="chip" style="font-size:1.6rem">' + icon(w) + STATUS[w].word + '</div>' +
+      '<div class="lead">' + (n ? n + ' thing' + (n > 1 ? 's need' : ' needs') + ' attention. The Overview shows what to do.' : w === 'nominal' ? 'Everything is normal. Nothing to do.' : 'No problem found, but some checks have no data.') + '</div>' +
+      '<div class="how">Press <kbd>Enter</kbd> to see the Overview.</div></div>';
+  }
+  var ind = indById(c.steps[c.i]), head = '<div class="step">Step ' + (c.i + 1) + ' of ' + c.steps.length + '</div>';
+  if (c.phase === 'result') return head + cardHtml(p, assess(p, ind), false);
+  var body;
+  if (ind.type === 'choice') {
+    body = '<div class="list">';
+    ind.options.concat([{label: 'Skip – I cannot check this now'}]).forEach(function (o, i) {
+      body += '<div class="row big' + (i === c.sel ? ' sel' : '') + '" data-click="pick:' + i + '"><kbd>' + (i + 1) + '</kbd><span class="r-label">' + esc(o.label) + '</span></div>';
+    });
+    body += '</div>';
+  } else {
+    body = '<div><input class="inp" id="ci-inp" data-autofocus inputmode="decimal" autocomplete="off" maxlength="7" value="' + esc(c.text) + '"> <span class="unit">' + esc(ind.unit) + '</span></div><div class="err">' + esc(c.err) + '</div>';
+  }
+  return '<div class="center">' + head + '<div class="title-xl">' + esc(ind.label) + '</div><div class="how">' + esc(ind.how) + '</div>' + body + '</div>';
+}
+function renderMain() {
+  var p = active();
+  if (!p) { endSession(); return renderStart(); }
+  var all = assessAll(p), w = worst(all), body, foot;
+  var head = '<header><span class="brand">CREW HEALTH</span><span class="who">' + esc(p.name) + '</span><span class="sp"></span>' +
+    '<span class="dim">' + niceDate(todayNum()) + '</span><span class="dim">Sound ' + (audio.ok ? 'on' : 'OFF') + '</span>' +
+    '<span class="chip st-' + w + '">' + icon(w) + STATUS[w].word + '</span></header>';
+  var alerts = alertsOf(all);
+  if (alerts.length) {   /* always visible while an alert exists: blinking until acknowledged, steady afterwards */
+    var live = ui.pending.length > 0, top = live ? ui.pending[0].a : alerts[0], n = live ? ui.pending.length : alerts.length, tact = actionFor(top);
+    head += '<div class="alarm st-' + top.status + (live ? ' live' : '') + '"' + (live ? ' data-click="key:a"' : '') + '>' + icon(top.status) +
+      '<span>' + (top.status === 'act' ? (live ? 'ALARM – ACT: ' : 'ACT: ') : 'WATCH: ') + esc(top.ind.label) + ' – ' + esc(top.word) + (n > 1 ? ' (+' + (n - 1) + ' more)' : '') + '</span>' +
+      '<span class="do">Do now: ' + esc(tact.t) + ' (' + OWNERS[tact.who] + ')</span><span class="sp"></span>' +
+      (live ? '<span><kbd>A</kbd>Acknowledge' + (top.status === 'act' ? ' and silence' : '') + '</span>' : '<span class="do"><kbd>1</kbd>Details</span>') + '</div>';
+  }
+  var notes = [];
+  if (saveFailed) notes.push('This device is NOT saving. Make a backup file now (key 6) and switch to the spare device.');
+  if (loadWarning) notes.push(loadWarning);
+  var lastEntry = p.entries[p.entries.length - 1];
+  if (lastEntry && dayOf(lastEntry.date) > todayNum()) notes.push('The clock looks wrong: your last reading is dated ' + niceDate(dayOf(lastEntry.date)) + '. Set today’s date (key 6).');
+  notes.forEach(function (n) { head += '<div class="notice"><b>NOTICE:</b> ' + esc(n) + '</div>'; });
+
+  if (ui.view === 'checkin') {
+    body = renderCheckin(p);
+    var c = ui.ci;
+    if (!c) foot = navKeys().concat(['|', ['Enter', 'Start', 'Enter']]);
+    else if (c.phase === 'ask') foot = (indById(c.steps[c.i]).type === 'choice' ? [['1-4', 'or ↑ ↓ Choose', 'ArrowDown']] : [['0-9', 'Type the number', 'x']]).concat([['Enter', 'Confirm', 'Enter'], ['Esc', 'Stop check-in (answers so far are saved)', 'Escape']]);
+    else foot = [['Enter', c.phase === 'done' ? 'Go to Overview' : 'Next', 'Enter'], ['Esc', 'Stop check-in', 'Escape']];
+  } else if (ui.card) {
+    body = cardHtml(p, assess(p, indById(ui.card.ids[ui.card.i])), true);
+    foot = [['Esc', 'Back', 'Escape'], ['← →', 'Previous / next check (' + (ui.card.i + 1) + ' of ' + ui.card.ids.length + ')', 'ArrowRight'], '|'].concat(navKeys());
+  } else {
+    if (ui.view === 'overview') body = renderOverview(p, all);
+    else if (ui.view === 'body') body = renderGrouped(p, all, REGIONS, 'region', true);
+    else if (ui.view === 'hazards') body = renderGrouped(p, all, HAZARDS, 'hazard', false);
+    else if (ui.view === 'trends') body = renderTrends(p, all);
+    else body = renderBackup(p);
+    foot = navKeys().concat(['|', ['↑ ↓', 'Move', 'ArrowDown'], ['Enter', ui.view === 'backup' ? 'Do it' : 'Open', 'Enter']]);
+  }
+  if (ui.pending.length) foot = foot.concat([['A', 'Acknowledge alarm', 'a']]);
+  return head + '<main>' + body + msgHtml() + '</main><footer>' + keysHtml(foot) + '</footer>';
+}
+function renderOverlay() {
+  if (ui.modal) {
+    var m = ui.modal, btn = '';
+    m.options.forEach(function (o, i) { btn += '<div class="row big' + (i === m.sel ? ' sel' : '') + '" data-click="pick:' + i + '" style="width:100%"><span class="r-label">' + esc(o.label) + '</span></div>'; });
+    return '<div class="veil"><div class="dialog"><h1>' + esc(m.title) + '</h1><div>' + esc(m.text) + '</div>' + btn + '<div class="dim" style="color:var(--dim)"><kbd>↑ ↓</kbd>Choose <kbd>Enter</kbd>Confirm <kbd>Esc</kbd>Cancel</div></div></div>';
+  }
+  if (ui.prompt) {
+    var q = ui.prompt;
+    return '<div class="veil"><div class="dialog"><h1>' + esc(q.title) + '</h1><div>' + esc(q.help) + '</div><input class="inp" id="prompt-inp" data-autofocus autocomplete="off" maxlength="40" value="' + esc(q.value) + '"><div class="err">' + esc(q.err) + '</div><div style="color:var(--dim)"><kbd>Enter</kbd>Confirm <kbd>Esc</kbd>Cancel</div></div></div>';
+  }
+  return '';
+}
+function render() {
+  if (crashed) return;
+  try {
+    app.innerHTML = (ui.screen === 'start' ? renderStart() : renderMain()) + renderOverlay();
+    var f = app.querySelector('[data-autofocus]');
+    if (f) { f.focus(); try { f.setSelectionRange(f.value.length, f.value.length); } catch (e) {} }
+    else if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    var s = app.querySelector('.list .row.sel');
+    if (s && s.scrollIntoView) s.scrollIntoView({block: 'nearest'});
+  } catch (e) { crash(e); }
+}
+function crash(e) {
+  crashed = true; stopActLoop();
+  try { document.getElementById('crash').hidden = false; if (window.console) console.error(e); } catch (e2) {}
+}
+function guard(fn) { try { return fn(); } catch (e) { crash(e); } }
+
+/* ---------- keyboard (everything goes through here; mouse clicks are translated to keys) ---------- */
+function move(k, n) {
+  if (!n) return false;
+  if (k === 'ArrowDown') { ui.sel = (ui.sel + 1) % n; return true; }
+  if (k === 'ArrowUp') { ui.sel = (ui.sel + n - 1) % n; return true; }
+  return false;
+}
+function setView(id) { ui.view = id; ui.sel = 0; ui.card = null; ui.ci = null; ui.msg = null; }
+function runCommand(cmd) {
+  if (cmd === 'export') exportProfile();
+  else if (cmd === 'import') { try { fileInput.click(); } catch (e) { say('The file chooser could not open.', true); } }
+  else if (cmd === 'switch') endSession();
+  else if (cmd === 'new') askNewAstronaut();
+  else if (cmd === 'date') askDate();
+  else if (cmd === 'tw') { initAudio(); playWatch(); say(audio.ok ? 'Watch sound played: two soft rising notes.' : 'Sound is not available on this device.', !audio.ok); }
+  else if (cmd === 'ta') { initAudio(); playAct(); say(audio.ok ? 'Act sound played: fast harsh beeps.' : 'Sound is not available on this device.', !audio.ok); }
+}
+function handleKey(k, inInput) {
+  var isAck = (k === 'a' || k === 'A');
+  if (ui.modal) {
+    var m = ui.modal;
+    if (k === 'ArrowDown' || k === 'ArrowUp' || k === 'ArrowLeft' || k === 'ArrowRight') { m.sel = (m.sel + 1) % m.options.length; return true; }
+    if (k === 'Escape') { ui.modal = null; return true; }
+    if (k === 'Enter') { ui.modal = null; if (m.options[m.sel].fn) m.options[m.sel].fn(); else say('Cancelled. Nothing was changed.'); return true; }
+    return true;
+  }
+  if (ui.prompt) {
+    if (k === 'Escape') { ui.prompt = null; return true; }
+    if (k === 'Enter') {
+      var el = document.getElementById('prompt-inp'), v = el ? el.value : '';
+      var err = ui.prompt.ok(v);
+      if (err) { ui.prompt.value = v; ui.prompt.err = err; } else ui.prompt = null;
+      return true;
+    }
+    return false;
+  }
+  if (ui.screen === 'start') {
+    if (move(k, ui.items.length)) return true;
+    if (k === 'Enter') {
+      var it = ui.items[ui.sel]; ui.msg = null;
+      if (!it) return true;
+      if (it.kind === 'profile') startSession(it.id);
+      else if (it.kind === 'new') askNewAstronaut();
+      else runCommand('import');
+      return true;
+    }
+    return false;
+  }
+  if (ui.view === 'checkin' && ui.ci) {
+    var c = ui.ci, ind = c.phase === 'ask' ? indById(c.steps[c.i]) : null;
+    if (k === 'Escape') { setView('overview'); return true; }
+    if (isAck && ui.pending.length) {                               /* letters are never an answer here, so A always acknowledges */
+      var cur = document.getElementById('ci-inp'); if (cur) c.text = cur.value;
+      acknowledge(); return true;
+    }
+    if (c.phase === 'done') { if (k === 'Enter') setView('overview'); return true; }
+    if (c.phase === 'result') { if (k === 'Enter') ciNext(); return true; }
+    if (ind.type === 'choice') {
+      var n = ind.options.length + 1;
+      if (k === 'ArrowDown') { c.sel = (c.sel + 1) % n; return true; }
+      if (k === 'ArrowUp') { c.sel = (c.sel + n - 1) % n; return true; }
+      if (/^[1-9]$/.test(k) && +k <= n) { c.sel = +k - 1; return true; }
+      if (k === 'Enter') { ciConfirm(); return true; }
+      return true;
+    }
+    if (k === 'Enter') { ciConfirm(); return true; }
+    if (k.length === 1 && !/[0-9.,]/.test(k)) return 'block';       /* letters cannot be typed into a number */
+    return false;                                                   /* digits, Backspace, etc. go to the input */
+  }
+  if (isAck && !inInput && ui.pending.length) { acknowledge(); return true; }
+  if (/^[1-6]$/.test(k)) { setView(VIEWS[+k - 1].id); return true; }
+  if (ui.card) {
+    var cd = ui.card, len = cd.ids.length;
+    if (k === 'Escape' || k === 'Backspace') { ui.card = null; return true; }
+    if (k === 'ArrowRight' || k === 'ArrowDown') { cd.i = (cd.i + 1) % len; return true; }
+    if (k === 'ArrowLeft' || k === 'ArrowUp') { cd.i = (cd.i + len - 1) % len; return true; }
+    return false;
+  }
+  if (ui.view === 'checkin') { if (k === 'Enter') { startCheckin(); return true; } return false; }
+  if (move(k, ui.items.length)) return true;
+  if (k === 'Enter') {
+    var x = ui.items[ui.sel];
+    if (!x) return true;
+    if (x.kind === 'ind') {
+      var ids = ui.items.filter(function (y) { return y.kind === 'ind'; }).map(function (y) { return y.id; });
+      ui.card = {ids: ids, i: ids.indexOf(x.id)};
+    } else if (x.kind === 'checkin') { setView('checkin'); startCheckin(); }
+    else if (x.cmd) { ui.msg = null; runCommand(x.cmd); }
+    return true;
+  }
+  return false;
+}
+document.addEventListener('keydown', function (e) {
+  if (crashed) { if (e.key === 'r' || e.key === 'R') location.reload(); return; }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  var t = e.target, inInput = !!(t && t.tagName === 'INPUT' && t.type !== 'file');
+  var r = guard(function () { return handleKey(e.key, inInput); });
+  if (r) e.preventDefault();
+  if (r === true) render();
+});
+document.addEventListener('click', function (e) {
+  if (crashed) return;
+  var el = e.target;
+  while (el && el !== document.body && !(el.getAttribute && el.getAttribute('data-click'))) el = el.parentNode;
+  if (!el || el === document.body || !el.getAttribute) return;
+  var cmd = el.getAttribute('data-click').split(':');
+  guard(function () {
+    if (cmd[0] === 'pick') {
+      var i = +cmd[1];
+      if (ui.modal) ui.modal.sel = i; else if (ui.view === 'checkin' && ui.ci && ui.screen === 'main') ui.ci.sel = i; else ui.sel = i;
+      handleKey('Enter', false);
+    } else handleKey(cmd[1], false);
+  });
+  render();
+});
+window.addEventListener('error', function (e) { crash(e && e.error); });
+window.addEventListener('unhandledrejection', function (e) { crash(e && e.reason); });
+
+guard(function () { loadStore(); });
+render();
+</script>
+</body>
+</html>

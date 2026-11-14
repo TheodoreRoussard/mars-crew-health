@@ -1,0 +1,639 @@
+{
+ "app": "crew-health-monitor",
+ "version": 1,
+ "exportedAt": "2026-11-14",
+ "sample": true,
+ "note": "Sample data for demonstration. Because \"sample\" is true, the tool moves the dates on import so the last day is today. Values are invented; thresholds are illustrative.",
+ "profile": {
+  "id": "sample-okafor",
+  "name": "Sam Okafor",
+  "role": "Flight engineer",
+  "baselines": {
+   "hr": 58,
+   "mass": 74,
+   "grip": 46
+  },
+  "entries": [
+   {
+    "date": "2026-10-16",
+    "values": {
+     "spo2": 97,
+     "hr": 59,
+     "bp": 122,
+     "temp": 36.6,
+     "mass": 74,
+     "exercise": 146,
+     "sleep": 6.6,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 2,
+     "co2": 2.7
+    }
+   },
+   {
+    "date": "2026-10-17",
+    "values": {
+     "spo2": 97,
+     "hr": 58,
+     "bp": 121,
+     "temp": 36.9,
+     "mass": 74,
+     "exercise": 140,
+     "sleep": 6.8,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.8,
+     "co2": 2.9,
+     "vision": 0,
+     "grip": 46,
+     "ucal": 0,
+     "medkit": 0
+    }
+   },
+   {
+    "date": "2026-10-18",
+    "values": {
+     "spo2": 97,
+     "hr": 58,
+     "bp": 123,
+     "temp": 36.6,
+     "mass": 73.7,
+     "exercise": 118,
+     "sleep": 7.8,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 2,
+     "co2": 3.5
+    }
+   },
+   {
+    "date": "2026-10-19",
+    "values": {
+     "spo2": 96,
+     "hr": 61,
+     "bp": 125,
+     "temp": 36.8,
+     "mass": 73.9,
+     "exercise": 131,
+     "sleep": 6.6,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.7,
+     "co2": 2.9
+    }
+   },
+   {
+    "date": "2026-10-20",
+    "values": {
+     "spo2": 98,
+     "hr": 59,
+     "bp": 116,
+     "temp": 36.8,
+     "mass": 73.6,
+     "exercise": 126,
+     "sleep": 6.8,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.6,
+     "co2": 2.7
+    }
+   },
+   {
+    "date": "2026-10-21",
+    "values": {
+     "spo2": 97,
+     "hr": 56,
+     "bp": 118,
+     "temp": 36.6,
+     "mass": 73.5,
+     "exercise": 121,
+     "sleep": 6.9,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.9,
+     "co2": 2.6
+    }
+   },
+   {
+    "date": "2026-10-22",
+    "values": {
+     "spo2": 98,
+     "hr": 60,
+     "bp": 113,
+     "temp": 36.6,
+     "mass": 73.7,
+     "exercise": 114,
+     "sleep": 6.6,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.9,
+     "co2": 3.1
+    }
+   },
+   {
+    "date": "2026-10-23",
+    "values": {
+     "spo2": 98,
+     "hr": 57,
+     "bp": 120,
+     "temp": 36.7,
+     "mass": 73.4,
+     "exercise": 130,
+     "sleep": 7,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.7,
+     "co2": 3
+    }
+   },
+   {
+    "date": "2026-10-24",
+    "values": {
+     "spo2": 97,
+     "hr": 62,
+     "bp": 112,
+     "temp": 36.6,
+     "mass": 73.3,
+     "exercise": 124,
+     "sleep": 7.3,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.7,
+     "co2": 3.3,
+     "vision": 0,
+     "grip": 46,
+     "ucal": 0,
+     "medkit": 0
+    }
+   },
+   {
+    "date": "2026-10-25",
+    "values": {
+     "spo2": 96,
+     "hr": 62,
+     "bp": 120,
+     "temp": 36.7,
+     "mass": 73.2,
+     "exercise": 40,
+     "sleep": 6.3,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 2.1,
+     "co2": 3
+    }
+   },
+   {
+    "date": "2026-10-26",
+    "values": {
+     "spo2": 97,
+     "hr": 56,
+     "bp": 122,
+     "temp": 36.8,
+     "mass": 73.3,
+     "exercise": 122,
+     "sleep": 7.3,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.4,
+     "co2": 2.6
+    }
+   },
+   {
+    "date": "2026-10-27",
+    "values": {
+     "spo2": 97,
+     "hr": 62,
+     "bp": 121,
+     "temp": 36.8,
+     "mass": 73.4,
+     "exercise": 141,
+     "sleep": 6.6,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.8,
+     "co2": 3.1
+    }
+   },
+   {
+    "date": "2026-10-28",
+    "values": {
+     "spo2": 97,
+     "hr": 58,
+     "bp": 121,
+     "temp": 36.6,
+     "mass": 73.1,
+     "exercise": 117,
+     "sleep": 7.3,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.9,
+     "co2": 3.3
+    }
+   },
+   {
+    "date": "2026-10-29",
+    "values": {
+     "spo2": 98,
+     "hr": 57,
+     "bp": 123,
+     "temp": 36.7,
+     "mass": 73,
+     "exercise": 127,
+     "sleep": 7.1,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 2.1,
+     "co2": 2.4
+    }
+   },
+   {
+    "date": "2026-10-30",
+    "values": {
+     "spo2": 98,
+     "hr": 60,
+     "bp": 124,
+     "temp": 36.7,
+     "mass": 72.9,
+     "exercise": 96,
+     "sleep": 7.2,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.9,
+     "co2": 2.7
+    }
+   },
+   {
+    "date": "2026-10-31",
+    "values": {
+     "spo2": 97,
+     "hr": 58,
+     "bp": 118,
+     "temp": 36.7,
+     "mass": 72.9,
+     "exercise": 121,
+     "sleep": 7.2,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.7,
+     "co2": 3.4,
+     "vision": 0,
+     "grip": 44,
+     "ucal": 0,
+     "medkit": 0
+    }
+   },
+   {
+    "date": "2026-11-01",
+    "values": {
+     "spo2": 96,
+     "hr": 59,
+     "bp": 116,
+     "temp": 36.4,
+     "mass": 72.7,
+     "exercise": 114,
+     "sleep": 6.7,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.7,
+     "co2": 3.5
+    }
+   },
+   {
+    "date": "2026-11-02",
+    "values": {
+     "spo2": 97,
+     "hr": 58,
+     "bp": 112,
+     "temp": 36.5,
+     "mass": 72.8,
+     "exercise": 136,
+     "sleep": 5.4,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 14.2,
+     "co2": 2.2
+    }
+   },
+   {
+    "date": "2026-11-03",
+    "values": {
+     "spo2": 97,
+     "hr": 62,
+     "bp": 123,
+     "temp": 36.4,
+     "mass": 72.5,
+     "exercise": 145,
+     "sleep": 6.9,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 4.6,
+     "co2": 2.8
+    }
+   },
+   {
+    "date": "2026-11-04",
+    "values": {
+     "spo2": 98,
+     "hr": 62,
+     "bp": 119,
+     "temp": 36.8,
+     "mass": 72.7,
+     "exercise": 150,
+     "sleep": 6.8,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.9,
+     "co2": 3.3
+    }
+   },
+   {
+    "date": "2026-11-05",
+    "values": {
+     "spo2": 96,
+     "hr": 62,
+     "bp": 121,
+     "temp": 36.7,
+     "mass": 72.5,
+     "exercise": 118,
+     "sleep": 6.7,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 1,
+     "rad": 1.6,
+     "co2": 3
+    }
+   },
+   {
+    "date": "2026-11-06",
+    "values": {
+     "spo2": 96,
+     "hr": 55,
+     "bp": 110,
+     "temp": 36.5,
+     "mass": 72.4,
+     "exercise": 116,
+     "sleep": 6.9,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 2,
+     "co2": 2.8
+    }
+   },
+   {
+    "date": "2026-11-07",
+    "values": {
+     "spo2": 97,
+     "hr": 58,
+     "bp": 116,
+     "temp": 36.8,
+     "mass": 72.4,
+     "exercise": 113,
+     "sleep": 6.4,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.7,
+     "co2": 3.3,
+     "vision": 0,
+     "grip": 44,
+     "ucal": 0,
+     "medkit": 0
+    }
+   },
+   {
+    "date": "2026-11-08",
+    "values": {
+     "spo2": 97,
+     "hr": 57,
+     "bp": 121,
+     "temp": 36.7,
+     "mass": 72.3,
+     "exercise": 142,
+     "sleep": 7.3,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 2.1,
+     "co2": 4.7
+    }
+   },
+   {
+    "date": "2026-11-09",
+    "values": {
+     "spo2": 96,
+     "hr": 58,
+     "bp": 117,
+     "temp": 36.7,
+     "mass": 72.3,
+     "exercise": 151,
+     "sleep": 6.9,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.6,
+     "co2": 3.1
+    }
+   },
+   {
+    "date": "2026-11-10",
+    "values": {
+     "spo2": 96,
+     "hr": 58,
+     "bp": 120,
+     "temp": 36.8,
+     "mass": 72.3,
+     "exercise": 117,
+     "sleep": 6.6,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.8,
+     "co2": 2.6
+    }
+   },
+   {
+    "date": "2026-11-11",
+    "values": {
+     "spo2": 97,
+     "hr": 58,
+     "bp": 118,
+     "temp": 36.7,
+     "mass": 72.1,
+     "exercise": 126,
+     "sleep": 7.3,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 0,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 2.1,
+     "co2": 3.2
+    }
+   },
+   {
+    "date": "2026-11-12",
+    "values": {
+     "spo2": 96,
+     "hr": 64,
+     "bp": 117,
+     "temp": 37.4,
+     "mass": 72,
+     "exercise": 140,
+     "sleep": 7.2,
+     "dizzy": 0,
+     "mood": 0,
+     "immune": 1,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.9,
+     "co2": 2.6
+    }
+   },
+   {
+    "date": "2026-11-13",
+    "values": {
+     "spo2": 96,
+     "hr": 70,
+     "bp": 120,
+     "temp": 37.9,
+     "mass": 72,
+     "exercise": 104,
+     "sleep": 5.6,
+     "dizzy": 0,
+     "mood": 1,
+     "immune": 1,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.9,
+     "co2": 2.4
+    }
+   },
+   {
+    "date": "2026-11-14",
+    "values": {
+     "spo2": 98,
+     "hr": 74,
+     "bp": 118,
+     "temp": 38.7,
+     "mass": 71.8,
+     "exercise": 30,
+     "sleep": 5.2,
+     "dizzy": 0,
+     "mood": 1,
+     "immune": 1,
+     "gut": 0,
+     "dcs": 0,
+     "eva": 0,
+     "rad": 1.9,
+     "co2": 3.3,
+     "vision": 0,
+     "grip": 44,
+     "ucal": 1,
+     "medkit": 0
+    }
+   }
+  ]
+ }
+}
