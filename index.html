@@ -489,7 +489,7 @@ function loadStore() {
     if (typeof o.dateOffset === 'number' && isFinite(o.dateOffset)) store.dateOffset = Math.round(o.dateOffset);
   } catch (e) {
     try { localStorage.setItem(KEY + '.damaged', raw); } catch (e2) {}
-    loadWarning = 'Saved data on this device could not be read. Load your latest backup file (Settings: key 0, then S).';
+    loadWarning = 'Saved data on this device could not be read. Load your latest backup file (Backup: key 0, then B).';
   }
 }
 function saveStore() {
@@ -1080,7 +1080,7 @@ function noticesHtml() {
   var notes = [], h = '<div class="notice">Prototype: illustrative rules and actions; not clinically validated.</div>';
   if (demoSession) h += '<div class="notice demo-note"><b>DEMO · Fictional data · Changes are temporary.</b> ' + esc(demoSession.guide) + ' <button type="button" data-click="key:d">D · Change scenario</button> <button type="button" data-click="key:x">X · Exit demo</button></div>';
   if (!audio.ok) notes.push(audio.tried ? 'Sound is not available on this device. Alerts are shown on screen only.' : 'Sound is off. Press any key to turn the alarm sound on.');
-  if (saveFailed) notes.push('This device is NOT saving. Make a backup file now (Settings: key 0, then S) and switch to the spare device.');
+  if (saveFailed) notes.push('This device is NOT saving. Make a backup file now (Backup: key 0, then B) and switch to the spare device.');
   if (loadWarning) notes.push(loadWarning);
   var wrong = crew().filter(clockWrong)[0];
   if (wrong) notes.push('The clock looks wrong: a reading of ' + wrong.name + ' is dated ' + niceDate(dayOf(wrong.entries[wrong.entries.length - 1].date)) + '. Set today’s date (Settings: key 0, then S).');
@@ -1107,31 +1107,39 @@ function renderHome() {
       '<div class="cc-foot">' + counts + '<span class="sp"></span><span>' + (wrong ? '' : due ? 'Check-in: ' + due + ' to do' : 'Check-in done') + '</span></div></div>';
   });
   var body = n ? '<div class="crew-grid c' + cols + '" style="grid-template-columns:repeat(' + cols + ',1fr);grid-template-rows:repeat(' + rows + ',1fr)">' + html + '</div>'
-    : '<div class="center"><div class="title-xl">CREW HEALTH MONITOR</div><div class="lead">No astronaut on this device yet.</div><div class="how">Press <kbd>Enter</kbd> to add one, or <kbd>S</kbd> for Settings to load a backup file.</div></div>';
+    : '<div class="center"><div class="title-xl">CREW HEALTH MONITOR</div><div class="lead">No astronaut on this device yet.</div><div class="how">Press <kbd>Enter</kbd> to add one, or <kbd>B</kbd> to load a backup file.</div></div>';
   return topBar() + alertBar(null) + noticesHtml() + '<main>' + body + msgHtml() + '</main><footer>' +
-    keysHtml((n ? [['← → ↑ ↓', 'Choose astronaut', 'ArrowRight'], ['Enter', 'Open', 'Enter']] : [['Enter', 'Add an astronaut', 'Enter']]).concat([['S', 'Settings', 's'], ['D', 'Start demo', 'd'], '|']).concat(ui.pending.length ? [['A', 'Acknowledge alarm', 'a']] : [])) + '</footer>';
+    keysHtml((n ? [['← → ↑ ↓', 'Choose astronaut', 'ArrowRight'], ['Enter', 'Open', 'Enter']] : [['Enter', 'Add an astronaut', 'Enter']]).concat([['B', 'Backup', 'b'], ['S', 'Settings', 's'], ['D', 'Start demo', 'd'], '|']).concat(ui.pending.length ? [['A', 'Acknowledge alarm', 'a']] : [])) + '</footer>';
 }
-function settingsItems() {
+/* Backup and Settings are two screens: B for files that leave the device, S for everything else. */
+function backupItems() {
   var list = crew(), items = [];
   if (list.length) items.push({cmd: 'export', ids: list.map(function (p) { return p.id; }), label: 'Make a backup file: whole crew (' + list.length + ')'});
   if (list.length > 1) list.forEach(function (p) { items.push({cmd: 'export', ids: [p.id], label: 'Make a backup file: only ' + p.name}); });
-  return items.concat([
-    {cmd: 'import', label: 'Load a backup file'},
-    {cmd: 'new', label: 'Add a new astronaut'}]).concat(list.length ? [{cmd: 'remove', label: 'Remove an astronaut'}] : []).concat([
+  return items.concat([{cmd: 'import', label: 'Load a backup file'}]);
+}
+function settingsItems() {
+  return [{cmd: 'new', label: 'Add a new astronaut'}].concat(crew().length ? [{cmd: 'remove', label: 'Remove an astronaut'}] : []).concat([
     {cmd: 'date', label: 'Set today’s date'},
     {cmd: 'tw', label: 'Test the Watch sound (two soft notes)'},
     {cmd: 'ta', label: 'Test the Act sound (fast harsh beeps)'}]);
 }
-function renderSettings() {
-  var items = settingsItems(), rows = '', info = '';
+function renderMenu(title, items, aside) {
+  var rows = '';
   if (ui.sel >= items.length) ui.sel = items.length - 1;
   items.forEach(function (it, i) { rows += '<div class="row' + (i === ui.sel ? ' sel' : '') + '" data-click="pick:' + i + '"><span class="r-label">' + esc(it.label) + '</span></div>'; });
   ui.items = items;
-  crew().forEach(function (p) { var le = store.lastExport[p.id]; info += esc(p.name) + ': <b>' + p.entries.length + ' days</b>, last backup <b>' + (le ? ago(Math.max(0, todayNum() - dayOf(le))) : 'never') + '</b><br>'; });
-  return topBar() + alertBar(null) + noticesHtml() + '<main><h1>Settings</h1><div class="cols"><div class="list settings">' + rows + '</div><aside><div class="box"><h2>This device</h2>' +
-    (info || 'No astronaut yet.<br>') + 'Today: <b>' + niceDate(todayNum()) + '</b><br>' + storageNote() + '</div>' +
-    '<div class="box"><h2>If hardware breaks</h2>Open index.html on the spare device, press S, choose “Load a backup file” and pick the newest file on the USB stick.</div></aside></div>' + msgHtml() + '</main><footer>' +
+  return topBar() + alertBar(null) + noticesHtml() + '<main><h1>' + title + '</h1><div class="cols"><div class="list settings">' + rows + '</div><aside>' + aside + '</aside></div>' + msgHtml() + '</main><footer>' +
     keysHtml([['↑ ↓', 'Move', 'ArrowDown'], ['Enter', 'Do it', 'Enter'], ['Esc', 'Back to the crew page', 'Escape'], '|'].concat(ui.pending.length ? [['A', 'Acknowledge alarm', 'a']] : [])) + '</footer>';
+}
+function renderBackup() {
+  var info = '';
+  crew().forEach(function (p) { var le = store.lastExport[p.id]; info += esc(p.name) + ': <b>' + p.entries.length + ' days</b>, last backup <b>' + (le ? ago(Math.max(0, todayNum() - dayOf(le))) : 'never') + '</b><br>'; });
+  return renderMenu('Backup', backupItems(), '<div class="box"><h2>Backups of this device</h2>' + (info || 'No astronaut yet.<br>') + storageNote() + '</div>' +
+    '<div class="box"><h2>If hardware breaks</h2>Open index.html on the spare device, press B, choose “Load a backup file” and pick the newest file on the USB stick.</div>');
+}
+function renderSettings() {
+  return renderMenu('Settings', settingsItems(), '<div class="box"><h2>This device</h2>Astronauts: <b>' + crew().length + '</b><br>Today: <b>' + niceDate(todayNum()) + '</b><br>' + storageNote() + '</div>');
 }
 function storageNote() { return saveFailed ? '<b style="color:var(--watch)">This device is NOT saving data.</b>' : 'Data is saved on this device.'; }
 function msgHtml() { return ui.msg ? '<div class="msg' + (ui.msg.bad ? ' bad' : '') + '">' + esc(ui.msg.text) + '</div>' : ''; }
@@ -1168,7 +1176,7 @@ function renderOverview(p, all) {
   return '<div class="hero st-' + w + '">' + icon(w) + '<div><div class="hero-title">' + title + '</div><div class="hero-sub">' + esc(sub) + '</div>' +
     '<div class="hero-do">' + esc(todo) + '</div><div class="hero-who">' + esc(who) + '</div></div></div>' +
     '<div class="cols"><div class="list">' + rows + '</div><aside><div class="box"><h2>All ' + all.length + ' checks</h2>' + counts + '</div>' +
-    '<div class="box"><h2>Backup</h2>Last backup file: <b>' + bk + '</b>' + (overdue ? '<br><b style="color:var(--watch)">Make a backup this week (Settings: key 0, then S).</b>' : '') + '</div></aside></div>';
+    '<div class="box"><h2>Backup</h2>Last backup file: <b>' + bk + '</b>' + (overdue ? '<br><b style="color:var(--watch)">Make a backup this week (Backup: key 0, then B).</b>' : '') + '</div></aside></div>';
 }
 function renderGrouped(p, all, groups, field, withBody) {
   var items = [], html = '', regSt = {}, selGroup = null;
@@ -1283,7 +1291,7 @@ function renderOverlay() {
 function render() {
   if (crashed) return;
   try {
-    app.innerHTML = (ui.screen === 'home' ? renderHome() : ui.screen === 'settings' ? renderSettings() : renderMain()) + renderOverlay();
+    app.innerHTML = (ui.screen === 'home' ? renderHome() : ui.screen === 'settings' ? renderSettings() : ui.screen === 'backup' ? renderBackup() : renderMain()) + renderOverlay();
     var f = app.querySelector('[data-autofocus]');
     if (f) { f.focus(); try { f.setSelectionRange(f.value.length, f.value.length); } catch (e) {} }
     else if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
@@ -1368,6 +1376,7 @@ function handleKey(k, inInput) {
   if (ui.screen === 'home') {
     var cnt = ui.items.length, cols = ui.cols || 1;
     if (k === 's' || k === 'S') { ui.screen = 'settings'; ui.sel = 0; ui.msg = null; return true; }
+    if (k === 'b' || k === 'B') { ui.screen = 'backup'; ui.sel = 0; ui.msg = null; return true; }
     if (cnt && k === 'ArrowRight') { ui.sel = (ui.sel + 1) % cnt; return true; }
     if (cnt && k === 'ArrowLeft') { ui.sel = (ui.sel + cnt - 1) % cnt; return true; }
     if (cnt && k === 'ArrowDown') { if (ui.sel + cols < cnt) ui.sel += cols; return true; }
@@ -1375,7 +1384,7 @@ function handleKey(k, inInput) {
     if (k === 'Enter') { ui.msg = null; if (cnt) openProfile(ui.items[ui.sel].id); else askNewAstronaut(); return true; }
     return false;
   }
-  if (ui.screen === 'settings') {
+  if (ui.screen === 'settings' || ui.screen === 'backup') {
     if (k === 'Escape') { goHome(); return true; }
     if (move(k, ui.items.length)) return true;
     if (k === 'Enter') { var it = ui.items[ui.sel]; ui.msg = null; if (it) runCommand(it); return true; }

@@ -37,7 +37,7 @@ No installation, package manager, build step, server, or API key is required.
 
 The built-in scenarios use **fictional data in a temporary workspace**. They do not overwrite saved crew profiles or write changes to browser storage. Press **D** to change scenario or **X** to exit and restore your crew. Reloading also leaves demo mode. Backup export is disabled in demo mode.
 
-For the separate four-person example crew, open **Settings (S)** from the crew page, choose **Load a backup file**, and select `sample-data.json`. Its dates shift so that the final sample day falls on today. This import persists in browser storage and asks before replacing matching profiles.
+For the separate four-person example crew, open **Backup (B)** from the crew page, choose **Load a backup file**, and select `sample-data.json`. Its dates shift so that the final sample day falls on today. This import persists in browser storage and asks before replacing matching profiles.
 
 To start with an empty profile, press **Enter** on an empty crew page, or choose **Add a new astronaut** in Settings. The optional personal-baseline form opens after entering a name; complete it or choose **Cancel / skip**.
 
@@ -75,8 +75,8 @@ Measurements are entered manually. The prototype does not connect directly to se
 | **5** | Trends |
 | **0** | Crew page |
 | **Tab / Shift+Tab** | Next / previous crew tab |
-| **S** | Settings from the crew page: backups, profiles, date, and sound tests |
-| **B** | Personal baselines inside a profile |
+| **B** | On the crew page: Backup (make or load a backup file). Inside a profile: personal baselines |
+| **S** | Settings from the crew page: profiles, date, and sound tests |
 | **D** | Start demo from the crew page; switch scenario during a demo |
 | **X** | Exit demo and restore the saved crew |
 | **↑ / ↓** | Choose an item |
@@ -116,7 +116,7 @@ Indicator definitions, ranges, schedules, status bands, and suggested actions ar
 
 Use the same browser profile and file location for daily use. Do not rely on private browsing or clear browser storage: doing so can remove saved measurements.
 
-From the crew page, use **S → Make a backup file** to export the whole crew or an individual profile. Each device keeps its own data; there is no automatic synchronization. Importing a backup for an existing profile asks before replacing its data, with **Cancel** selected by default.
+From the crew page, use **B → Make a backup file** to export the whole crew or an individual profile. Each device keeps its own data; there is no automatic synchronization. Importing a backup for an existing profile asks before replacing its data, with **Cancel** selected by default.
 
 The app includes a backup reminder and a date-offset setting for devices with an incorrect clock. Local storage and exported JSON files are not encrypted by the application.
 

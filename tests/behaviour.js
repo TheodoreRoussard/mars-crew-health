@@ -57,8 +57,11 @@ a.key('ShiftTab'); a.key('ShiftTab'); ok(a.get('ui.screen')==='home','Shift+Tab 
 a.key('Tab'); a.key('Tab'); a.key('Tab'); a.key('0'); ok(a.get('ui.screen')==='home'&&a.get('ui.sel')===2,'key 0 leaves the profile and selects that astronaut on the crew page');
 a.key('Enter'); a.key('Escape'); ok(a.get('ui.screen')==='home','Esc at the top of a profile returns to the crew page');
 a.key('Enter'); a.key('5'); a.key('6'); ok(a.get('ui.view')==='trends','key 6 no longer opens a view inside a profile');
-a.key('0'); a.key('s'); ok(a.get('ui.screen')==='settings'&&a.html().includes('<h1>Settings</h1>')&&a.html().includes('Make a backup file: whole crew (5)')&&a.html().includes('only Sam Okafor')&&a.html().includes('Set today’s date'),'S on the crew page opens Settings');
+a.key('0'); ok(a.html().includes('<kbd>B</kbd>Backup')&&a.html().includes('<kbd>S</kbd>Settings')&&a.html().includes('<kbd>D</kbd>Start demo'),'crew page footer keeps Backup, Settings and Start demo together');
+a.key('s'); ok(a.get('ui.screen')==='settings'&&a.html().includes('<h1>Settings</h1>')&&a.html().includes('Set today’s date')&&a.html().includes('Remove an astronaut')&&!a.html().includes('backup file'),'S on the crew page opens Settings, with no backup items');
 a.key('Escape'); ok(a.get('ui.screen')==='home','Esc leaves Settings');
+a.key('b'); ok(a.get('ui.screen')==='backup'&&a.html().includes('<h1>Backup</h1>')&&a.html().includes('Make a backup file: whole crew (5)')&&a.html().includes('Load a backup file')&&a.html().includes('last backup')&&!a.html().includes('Set today’s date'),'B on the crew page opens Backup, with only backup items');
+a.key('Escape'); ok(a.get('ui.screen')==='home','Esc leaves Backup');
 
 // 3b. remove an astronaut: two confirmations, both default to Cancel
 { const d=mk(false); d.ctx.importText(sample); d.ctx.render(); d.key('s');
@@ -142,7 +145,7 @@ const before=JSON.stringify(a.P(SAM)); a.key('Enter'); a.key('2'); a.key('Enter'
 let b=mk(true); b.ctx.importText(sample); b.ctx.startSession(SAM); b.ctx.render(); ok(!b.get('crashed')&&b.html().includes('NOT saving'),'localStorage failure -> warning, no crash');
 
 // 10. keyboard fuzz
-let c=mk(false); c.ctx.importText(sample); const keys=['1','2','3','4','5','6','7','0','0','9','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter','Enter','Enter','Escape','a','A','s','S','Tab','Tab','ShiftTab','x','.',',','-','Backspace',' ','r','F5'];
+let c=mk(false); c.ctx.importText(sample); const keys=['1','2','3','4','5','6','7','0','0','9','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter','Enter','Enter','Escape','a','A','s','S','b','B','Tab','Tab','ShiftTab','x','.',',','-','Backspace',' ','r','F5'];
 let seed=7; const rnd=()=>(seed=(seed*1664525+1013904223)>>>0)/4294967296; const vals=['','12','abc','-5','1e9','36.6','97',' 7,5 ','<b>','2031-04-09','Zoé'];
 const seen={};
 for(let i=0;i<20000;i++){ c.inputs['ci-inp']={value:vals[Math.floor(rnd()*vals.length)]}; c.inputs['prompt-inp']={value:vals[Math.floor(rnd()*vals.length)]}; c.key(keys[Math.floor(rnd()*keys.length)]); seen[c.get('ui.screen+"/"+ui.view+"/"+(ui.ci?ui.ci.phase:"")+(ui.card?"card":"")+(ui.modal?"modal":"")+(ui.prompt?"prompt":"")')]=1; if(i%997===0) c.ctx.importText(sample); if(c.get('crashed')) break; }
