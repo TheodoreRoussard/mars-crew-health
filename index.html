@@ -879,9 +879,10 @@ function askDate() {
     return '';
   }};
 }
-function exportBackup(ids) {
+/* Always the whole crew: one file per week to look after, and no astronaut can be left out by mistake. */
+function exportBackup() {
   if (demoSession) { say('Demo data is temporary. Exit the demo to export your saved crew.', true); return; }
-  var list = (ids || []).map(function (id) { return store.profiles[id]; }).filter(Boolean);
+  var list = crew();
   if (!list.length) return say('There is no astronaut to back up yet.', true);
   try {
     var day = isoOf(todayNum());
