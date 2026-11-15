@@ -36,7 +36,7 @@ const script=`
    assert(document.querySelector('header .ico'),'Tab pictograms removed');
    var nominal=document.querySelector('main .row.st-nominal .r-word');
    assert(nominal && getComputedStyle(nominal).color==='rgb(74, 222, 128)','OK text is not green');
-   assert(getComputedStyle(document.querySelector('main .row.st-watch .r-word')).color==='rgb(255, 191, 36)','Watch text is not amber');
+   assert(getComputedStyle(document.querySelector('main .row.st-watch .r-word')).color==='rgb(251, 191, 36)','Watch text is not amber');
    assert(getComputedStyle(document.querySelector('main .row.st-act .r-word')).color==='rgb(255, 107, 94)','Act text is not red');
    key('Enter');assert(!document.querySelector('main .ico'),'Detail card pictogram remains');
   });
