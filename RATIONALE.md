@@ -20,7 +20,7 @@
 | The first key press or click turns the sound on; a notice says so until then | Browsers allow sound only after a user action |
 | "No data" for missing, impossible or old values, and for all values when the clock is behind the data | Fail safe: an old "OK" is a wrong status |
 | Single `index.html`: no network, no libraries, no build | Runs from `file://` on a Raspberry Pi 4. Fewer parts to fail |
-| JSON backup of the whole crew or of one astronaut, in Settings on the crew page. Loading is validated before anything is replaced. Confirmation defaults to Cancel | Pi, drive, keyboard or cable breaks. A bad file cannot erase good data |
+| JSON backup of the whole crew or of one astronaut, on its own Backup screen (`B` on the crew page), apart from Settings (`S`). Loading is validated before anything is replaced. Confirmation defaults to Cancel | Pi, drive, keyboard or cable breaks. A bad file cannot erase good data |
 | Backup reminder after 7 days | A backup only helps if it is recent |
 | Every key shown in the footer. Every item is also clickable | Keyboard-only use. A mouse still works if the keyboard fails |
 | Crash screen ("data is safe, press R"), save-failure notice, "Set today's date" | Software bugs. A Pi has no battery clock and space has no network time |

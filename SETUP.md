@@ -11,7 +11,7 @@ Print this page and keep it next to the screen. All keys are also shown on scree
 5. Test both sounds in Settings. Set the speaker volume so they are heard across the room.
 6. Check the date at the top right. If it is wrong, choose **Set today's date**. Repeat after every power cut: the Raspberry Pi has no battery clock.
 
-To try the tool with an example crew, choose **Load a backup file** in Settings and pick `sample-data.json`.
+To try the tool with an example crew, press `B`, choose **Load a backup file** and pick `sample-data.json`.
 
 ## 2. Every day
 
@@ -23,7 +23,8 @@ To try the tool with an example crew, choose **Load a backup file** in Settings 
 | `1` to `5` | Inside a profile: Overview, Check-in, Body, Hazards, Trends |
 | `Esc` | Back |
 | `A` | Acknowledge an alarm |
-| `S` | Settings (from the crew page) |
+| `B` | Backup: make or load a backup file (from the crew page) |
+| `S` | Settings: astronauts, date, sound tests (from the crew page) |
 
 Open your profile, press `2`, then either answer everything that is due or pick a single question.
 
@@ -32,7 +33,7 @@ The sound turns on at the first key press after the page is opened. An **Act** a
 ## 3. Every week: backup (1 minute)
 
 1. Plug in **USB stick A**.
-2. On the crew page press `S`, choose **Make a backup file: whole crew**, and save it to the stick.
+2. On the crew page press `B`, choose **Make a backup file: whole crew**, and save it to the stick.
 3. Next week use **USB stick B**. Alternate A and B, and store them in different modules.
 
 Keep a copy of `index.html` on both sticks: the whole tool is that one file. Each profile reminds its owner when the last backup is more than 7 days old.
@@ -43,7 +44,7 @@ Keep a copy of `index.html` on both sticks: the whole tool is that one file. Eac
 |---|---|
 | Screen is dead | Alarms still sound. Move the cable to another screen, or use the spare device. |
 | Keyboard is dead | Use the mouse: everything on screen can be clicked. |
-| Pi or drive is dead | On the spare device, open `index.html` from the USB stick. Press `S`, choose **Load a backup file**, pick the newest backup, then set the date. |
+| Pi or drive is dead | On the spare device, open `index.html` from the USB stick. Press `B`, choose **Load a backup file**, pick the newest backup, then set the date. |
 | "The screen had a problem" | Press `R`. Saved measurements are kept. |
 | "This device is NOT saving" | Make a backup file now, then move to the spare device. |
 | "The clock looks wrong" / "Date is wrong" | In Settings, choose **Set today's date**. Statuses stay "No data" until you do. |
