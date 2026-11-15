@@ -6,7 +6,7 @@ Built for the **2026 NASA Space Apps Challenge**, addressing [Create Health Moni
 
 Our goal is simple: help a crew member without medical training answer **“Am I OK, and what should I do now?”** at a glance. Crew Health Monitor brings daily measurements, symptoms, personal baselines, trends, and suggested next steps into one interface that works without an internet connection.
 
-**Try it now:** [mars-crew-health.vercel.app](https://mars-crew-health.vercel.app) (no login, no install), then press **D** for a demo scenario.
+**Try it now:** [mars-crew-health.vercel.app](https://mars-crew-health.vercel.app) (no login, no install), then press **D** to start a demo scenario.
 
 | | |
 | --- | --- |
@@ -26,30 +26,25 @@ The interface puts plain-language status and the next action before raw numbers.
 
 ## Try the demo
 
-No installation, package manager, build step, server, or API key is required. The quickest way is the [live app](https://mars-crew-health.vercel.app); it is the same `index.html` as in this repository and runs entirely in your browser. To run it locally instead:
+Nothing to download or install: the demo runs in your browser.
 
-1. Download the repository using **Code → Download ZIP**, then extract it. Alternatively:
-
-   ```sh
-   git clone https://github.com/TheodoreRoussard/mars-crew-health.git
-   cd mars-crew-health
-   ```
-
-2. Open `index.html` in Chromium or Chrome. Press **F11** for full screen.
-3. On the crew page, press **D** (or click **Start demo**).
-4. Choose one of the three built-in scenarios:
+1. Open **[mars-crew-health.vercel.app](https://mars-crew-health.vercel.app)** in Chrome, Edge or another Chromium browser.
+2. Press **D** (or click **D · Start demo** at the bottom of the screen).
+3. Pick a scenario with **↑ / ↓** and **Enter**, or click it:
 
    | Scenario | What to explore |
    | --- | --- |
-   | Routine check | No alerts in the recorded checks; explore 30-day trends. |
+   | Routine check | No alerts in the recorded checks; press **4** to explore 30-day trends. |
    | Progressive change | Body mass and grip strength fall relative to pre-flight references. Open an alert to see the calculation. |
-   | Radiation alert | A dose spike triggers Act. Inspect the applicable rule, then press **A** to acknowledge the sound. |
+   | Radiation alert | A dose spike triggers Act, with an alarm sound. Open the alert to see the rule that applied, then press **A** to silence the sound. |
 
-The built-in scenarios use **fictional data in a temporary workspace**. They do not overwrite saved crew profiles or write changes to browser storage. Press **D** to change scenario or **X** to exit and restore your crew. Reloading also leaves demo mode. Backup export is disabled in demo mode.
+Press **D** again to switch scenario, or **X** to leave the demo. The scenarios use **fictional data in a temporary workspace**: nothing is saved, and reloading the page also leaves the demo.
 
-For the separate four-person example crew, open **Backup (B)** from the crew page, choose **Load a backup file**, and select `sample-data.json`. Its dates shift so that the final sample day falls on today. This import persists in browser storage and asks before replacing matching profiles.
+### Beyond the demo
 
-To start with an empty profile, press **Enter** on an empty crew page, or choose **Add a new astronaut** in Settings. The optional personal-baseline form opens after entering a name; complete it or choose **Cancel / skip**.
+- **Four-person example crew:** download [`sample-data.json`](sample-data.json), then on the crew page open **Backup (B)**, choose **Load a backup file** and select it. Its dates shift so that the last sample day is today. Unlike the demo, this import is saved in the browser and asks before replacing matching profiles.
+- **Your own profile:** press **Enter** on an empty crew page, or choose **Add a new astronaut** in Settings (**S**). An optional personal-baseline form opens after you enter a name; complete it or choose **Cancel / skip**.
+- **Offline use:** the live site and this repository's `index.html` are the same file. To use it without a network, download `index.html` and open it in Chromium; [SETUP.md](SETUP.md) covers setup on a Raspberry Pi 4, backups and recovery.
 
 ## Personal references and explained alerts
 
