@@ -5,7 +5,7 @@
 | Feature | Risk, hazard or pain point it answers |
 |---|---|
 | Overview headline ("YOU ARE OK", "KEEP WATCH", "ACT NOW") with one action, before any number. An action banner stays on every screen while an alert exists | Astronaut does not understand the information |
-| Crew page: one card per astronaut with status, top alert, action and check-in state. The grid re-arranges for any crew size. Alarms sound for the whole crew on every screen | Central room, shared screen: anyone walking past sees who needs help. Screen breaks: the sound still covers everyone |
+| Crew page: one card per astronaut with status, every Act alert by name, action and check-in state. If a card is too full, secondary text goes first; an Act alert is never hidden or reduced to a count. The grid re-arranges for any crew size. Alarms sound for the whole crew on every screen | Central room, shared screen: anyone walking past sees who needs help. Screen breaks: the sound still covers everyone |
 | Top bar with one tab per astronaut, like browser tabs; `0` or the Crew tab leaves a profile | One way to move between people, always visible |
 | Four statuses only, each with a colour, a shape and a word | Same. Still readable for colour-blind crew or on a dim screen |
 | Words before numbers ("Slight fever", then "37.9 °C") and a personal baseline | Astronauts are not doctors. Bodies adapt in space, so "normal for you" matters (cardiovascular, fitness, nutrition) |

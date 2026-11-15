@@ -38,6 +38,11 @@ a=mk(false); a.ctx.importText(sample); a.ctx.render();
 ok(Object.keys(a.get('store.profiles')).length===4,'crew file loads 4 astronauts');
 ok(['Sam Okafor','Ana Ruiz','Kenji Mori','Lena Fischer'].every(n=>a.html().includes(n))&&a.html().includes('ACT NOW')&&a.html().includes('KEEP WATCH')&&a.html().includes('Check-in: ')&&a.html().includes('Check-in done'),'crew page shows every astronaut with status, action and check-in state');
 ok(a.html().includes('grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr)'),'4 astronauts -> 2 x 2 grid');
+{ const d=mk(false); d.ctx.importText(sample); const s=d.P(SAM);
+  [['spo2',86],['bp',182],['rad',3.5]].forEach(v=>d.ctx.setValue(s,d.I(v[0]),v[1])); d.ctx.render();
+  const acts=d.ctx.alertsOf(d.ctx.assessAll(s)).filter(x=>x.status==='act'), card=d.html().split('crew-card')[1];
+  ok(acts.length===4&&acts.every(x=>card.includes(x.ind.label.replace(/ \(.*\)$/,''))&&card.includes(x.word))&&(card.match(/<li>/g)||[]).length===4,'crew card lists every Act alert (4) by name and word, not only the first');
+  ok(!/\d+ Act</.test(card)&&card.includes('6 Watch'),'Act is never reduced to a count on the card; Watch stays a count'); }
 ok(a.get('ui.pending.length')>0&&a.beeps.length===0&&a.html().includes('ALARM – ACT: Sam Okafor'),'before any key: alarm banner visible, no sound yet');
 a.key('ArrowRight'); ok(a.beeps.length===6&&a.beeps.every(b=>b.type==='square')&&a.html().includes('Sound on'),'first key press turns sound on: Act = 6 square pulses');
 a.tick(); ok(a.beeps.length===12,'Act repeats on the 8 s timer');
