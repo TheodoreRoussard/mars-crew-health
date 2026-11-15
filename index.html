@@ -724,6 +724,25 @@ function askNewAstronaut() {
     return '';
   }};
 }
+/* Two steps, both defaulting to Cancel: pick who, then confirm with the number of days that will be lost. */
+function askRemoveAstronaut() {
+  var list = crew();
+  if (!list.length) return say('There is no astronaut on this device.', true);
+  ui.modal = {title: 'Remove an astronaut', text: 'Choose who to remove from this device.', sel: 0,
+    options: [{label: 'Cancel – remove nobody'}].concat(list.map(function (p) { return {label: p.name, fn: function () { confirmRemove(p.id); }}; }))};
+}
+function confirmRemove(id) {
+  var p = store.profiles[id], le = store.lastExport[id];
+  if (!p) return;
+  ui.modal = {title: 'Remove ' + p.name + '?',
+    text: 'All ' + p.entries.length + ' days of ' + p.name + '’s measurements will be erased from this device. This cannot be undone. Last backup file: ' + (le ? ago(Math.max(0, todayNum() - dayOf(le))) : 'never') + '.',
+    sel: 0, options: [{label: 'Cancel – keep ' + p.name}, {label: 'Remove ' + p.name + ' and erase the data', fn: function () {
+      delete store.profiles[id]; delete store.lastExport[id]; saveStore();
+      if (ui.activeId === id) ui.activeId = null;
+      refreshAlarms();
+      say('Removed ' + p.name + ' from this device.' + (saveFailed ? ' WARNING: the change could not be saved on this device.' : ''));
+    }}]};
+}
 function askDate() {
   ui.prompt = {title: 'Set today’s date', help: 'Type the date as YEAR-MONTH-DAY, for example 2031-04-09.', value: isoOf(todayNum()), err: '', ok: function (v) {
     var d = dayOf(String(v).trim());
@@ -968,7 +987,7 @@ function settingsItems() {
   if (list.length > 1) list.forEach(function (p) { items.push({cmd: 'export', ids: [p.id], label: 'Make a backup file: only ' + p.name}); });
   return items.concat([
     {cmd: 'import', label: 'Load a backup file'},
-    {cmd: 'new', label: 'Add a new astronaut'},
+    {cmd: 'new', label: 'Add a new astronaut'}]).concat(list.length ? [{cmd: 'remove', label: 'Remove an astronaut'}] : []).concat([
     {cmd: 'date', label: 'Set today’s date'},
     {cmd: 'tw', label: 'Test the Watch sound (two soft notes)'},
     {cmd: 'ta', label: 'Test the Act sound (fast harsh beeps)'}]);
@@ -1160,6 +1179,7 @@ function runCommand(it) {
   if (cmd === 'export') exportBackup(it.ids);
   else if (cmd === 'import') { try { fileInput.click(); } catch (e) { say('The file chooser could not open.', true); } }
   else if (cmd === 'new') askNewAstronaut();
+  else if (cmd === 'remove') askRemoveAstronaut();
   else if (cmd === 'date') askDate();
   else if (cmd === 'tw') { initAudio(); playWatch(); say(audio.ok ? 'Watch sound played: two soft rising notes.' : 'Sound is not available on this device.', !audio.ok); }
   else if (cmd === 'ta') { initAudio(); playAct(); say(audio.ok ? 'Act sound played: fast harsh beeps.' : 'Sound is not available on this device.', !audio.ok); }
@@ -1168,7 +1188,8 @@ function handleKey(k, inInput) {
   var isAck = (k === 'a' || k === 'A');
   if (ui.modal) {
     var m = ui.modal;
-    if (k === 'ArrowDown' || k === 'ArrowUp' || k === 'ArrowLeft' || k === 'ArrowRight') { m.sel = (m.sel + 1) % m.options.length; return true; }
+    if (k === 'ArrowDown' || k === 'ArrowRight') { m.sel = (m.sel + 1) % m.options.length; return true; }
+    if (k === 'ArrowUp' || k === 'ArrowLeft') { m.sel = (m.sel + m.options.length - 1) % m.options.length; return true; }
     if (k === 'Escape') { ui.modal = null; return true; }
     if (k === 'Enter') { ui.modal = null; if (m.options[m.sel].fn) m.options[m.sel].fn(); else say('Cancelled. Nothing was changed.'); return true; }
     return true;
