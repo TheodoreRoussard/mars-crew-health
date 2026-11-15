@@ -25,7 +25,7 @@ c.openProfile('Red');c.setView('trends');c.render();
 const ordered=c.ui.items.map(item=>c.assess(red,c.indById(item.id))),rank={act:0,watch:1,nominal:2,nodata:3};
 for(let i=1;i<ordered.length;i++){const a=ordered[i-1],b=ordered[i];assert.ok(rank[a.status]<rank[b.status]||rank[a.status]===rank[b.status]&&a.ind.label.localeCompare(b.ind.label,'en')<=0);}
 assert.equal(c.ui.items[0].id,'bp');c.handleKey('Enter',false);c.render();assert.equal(c.ui.card.ids[c.ui.card.i],'bp');
-for(const view of ['body','hazards','trends']){
+for(const view of ['body','trends']){
  c.setView(view);c.render();const main=el.innerHTML.split('<main>')[1].split('</main>')[0];
  assert.ok(!main.includes('class="ico"'),view);assert.ok(el.innerHTML.split('</header>')[0].includes('class="ico"'));
  assert.ok(main.includes('text-status'));c.handleKey('Enter',false);c.render();

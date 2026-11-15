@@ -153,13 +153,17 @@ header.many .snd{margin-left:.5rem;font-size:.85rem}
 .veil{position:fixed;inset:0;background:#000c;display:flex;align-items:center;justify-content:center;z-index:5}
 .dialog{background:var(--panel);border:3px solid var(--focus);border-radius:.5rem;padding:1.2rem 1.5rem;width:min(40rem,92vw);display:flex;flex-direction:column;gap:.7rem;align-items:flex-start}
 .dialog .inp{font-size:1.6rem;width:100%;text-align:left}
-.body-svg{height:100%;max-height:100%;flex:none}
-.body-wrap{flex:.55;display:flex;align-items:center;justify-content:center;min-height:0}
-.reg{fill:var(--c);fill-opacity:.18;stroke:var(--c);stroke-width:3}
-.reg.on{stroke:#fff;stroke-width:6;fill-opacity:.4}
-.reg.suit{fill:none;stroke-width:2;stroke-dasharray:6 5}
-.reg.suit.on{fill:none;stroke-dasharray:none}
-.reg-t{fill:var(--text);font-size:14px;font-weight:700;text-anchor:middle;pointer-events:none;paint-order:stroke;stroke:var(--bg);stroke-width:5px;stroke-linejoin:round}
+.map{flex:1.15;min-width:0;display:flex;gap:.6rem}
+.map-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:.35rem}
+.tile{flex:1;min-height:0;display:flex;align-items:center;gap:.6rem;padding:.2rem .6rem;background:var(--panel);border:2px solid var(--line);border-radius:.4rem;overflow:hidden}
+.tile.st-watch,.tile.st-act{border-color:var(--c)}
+.tile.lit{background:var(--panel2);outline:2px solid var(--focus);outline-offset:1px}   /* outside the border, so a lit tile keeps its status colour */
+.tile .sys{flex:none;width:1.9rem;height:1.9rem;fill:none;stroke:var(--dim);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tile.lit .sys{stroke:var(--text)}
+.t-txt{min-width:0}
+.t-name{font-weight:700;font-size:.95rem}
+.t-word{font-size:.85rem;font-weight:700;color:var(--c);line-height:1.2}
+.tile.st-nominal .t-word,.tile.st-nodata .t-word{font-weight:500}
 #crash{position:fixed;inset:0;z-index:9;background:#000;color:var(--text);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;font-size:1.5rem;text-align:center;padding:2rem}
 #crash[hidden]{display:none}
 /* multi-line prose gets more leading; single-line rows and headlines stay compact to fit 720p */
@@ -840,7 +844,7 @@ function explainStatus(p, a) {
 
 /* Demo store exists only in memory. The real store and alarm state are restored on exit. */
 var DEMOS = [
-  {name: 'Routine check', guide: 'All recorded checks are nominal. Open Trends (5) to explore 30 days of readings.'},
+  {name: 'Routine check', guide: 'All recorded checks are nominal. Open Trends (4) to explore 30 days of readings.'},
   {name: 'Progressive change', guide: 'Body mass and grip strength have fallen relative to pre-flight references. Open an alert to see the calculation.'},
   {name: 'Radiation alert', guide: 'A dose spike triggers Act. Open the radiation alert, inspect the rule, then press A to silence the sound.'}
 ];
@@ -886,7 +890,7 @@ function icon(st) {
   else s += '<circle cx="12" cy="12" r="9.5" fill="none" stroke="' + c + '" stroke-width="2.2" stroke-dasharray="4 3"/><rect x="7" y="10.8" width="10" height="2.4" fill="' + c + '"/>';
   return s + '</svg>';
 }
-function textStatusView() { return ui.view === 'body' || ui.view === 'hazards' || ui.view === 'trends'; }
+function textStatusView() { return ui.view === 'body' || ui.view === 'trends'; }
 function trendHtml(t, textOnly) {
   if (!t) return 'Trend: not enough data yet';
   var rot = t === 'up' ? -40 : t === 'down' ? 40 : 0, word = t === 'up' ? 'Rising' : t === 'down' ? 'Falling' : 'Steady';
@@ -924,8 +928,8 @@ function playAct() {
 }
 
 /* ---------- UI state ---------- */
-var VIEWS = [{id: 'overview', name: 'Overview'}, {id: 'checkin', name: 'Check-in'}, {id: 'body', name: 'Body'},
-             {id: 'hazards', name: 'Hazards'}, {id: 'trends', name: 'Trends'}];
+var VIEWS = [{id: 'overview', name: 'Overview'}, {id: 'checkin', name: 'Check-in'}, {id: 'body', name: 'Body & hazards'},
+             {id: 'trends', name: 'Trends'}];
 var ui = {screen: 'home', cols: 1, activeId: null, view: 'overview', sel: 0, items: [], card: null, ci: null,
           modal: null, prompt: null, msg: null, pending: []};
 var acked = {}, announced = {}, actTimer = null, crashed = false;
@@ -1390,31 +1394,44 @@ function renderOverview(p, all) {
     '<div class="cols"><div class="list">' + rows + '</div><aside><div class="box"><h2>All ' + all.length + ' checks</h2>' + counts + '</div>' +
     '<div class="box"><h2>Backup</h2>Last backup file: <b>' + bk + '</b>' + (overdue ? '<br><b style="color:var(--watch)">Make a backup this week (Backup: key 0, then B).</b>' : '') + '</div></aside></div>';
 }
-function renderGrouped(p, all, groups, field, withBody) {
-  var items = [], html = '', regSt = {}, selGroup = null;
+/* One view for body systems and space hazards. Every check is listed once, grouped by body system; the tiles on the
+   left show the worst status of each system and of each hazard, and the selected check lights the two it belongs to. */
+var MAP_BODY = [
+  {id: 'head',    name: 'Head & eyes',     d: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'},
+  {id: 'heart',   name: 'Heart & lungs',   d: '<path d="M12 20.5s-8-5-8-10.7A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8 2.8c0 5.7-8 10.7-8 10.7z"/>'},
+  {id: 'muscles', name: 'Muscles & bones', d: '<path d="M8.2 5.2a2.6 2.6 0 1 0-3 3l10.6 10.6a2.6 2.6 0 1 0 3-3z"/><path d="M5.2 8.2a2.6 2.6 0 1 0 3-3M18.8 15.8a2.6 2.6 0 1 0-3 3"/>'},
+  {id: 'immune',  name: 'Immunity & gut',  d: '<path d="M12 3l8 3v6c0 4.8-3.4 8-8 9-4.6-1-8-4.2-8-9V6z"/><path d="M12 8.5v7M8.5 12h7"/>'},
+  {id: 'eva',     name: 'Suit work',       d: '<circle cx="12" cy="10.5" r="7.5"/><rect x="7.5" y="7.5" width="9" height="5.5" rx="2.5"/><path d="M6 21h12M9 17.5V21M15 17.5V21"/>'},
+  {id: 'mind',    name: 'Sleep & mood',    d: '<path d="M19.5 14.5A8 8 0 1 1 9.5 4.5a6.5 6.5 0 0 0 10 10z"/>'}
+];
+var MAP_HAZARD = [
+  {id: 'radiation', name: 'Radiation',      d: '<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3.2M12 18.3v3.2M2.5 12h3.2M18.3 12h3.2M5.3 5.3l2.3 2.3M16.4 16.4l2.3 2.3M5.3 18.7l2.3-2.3M16.4 7.6l2.3-2.3"/>'},
+  {id: 'closed',    name: 'Closed cabin',   d: '<rect x="3" y="6" width="18" height="12" rx="6"/><circle cx="12" cy="12" r="2.6"/>'},
+  {id: 'isolation', name: 'Isolation',      d: '<circle cx="12" cy="9" r="3"/><path d="M6.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="12" cy="12" r="10" stroke-dasharray="3 3.2"/>'},
+  {id: 'distance',  name: 'Far from Earth', d: '<circle cx="6.5" cy="16.5" r="4"/><circle cx="19" cy="5" r="2"/><path d="M10 13l6-5.5" stroke-dasharray="2 2.6"/>'},
+  {id: 'gravity',   name: 'Gravity',        d: '<path d="M12 3v11M7.5 9.5L12 14l4.5-4.5M4 20h16"/>'}
+];
+function mapGroupOf(ind) { return ind.region || (ind.hazard === 'isolation' ? 'mind' : 'cabin'); }
+function mapTile(t, list, lit) {
+  var w = worst(list), alerts = alertsOf(list), word = STATUS[w].word + (alerts.length ? ' · ' + alerts[0].ind.label.replace(/ \(.*\)$/, '') + (alerts.length > 1 ? ' +' + (alerts.length - 1) + ' more' : '') : '');
+  return '<div class="tile st-' + w + (lit ? ' lit' : '') + '"><svg class="sys" viewBox="0 0 24 24" aria-hidden="true">' + t.d + '</svg>' +
+    '<div class="t-txt"><div class="t-name">' + esc(t.name) + '</div><div class="t-word">' + esc(word) + '</div></div></div>';
+}
+function renderMap(p, all) {
+  var groups = REGIONS.concat([{id: 'mind', name: 'Sleep and mood'}, {id: 'cabin', name: 'Cabin and supplies'}]);
+  var items = [], html = '', selInd = null;
   groups.forEach(function (g) {
-    var list = all.filter(function (a) { return a.ind[field] === g.id; });
-    regSt[g.id] = worst(list);
+    var list = all.filter(function (a) { return mapGroupOf(a.ind) === g.id; });
+    if (!list.length) return;
     html += groupHtml(g.name, list, true);
-    list.forEach(function (a) { if (items.length === ui.sel) selGroup = g.id; html += rowHtml(a, items.length, false, true); items.push({kind: 'ind', id: a.ind.id}); });
+    list.forEach(function (a) { if (items.length === ui.sel) selInd = a.ind; html += rowHtml(a, items.length, false, true); items.push({kind: 'ind', id: a.ind.id}); });
   });
   if (ui.sel >= items.length) ui.sel = items.length - 1;
   ui.items = items;
-  var side = '';
-  if (withBody) {
-    var r = function (id, shape) { return shape.replace('<', '<' ) .replace('/>', ' class="reg st-' + regSt[id] + (selGroup === id ? ' on' : '') + '"/>'); };
-    side = '<div class="body-wrap"><svg class="body-svg" viewBox="0 0 200 420" aria-hidden="true">' +
-      r('head', '<circle cx="100" cy="42" r="32"/>') +
-      r('heart', '<rect x="58" y="84" width="84" height="82" rx="14"/>') +
-      r('immune', '<rect x="62" y="172" width="76" height="70" rx="12"/>') +
-      r('muscles', '<rect x="24" y="88" width="26" height="150" rx="13"/>') + r('muscles', '<rect x="150" y="88" width="26" height="150" rx="13"/>') +
-      r('muscles', '<rect x="62" y="250" width="34" height="162" rx="14"/>') + r('muscles', '<rect x="104" y="250" width="34" height="162" rx="14"/>') +
-      r('eva', '<rect x="5" y="3" width="190" height="414" rx="34"/>').replace('class="reg ', 'class="reg suit ') +   /* the suit: an outline around the whole body */
-      '<text class="reg-t" x="100" y="47">Head</text><text class="reg-t" x="100" y="130">Heart</text><text class="reg-t" x="100" y="212">Gut</text>' +
-      '<text class="reg-t" x="100" y="336">Muscles</text><text class="reg-t st-' + regSt.eva + '" x="30" y="26" style="fill:var(--c)">Suit</text>' +
-      '</svg></div>';
-  }
-  return '<div class="cols">' + side + '<div class="list">' + html + '</div></div>';
+  var body = '', haz = '';
+  MAP_BODY.forEach(function (t) { body += mapTile(t, all.filter(function (a) { return mapGroupOf(a.ind) === t.id; }), !!selInd && mapGroupOf(selInd) === t.id); });
+  MAP_HAZARD.forEach(function (t) { haz += mapTile(t, all.filter(function (a) { return a.ind.hazard === t.id; }), !!selInd && selInd.hazard === t.id); });
+  return '<div class="cols"><div class="map"><div class="map-col"><h2>Body</h2>' + body + '</div><div class="map-col"><h2>Space hazards</h2>' + haz + '</div></div><div class="list">' + html + '</div></div>';
 }
 function renderTrends(p, all) {
   var rank = {act:0, watch:1, nominal:2, nodata:3};
@@ -1487,8 +1504,7 @@ function renderMain() {
   } else {
     if (ui.view === 'overview') body = renderOverview(p, all);
     else if (ui.view === 'checkin') body = renderCheckin(p);
-    else if (ui.view === 'body') body = renderGrouped(p, all, REGIONS, 'region', true);
-    else if (ui.view === 'hazards') body = renderGrouped(p, all, HAZARDS, 'hazard', false);
+    else if (ui.view === 'body') body = renderMap(p, all);
     else body = renderTrends(p, all);
     foot = navKeys().concat(['|', ['↑ ↓', 'Move', 'ArrowDown'], ['Enter', ui.view === 'checkin' ? 'Answer' : 'Open', 'Enter'], ['Esc', 'Crew page', 'Escape']]);
   }
@@ -1626,7 +1642,7 @@ function handleKey(k, inInput) {
     if (k === 'Enter') { var it = ui.items[ui.sel]; ui.msg = null; if (it) runCommand(it); return true; }
     return false;
   }
-  if (/^[1-5]$/.test(k)) { setView(VIEWS[+k - 1].id); return true; }
+  if (/^[1-9]$/.test(k) && +k <= VIEWS.length) { setView(VIEWS[+k - 1].id); return true; }
   if (ui.card) {
     var cd = ui.card, len = cd.ids.length;
     if (k === 'Escape' || k === 'Backspace') { ui.card = null; return true; }

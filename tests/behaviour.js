@@ -72,12 +72,26 @@ a.key('3'); a.key('Tab'); ok(a.get('ui.activeId')===ANA&&a.get('ui.view')==='bod
 a.key('ShiftTab'); a.key('ShiftTab'); ok(a.get('ui.screen')==='home','Shift+Tab goes back through the tabs to the crew page');
 a.key('Tab'); a.key('Tab'); a.key('Tab'); a.key('0'); ok(a.get('ui.screen')==='home'&&a.get('ui.sel')===2,'key 0 leaves the profile and selects that astronaut on the crew page');
 a.key('Enter'); a.key('Escape'); ok(a.get('ui.screen')==='home','Esc at the top of a profile returns to the crew page');
-a.key('Enter'); a.key('5'); a.key('6'); ok(a.get('ui.view')==='trends','key 6 no longer opens a view inside a profile');
+a.key('Enter'); a.key('4'); ok(a.get('ui.view')==='trends','key 4 opens Trends'); a.key('5'); a.key('6'); ok(a.get('ui.view')==='trends','keys 5 and 6 no longer open a view inside a profile');
 a.key('0'); ok(a.html().includes('<kbd>B</kbd>Backup')&&a.html().includes('<kbd>S</kbd>Settings')&&a.html().includes('<kbd>D</kbd>Start demo'),'crew page footer keeps Backup, Settings and Start demo together');
 a.key('s'); ok(a.get('ui.screen')==='settings'&&a.html().includes('<h1>Settings</h1>')&&a.html().includes('Set today’s date')&&a.html().includes('Remove an astronaut')&&!a.html().includes('backup file'),'S on the crew page opens Settings, with no backup items');
 a.key('Escape'); ok(a.get('ui.screen')==='home','Esc leaves Settings');
 a.key('b'); ok(a.get('ui.screen')==='backup'&&a.html().includes('<h1>Backup</h1>')&&a.html().includes('Make a backup file: whole crew (5)')&&a.html().includes('Load a backup file')&&a.html().includes('last backup')&&!a.html().includes('Set today’s date'),'B on the crew page opens Backup, with only backup items');
 a.key('Escape'); ok(a.get('ui.screen')==='home','Esc leaves Backup');
+// 3c. Body & hazards: one view, every check once, tiles for 6 body systems and 5 hazards
+{ const d=mk(false); d.ctx.importText(sample); d.ctx.startSession(SAM); d.key('3');
+  const ids=d.get('ui.items.map(function(x){return x.id}).join()').split(','), all=d.get('INDICATORS.map(function(i){return i.id}).join()').split(',');
+  ok(d.get('ui.view')==='body'&&ids.length===all.length&&new Set(ids).size===ids.length&&all.every(i=>ids.includes(i)),'key 3: every check ('+all.length+') is listed exactly once');
+  ok(d.get('VIEWS.length')===4&&!d.html().includes('>Hazards<')&&d.html().includes('Body &amp; hazards'),'Hazards is no longer a separate view');
+  const tiles=d.html().split('class="tile ').length-1, h=d.html();
+  ok(tiles===11&&['Head &amp; eyes','Heart &amp; lungs','Muscles &amp; bones','Immunity &amp; gut','Suit work','Sleep &amp; mood','Radiation','Closed cabin','Isolation','Far from Earth','Gravity'].every(n=>h.includes('t-name">'+n)),'11 tiles: 6 body systems and 5 space hazards, each named');
+  ok(/tile st-act[^>]*>(?:(?!class="tile).)*Immunity &amp; gut(?:(?!class="tile).)*Act · Body temperature/.test(h)&&/tile st-act[^>]*>(?:(?!class="tile).)*Closed cabin/.test(h),'a tile on Act names its worst check; the same fever shows on its body tile and its hazard tile');
+  d.get('ui.sel='+ids.indexOf('hr')); d.ctx.render(); const lit=d.html().split('class="tile ').slice(1).filter(t=>/^st-\w+ lit/.test(t)).map(t=>t.match(/t-name">([^<]+)/)[1]);
+  ok(lit.join()==='Heart &amp; lungs,Gravity','selecting Resting heart rate lights its body tile and its hazard tile: '+lit.join());
+  d.get('ui.sel='+ids.indexOf('eva_air')); d.ctx.render(); const lit2=d.html().split('class="tile ').slice(1).filter(t=>/^st-\w+ lit/.test(t)).length;
+  ok(lit2===1,'a suit check lights only its body tile (it has no hazard)');
+  d.get('ui.sel=0'); d.key('Enter'); let seen=new Set(); for(let i=0;i<all.length;i++){ seen.add(d.get('ui.card.ids[ui.card.i]')); d.key('ArrowRight'); }
+  ok(seen.size===all.length,'Enter opens the card and the arrows page through all '+all.length+' checks'); }
 
 { const d=mk(false); d.ctx.importText(sample); d.ctx.render(); d.key('b');
   ok(d.get('ui.items.length')===2&&!d.html().includes('only ')&&d.get('ui.items[0].cmd')==='export','Backup offers one whole-crew backup and Load, no per-astronaut backup');
@@ -133,7 +147,7 @@ const before=JSON.stringify(a.P(SAM)); a.key('Enter'); a.key('2'); a.key('Enter'
   ok(d.ctx.evaluate(I('rad'),3,null).word==='Elevated'&&d.ctx.evaluate(I('rad'),1,null).status==='nominal','rad: no usual level yet -> fixed limits');
   let c=d.ctx.cumulative(P(),I('rad')); const man=P().entries.reduce((x,e)=>x+e.values.rad,0); ok(Math.abs(c.sum-man)<1e-9&&c.days===30&&c.missing===0,'rad: mission total = sum of daily doses');
   delete P().entries[10].values.rad; c=d.ctx.cumulative(P(),I('rad')); ok(c.days===29&&c.missing===1,'rad: unmeasured day is counted as missing, not as zero');
-  d.ctx.startSession(SAM); d.key('4'); d.key('Enter'); ok(d.html().includes('Mission total:')&&d.html().includes('1 days not measured')&&d.html().includes('Your usual level')&&d.html().includes('NASA reference, ISS dosimeter 2014'),'rad card shows usual level, mission total and the NASA reference'); }
+  d.ctx.startSession(SAM); d.key('3'); d.get('ui.sel='+d.get('ui.items.findIndex(function(x){return x.id==="rad"})')); d.key('Enter'); ok(d.html().includes('Mission total:')&&d.html().includes('1 days not measured')&&d.html().includes('Your usual level')&&d.html().includes('NASA reference, ISS dosimeter 2014'),'rad card shows usual level, mission total and the NASA reference'); }
 
 // 7. spacewalks as events
 { const d=mk(false); d.ctx.importText(sample); const pid=SAM, P=()=>d.P(pid), A=id=>d.A(pid,id), I=d.I;
