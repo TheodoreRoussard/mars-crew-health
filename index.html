@@ -43,6 +43,22 @@ header.many .dim{margin-left:.5rem;font-size:.85rem}
 .cc-foot{margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:.2em .9em;color:var(--dim);font-size:.9em}
 .cc-foot .sp{flex:1}
 .cc-n{display:inline-flex;align-items:center;gap:.3em;color:var(--c);font-weight:700}
+/* every Act alert gets its own line: label in white, word in red, red icon */
+.cc-acts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.2em}
+.cc-acts li{display:flex;align-items:flex-start;gap:.45em;font-size:1.15em;line-height:1.25;color:var(--act);font-weight:700}
+.cc-acts li b{color:var(--text)}
+.cc-acts .ico{width:1.15em;height:1.15em;margin-top:.05em}
+.cc-acts.many li{font-size:1em}
+/* fitCards() adds these one by one until the card stops overflowing: secondary text goes first, Act alerts always stay */
+.crew-card.fit1 .cc-role,.crew-card.fit1 .cc-who{display:none}
+.crew-card.fit2 .cc-foot{display:none}
+.crew-card.fit3 .cc-do{display:none}
+.crew-card.fit4 .cc-acts{flex-direction:row;flex-wrap:wrap;gap:.15em 1em}
+.crew-card.fit4 .cc-acts .w{display:none}
+.crew-card.fit5 .cc-top .ico{width:2em;height:2em}
+.crew-card.fit5 .cc-status{font-size:1.4em}
+.crew-card.fit5 .cc-acts .p{display:none}
+.crew-card.fit6 .cc-status{display:none}
 .sub{color:var(--dim);font-size:1rem;line-height:1.45}
 .r-state{flex:.7;color:var(--dim);white-space:nowrap}
 .r-state.todo{color:var(--text);font-weight:800}
@@ -1240,14 +1256,17 @@ function renderHome() {
   list.forEach(function (p, i) {
     var all = assessAll(p), w = worst(all), al = alertsOf(all), wrong = clockWrong(p), due = wrong ? 0 : dueSteps(p).length;
     var missing = all.filter(function (a) { return a.status === 'nodata'; }).length, top = al[0], act = top ? actionFor(top) : null;
+    var acts = al.filter(function (a) { return a.status === 'act'; }), nWatch = al.length - acts.length;
     var title = w === 'act' ? 'ACT NOW' : w === 'watch' ? 'KEEP WATCH' : w === 'nominal' ? 'NO ALERTS' : 'NO DATA', counts = '';
-    ['act', 'watch', 'nodata'].forEach(function (st) {
+    ['watch', 'nodata'].forEach(function (st) {               /* Act is listed in full above, never only as a count */
       var k = all.filter(function (a) { return a.status === st; }).length;
       if (k) counts += '<span class="cc-n st-' + st + '">' + icon(st) + k + ' ' + STATUS[st].word + '</span>';
     });
     html += '<div class="crew-card st-' + w + (i === ui.sel ? ' sel' : '') + '" data-click="pick:' + i + '">' +
       '<div class="cc-top">' + icon(w) + '<div class="cc-id"><div class="cc-name">' + esc(p.name) + '</div><div class="cc-role">' + esc(p.role) + '</div></div><div class="cc-status">' + title + '</div></div>' +
-      (top ? '<div class="cc-alert">' + esc(top.ind.label + ': ' + top.word) + (al.length > 1 ? ' (+' + (al.length - 1) + ' more)' : '') + '</div><div class="cc-do">Do now: ' + esc(act.t) + '</div><div class="cc-who">Who handles it: ' + OWNERS[act.who] + '</div>'
+      (acts.length ? '<ul class="cc-acts' + (acts.length > 3 ? ' many' : '') + '">' + acts.map(function (a) { return '<li>' + icon('act') + '<span><b>' + esc(a.ind.label.replace(/ \(.*\)$/, '')) + '<span class="p">' + esc((a.ind.label.match(/ \(.*\)$/) || [''])[0]) + '</span></b><span class="w">: ' + esc(a.word) + '</span></span></li>'; }).join('') + '</ul>' +
+          '<div class="cc-do">Do now: ' + esc(act.t) + '</div>' + (acts.length === 1 ? '<div class="cc-who">Who handles it: ' + OWNERS[act.who] + '</div>' : '')
+      : top ? '<div class="cc-alert">' + esc(top.ind.label + ': ' + top.word) + (al.length > 1 ? ' (+' + (al.length - 1) + ' more)' : '') + '</div><div class="cc-do">Do now: ' + esc(act.t) + '</div><div class="cc-who">Who handles it: ' + OWNERS[act.who] + '</div>'
            : '<div class="cc-alert">' + (w === 'nominal' ? 'No alerts in recorded checks.' : wrong ? 'The date on this device is wrong.' : missing + ' of ' + all.length + ' checks have no data.') + '</div><div class="cc-do">' + (w === 'nominal' ? (due ? 'Do today’s check-in.' : 'Nothing to do.') : wrong ? 'Set today’s date in Settings.' : 'Do the daily check-in.') + '</div>') +
       '<div class="cc-foot">' + counts + '<span class="sp"></span><span>' + (wrong ? '' : due ? 'Check-in: ' + due + ' to do' : 'Check-in done') + '</span></div></div>';
   });
@@ -1442,9 +1461,17 @@ function render() {
     var f = app.querySelector('[data-autofocus]');
     if (f) { f.focus(); try { f.setSelectionRange(f.value.length, f.value.length); } catch (e) {} }
     else if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    fitCards();
     var s = app.querySelector('.list .row.sel');
     if (s && s.scrollIntoView) s.scrollIntoView({block: 'nearest'});
   } catch (e) { crash(e); }
+}
+/* A crew card never hides an Act alert: if its content overflows, drop the least useful parts step by step. */
+function fitCards() {
+  if (!app.querySelectorAll) return;
+  var cards = app.querySelectorAll('.crew-card');
+  for (var i = 0; i < cards.length; i++)
+    for (var lv = 1; lv <= 6 && cards[i].scrollHeight > cards[i].clientHeight + 1; lv++) cards[i].classList.add('fit' + lv);
 }
 function crash(e) {
   crashed = true; stopActLoop();
