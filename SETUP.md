@@ -7,7 +7,7 @@ Print this page and keep it next to the screen. All keys are also shown on scree
 1. Copy `index.html` to the device and open it in Chromium. Press `F11` for full screen.
 2. In Chromium settings, under Downloads, turn on **"Ask where to save each file"**, so backups can go straight to the USB stick.
 3. The first screen is the **crew page**. Press `S` for Settings.
-4. Choose **Add a new astronaut**, type the name, press `Enter`. Repeat for each crew member.
+4. Choose **Add a new astronaut**, type the name, press `Enter`. The optional personal-baseline form opens: enter known references with their date and source, or choose Cancel / skip. Repeat for each crew member.
 5. Test both sounds in Settings. Set the speaker volume so they are heard across the room.
 6. Check the date at the top right. If it is wrong, choose **Set today's date**. Repeat after every power cut: the Raspberry Pi has no battery clock.
 
@@ -57,3 +57,13 @@ Keep a copy of `index.html` on both sticks: the whole tool is that one file. Eac
 - Loading a backup replaces the astronauts it contains. The tool lists them and asks first; the default answer is Cancel. A backup file always holds the whole crew. Older one-astronaut backup files can still be loaded.
 - To remove an astronaut from this device (crew change, test profile), press `S` and choose **Remove an astronaut**. The tool asks twice and the default answer is Cancel. Make a backup first: removing erases that person's measurements on this device.
 - Do not clear Chromium's browsing data and do not use an incognito window: saved measurements would be lost. Backup files are not affected.
+
+
+## 6. Demo and personal baselines
+
+- On the crew page, press **D** to choose Routine check, Progressive change, or Radiation alert. No file import is needed. The fictional demo workspace is temporary: changes are not written to browser storage and backup export is disabled.
+- In a demo, press **D** to switch scenarios or **X** to restore your saved crew. Reloading also returns to saved data.
+- Inside a profile, press **B** to enter heart-rate, body-mass, and grip-strength references. Enter the measurement date and source/context. Blank fields retain existing references; Cancel / skip leaves all references unchanged.
+- Changed references update statuses immediately. Their date and source survive JSON backup/export and import. Existing backups without this metadata remain supported.
+- Without an explicit baseline, the first 3–7 readings provide a provisional reference. This is not a validated pre-flight baseline.
+- Open an indicator card to read **Why this status?**: the value, applicable band, and personal or rolling reference when used. All rules and actions remain illustrative.
