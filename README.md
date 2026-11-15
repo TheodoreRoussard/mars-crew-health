@@ -6,6 +6,16 @@ Built for the **2026 NASA Space Apps Challenge**, addressing [Create Health Moni
 
 Our goal is simple: help a crew member without medical training answer **“Am I OK, and what should I do now?”** at a glance. Crew Health Monitor brings daily measurements, symptoms, personal baselines, trends, and suggested next steps into one interface that works without an internet connection.
 
+**Try it now:** [mars-crew-health.vercel.app](https://mars-crew-health.vercel.app) (no login, no install), then press **D** for a demo scenario.
+
+| | |
+| --- | --- |
+| **Challenge** | [Create Health Monitoring Software for Astronauts on Space Missions](https://www.spaceappschallenge.org/2026/challenges/health-monitoring-software/) |
+| **Live app** | https://mars-crew-health.vercel.app |
+| **Source code** | https://github.com/TheodoreRoussard/mars-crew-health |
+| **NASA data** | ISS radiation dosimetry (2014) and the US/Russian spacewalk log (1965–2013): see [NASA data used](#nasa-data-used) |
+| **Use of AI** | Disclosed in [Use of AI tools](#use-of-ai-tools) |
+
 > **Hackathon prototype:** the thresholds and suggested actions are illustrative and have not been clinically validated. Demonstration profiles are not real astronaut medical records. This project supports a demonstration of crew health monitoring; it is not a medical device or an operational flight system.
 
 ## Why this project?
@@ -16,7 +26,7 @@ The interface puts plain-language status and the next action before raw numbers.
 
 ## Try the demo
 
-No installation, package manager, build step, server, or API key is required.
+No installation, package manager, build step, server, or API key is required. The quickest way is the [live app](https://mars-crew-health.vercel.app); it is the same `index.html` as in this repository and runs entirely in your browser. To run it locally instead:
 
 1. Download the repository using **Code → Download ZIP**, then extract it. Alternatively:
 
@@ -143,15 +153,98 @@ The app includes a backup reminder and a date-offset setting for devices with an
 
 See [SETUP.md](SETUP.md) for the full setup, sound testing, backup rotation, and recovery procedure.
 
-## NASA research and current limitations
+## NASA data used
 
-[DATA-SOURCES.md](DATA-SOURCES.md) documents the team's exploration of NASA datasets, including ISS radiation dosimetry and historical EVA records. It is currently written in French and separates reviewed datasets, interpretations, and possible improvements.
+We searched the [NASA open data catalogue](https://data.nasa.gov/) (about 60 keyword searches, one or more per risk and hazard in the challenge brief, on 14 November 2026) and analysed two datasets in depth. Both directly shaped how the app judges a reading.
 
-The application does not fetch NASA datasets over the network, and its thresholds are **not NASA-validated clinical limits**. The built-in demos use invented values. The separate sample crew combines fictional health readings with historical ISS radiation values and EVA durations, as documented in its generator; these values can be loaded through the sample file, but they are not an astronaut medical record.
+### ISS radiation dosimetry (Tissue Equivalent Proportional Counter, 2014)
 
-Current limitations include manual data entry, systolic-only blood pressure, and no authentication or encrypted storage. Clinical rules and suggested actions require specialist review before any real-world use.
+| Finding | Value |
+| --- | --- |
+| Days analysed (at least 80 % coverage) | 352 |
+| Median daily dose equivalent, usual location | 0.68 mSv/day (5th–95th percentile 0.62–0.75) |
+| Day-to-day variation at a fixed location | about 6 % of the mean (median change 0.02 mSv) |
+| Same module, other location (May 2014) | 0.83 mSv/day, about 20 % higher |
+| Share of dose from the radiation belts / galactic cosmic rays | 52 % / 48 % (7 % / 93 % of the time) |
 
-Potential next steps include recording sensor location and measurement context, supporting multiple readings per day, and validating rules with specialists. Radiation cumulative-dose tracking and event-based EVA follow-ups are already implemented.
+**How it is used:**
+
+- Because the background dose is so stable at a fixed location, a jump away from your *own* usual level is the real signal. The radiation rule therefore compares today's dose with the median of the previous 7 days, keeps a fixed storm limit as a fallback, and keeps an absolute backstop.
+- The radiation card shows the NASA reference range and the mission's running total.
+- The 20 % location effect is why recording where each measurement is taken is our first next step.
+- The four-person sample crew (`sample-data.json`) replays the 30 real daily doses from 16 October to 14 November 2014.
+
+These values come from low Earth orbit. On the way to Mars there are no radiation belts and no magnetic shielding, so the background level will differ, but the method (a stable personal baseline, alerting on the departure from it) still applies.
+
+### Extravehicular activity (EVA) log, United States and Russia, 1965–2013
+
+| Finding | Value |
+| --- | --- |
+| Spacewalks logged | 375 (368 with a recorded duration) |
+| Duration | median 6 h; 90 % under 7 h 21 min; longest 8 h 56 min |
+| Crew issues reported in the notes | suit CO2 (9 sorties), ammonia contamination (about 6), fogging or eye irritation (6), damaged gloves (4), fatigue or overheating (2), water in the helmet (1) |
+
+**How it is used:**
+
+- NASA records spacewalks as one line per sortie, so the app logs them as **events**: “suit work since the last check-in?”, then the duration and three symptom questions, repeated daily until the symptom clears.
+- The follow-up questions (breathing and heat, eyes and skin, hands and shoulders) target the problems the log reports most often.
+- The spacewalk-duration card shows the NASA reference distribution.
+- The sample crew uses two real sortie durations: EVA 227 (30 August 2012, 8.3 h) and EVA 231 (9 July 2013, 6.1 h).
+
+### Other NASA datasets reviewed
+
+The catalogue also holds Curiosity's radiation measurements on Mars (MSL RAD), ISS microbial surveys, crew immune and gene-expression studies, the MARS500 isolation study and bed-rest studies. They justify why indicators such as immunity, isolation and fitness are tracked, but they come from lab samples analysed on the ground, so they do not give thresholds that can be read on board. Astronaut clinical measurements (blood pressure, pulse, mass, vision, sleep) are not on the open portal; NASA's [Life Sciences Portal](https://nlsp.nasa.gov) points to the archive that holds them.
+
+The full working notes are in [DATA-SOURCES.md](DATA-SOURCES.md) (in French).
+
+## Limitations
+
+The application does not fetch NASA datasets over the network, and its thresholds are **not NASA-validated clinical limits**. Flight surgeons must replace them; they live in one table at the top of the script. The built-in demos use invented values. The sample crew combines fictional health readings with the historical ISS radiation values and EVA durations described above; it is not an astronaut medical record.
+
+Other current limitations:
+
+- Data entry is manual.
+- Blood pressure records the systolic value only.
+- There is no authentication or encrypted storage.
+- Clinical rules and suggested actions require specialist review before any real-world use.
+
+## Next steps
+
+- Record the sensor location and measurement context with each reading (motivated by the 20 % location effect in the ISS data).
+- Accept readings directly from sensors.
+- Validate the rules with flight surgeons, using NASA's life-sciences data archive.
+- Track cabin oxygen alongside blood oxygen and cabin CO2.
+
+Radiation cumulative-dose tracking, event-based spacewalk follow-ups and multiple readings per day are already implemented.
+
+## References and third-party resources
+
+The application contains **no third-party code, libraries, fonts, images or sounds**. All icons, the body illustration and the charts are inline SVG made for this project, and alarm sounds are generated with the Web Audio API.
+
+Data and documents used:
+
+| Resource | Used for |
+| --- | --- |
+| NASA, ISS Tissue Equivalent Proportional Counter dose data, 2014 ([data.nasa.gov](https://data.nasa.gov/)) | Radiation rule, reference line, sample crew doses ([extract](tools/nasa-iss-tepc-daily-dose-2014.json)) |
+| NASA, Extravehicular Activity (EVA) log, US and Russia, 1965–2013 ([data.nasa.gov](https://data.nasa.gov/)) | Event-based spacewalk follow-up, duration reference, sample sorties |
+| NASA, [Natural and Induced Environments (Human Integration Design Handbook, vol. 2)](https://www.nasa.gov/reference/6-0-natural-and-induced-environments-vol-2/) | Radiation sheltering guidance |
+| NASA, [Life Sciences Portal](https://nlsp.nasa.gov) | Pointer to astronaut clinical data for future validation |
+| NHS: [fever in adults](https://www.nhs.uk/symptoms/fever-in-adults/), [dehydration](https://www.nhs.uk/conditions/dehydration/), [dizziness](https://www.nhs.uk/symptoms/dizziness/), [cuts and grazes](https://www.nhs.uk/conditions/cuts-and-grazes/), [vision loss](https://www.nhs.uk/conditions/vision-loss/) | Wording of suggested first actions |
+| St John Ambulance, [hypothermia](https://www.sja.org.uk/first-aid-advice/hypothermia/); NSW Health, [hypothermia](https://www.health.nsw.gov.au/environment/factsheets/Pages/hypothermia.aspx) | Low-temperature guidance |
+| American Heart Association, [monitoring your blood pressure at home](https://www.heart.org/en/health-topics/high-blood-pressure/understanding-blood-pressure-readings/monitoring-your-blood-pressure-at-home) | Blood pressure re-measurement guidance |
+
+See [ACTION-GUIDANCE.md](ACTION-GUIDANCE.md) for how each source maps to an action.
+
+## Use of AI tools
+
+In line with the NASA Space Apps rules on AI (“Super Intelligence”) tools:
+
+- **Code, tests and documentation:** the team used Claude (Anthropic), through Claude Code, as a coding assistant to write, review and refactor parts of `index.html`, the test scripts in `tests/` and the Markdown documentation. Commits produced with its help carry a `Co-Authored-By: Claude` trailer in the Git history.
+- **Presentation:** the slide deck was drafted with the same assistant. Its screenshots are real captures of the app.
+- **Data:** no data was generated by AI. NASA values come from the datasets listed above, and the fictional demo and sample health readings are produced by deterministic code (`tools/make-sample.js`, `demoProfile()` in `index.html`).
+- **Images, video and audio:** none were generated by AI.
+
+The team reviewed, tested (`npm test`) and takes responsibility for all AI-assisted content.
 
 ## Repository guide
 
@@ -161,7 +254,9 @@ Potential next steps include recording sensor location and measurement context, 
 | [sample-data.json](sample-data.json) | Four-person example crew with documented historical radiation and EVA inputs |
 | [SETUP.md](SETUP.md) | Setup, daily use, backups, and recovery |
 | [RATIONALE.md](RATIONALE.md) | Design decisions and risk coverage |
-| [DATA-SOURCES.md](DATA-SOURCES.md) | NASA dataset research and proposed improvements |
+| [ACTION-GUIDANCE.md](ACTION-GUIDANCE.md) | Sources behind each suggested action |
+| [DATA-SOURCES.md](DATA-SOURCES.md) | Full NASA dataset working notes (in French; English summary in [NASA data used](#nasa-data-used)) |
+| [tools/](tools/) | Sample-crew generator and the NASA ISS dose extract it uses |
 
 ## Development checks
 
