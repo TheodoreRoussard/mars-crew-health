@@ -57,7 +57,7 @@ a.key('ShiftTab'); a.key('ShiftTab'); ok(a.get('ui.screen')==='home','Shift+Tab 
 a.key('Tab'); a.key('Tab'); a.key('Tab'); a.key('0'); ok(a.get('ui.screen')==='home'&&a.get('ui.sel')===2,'key 0 leaves the profile and selects that astronaut on the crew page');
 a.key('Enter'); a.key('Escape'); ok(a.get('ui.screen')==='home','Esc at the top of a profile returns to the crew page');
 a.key('Enter'); a.key('5'); a.key('6'); ok(a.get('ui.view')==='trends','key 6 no longer opens a view inside a profile');
-a.key('0'); ok(a.html().includes('<kbd>B</kbd>Backup')&&a.html().includes('<kbd>S</kbd>Settings'),'crew page footer shows both B Backup and S Settings');
+a.key('0'); ok(a.html().includes('<kbd>B</kbd>Backup')&&a.html().includes('<kbd>S</kbd>Settings')&&a.html().includes('<kbd>D</kbd>Start demo'),'crew page footer keeps Backup, Settings and Start demo together');
 a.key('s'); ok(a.get('ui.screen')==='settings'&&a.html().includes('<h1>Settings</h1>')&&a.html().includes('Set today’s date')&&a.html().includes('Remove an astronaut')&&!a.html().includes('backup file'),'S on the crew page opens Settings, with no backup items');
 a.key('Escape'); ok(a.get('ui.screen')==='home','Esc leaves Settings');
 a.key('b'); ok(a.get('ui.screen')==='backup'&&a.html().includes('<h1>Backup</h1>')&&a.html().includes('Make a backup file: whole crew (5)')&&a.html().includes('Load a backup file')&&a.html().includes('last backup')&&!a.html().includes('Set today’s date'),'B on the crew page opens Backup, with only backup items');

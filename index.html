@@ -1109,7 +1109,7 @@ function renderHome() {
   var body = n ? '<div class="crew-grid c' + cols + '" style="grid-template-columns:repeat(' + cols + ',1fr);grid-template-rows:repeat(' + rows + ',1fr)">' + html + '</div>'
     : '<div class="center"><div class="title-xl">CREW HEALTH MONITOR</div><div class="lead">No astronaut on this device yet.</div><div class="how">Press <kbd>Enter</kbd> to add one, or <kbd>B</kbd> to load a backup file.</div></div>';
   return topBar() + alertBar(null) + noticesHtml() + '<main>' + body + msgHtml() + '</main><footer>' +
-    keysHtml((n ? [['← → ↑ ↓', 'Choose astronaut', 'ArrowRight'], ['Enter', 'Open', 'Enter']] : [['Enter', 'Add an astronaut', 'Enter']]).concat([['S', 'Settings', 's'], ['D', 'Start demo', 'd'], '|']).concat(ui.pending.length ? [['A', 'Acknowledge alarm', 'a']] : [])) + '</footer>';
+    keysHtml((n ? [['← → ↑ ↓', 'Choose astronaut', 'ArrowRight'], ['Enter', 'Open', 'Enter']] : [['Enter', 'Add an astronaut', 'Enter']]).concat([['B', 'Backup', 'b'], ['S', 'Settings', 's'], ['D', 'Start demo', 'd'], '|']).concat(ui.pending.length ? [['A', 'Acknowledge alarm', 'a']] : [])) + '</footer>';
 }
 /* Backup and Settings are two screens: B for files that leave the device, S for everything else. */
 function backupItems() {
