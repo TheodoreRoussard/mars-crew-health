@@ -17,7 +17,8 @@ function mk(lsThrows){
   ctx.window=ctx; ctx.window.addEventListener=()=>{};
   vm.createContext(ctx); vm.runInContext(code.replace(/^'use strict';/,''),ctx);
   const key=k=>listeners.keydown(k==='ShiftTab'?{key:'Tab',shiftKey:true,target:{tagName:'BODY'},preventDefault(){}}:{key:k,target:{tagName:'BODY'},preventDefault(){}});
-  const o={ctx,els,inputs,key,mem,beeps,tick:()=>tick&&tick(),get:x=>vm.runInContext(x,ctx)};
+  const click=cmd=>listeners.click({target:{getAttribute:name=>name==='data-click'?cmd:null}});
+  const o={ctx,els,inputs,key,click,mem,beeps,tick:()=>tick&&tick(),get:x=>vm.runInContext(x,ctx)};
   o.html=()=>els.app.innerHTML; o.P=id=>o.get('store.profiles["'+id+'"]'); o.I=id=>ctx.indById(id); o.A=(pid,id)=>ctx.assess(o.P(pid),o.I(id));
   return o;
 }
@@ -27,6 +28,7 @@ const SAM='sample-okafor',ANA='sample-ruiz',KEN='sample-mori',LENA='sample-fisch
 // 1. empty device, unsafe imports
 let a=mk(false);
 ok(a.html().includes('No astronaut on this device yet')&&a.html().includes('Sound is off'),'empty crew page, sound-off notice');
+ok(!a.html().includes('data-click="key:Tab"'),'single Crew tab has no Tab Next hint');
 for(const bad of ['{oops','null','[]','{"app":"x"}',JSON.stringify({app:APPID,version:3,profile:{}}),JSON.stringify({app:APPID,version:1,profiles:[]}),JSON.stringify({app:APPID,version:1,profile:{name:'',entries:[]}}),JSON.stringify({app:APPID,version:1,profile:{name:'Z',entries:'no'}}),JSON.stringify({app:APPID,version:1,profiles:[{name:'Good',entries:[]},{name:'',entries:[]}]})]) a.ctx.importText(bad);
 ok(Object.keys(a.get('store.profiles')).length===0&&!a.get('crashed'),'9 malformed files rejected (one bad astronaut rejects the whole file), nothing stored');
 a.ctx.importText(JSON.stringify({app:APPID,version:1,profile:{id:'h1',name:'<img src=x onerror=1>',baselines:{hr:'x',mass:1e9},entries:[{date:'2026-02-31',values:{hr:60}},{date:'2026-11-14',values:{hr:'60',spo2:300,temp:null,mood:7,bp:120}},null,5]}}));
@@ -46,10 +48,12 @@ ok(a.html().includes('grid-template-columns:repeat(2,1fr);grid-template-rows:rep
 ok(a.get('ui.pending.length')>0&&a.beeps.length===0&&a.html().includes('alert-live alert-act')&&!a.html().includes('class="alarm'),'before any key: affected crew card is marked, no banner and no sound yet');
 a.key('ArrowRight'); ok(a.beeps.length===6&&a.beeps.every(b=>b.type==='square')&&a.html().includes('Sound on'),'first key press turns sound on: Act = 6 square pulses');
 { const m=mk(false); m.ctx.importText(sample); m.ctx.render();
-  ok(m.html().includes('class="snd off" data-click="key:m"')&&m.html().includes('Sound off'),'header has a Sound button, off before the first key');
-  m.key('m'); ok(m.get('audio.ok')&&!m.get('audio.muted')&&m.beeps.length===6&&m.html().includes('Sound on'),'M as the very first key turns the sound on (it does not mute it straight away)');
-  m.key('m'); m.tick(); ok(m.get('audio.muted')&&m.beeps.length===6&&m.html().includes('Sound off')&&m.html().includes('Press M to turn the sound back on')&&m.get('ui.pending.length')>0,'M mutes: the 8 s repeat is silent, alerts stay pending and a notice says how to turn it back on');
-  m.key('M'); ok(!m.get('audio.muted')&&m.beeps.length===12&&m.html().includes('Sound on'),'M again turns the sound on and the pending Act alarm sounds at once');
+  ok(m.html().includes('class="snd off" data-click="sound-toggle"')&&!m.html().includes('<kbd>M</kbd>')&&m.html().includes('Sound off'),'header has a Sound button without an M shortcut');
+  m.click('sound-toggle'); ok(m.get('audio.ok')&&!m.get('audio.muted')&&m.beeps.length===6&&m.html().includes('Sound on'),'first sound-button click turns sound on without immediately muting');
+  m.key('m');m.key('M');ok(!m.get('audio.muted'),'m and M no longer toggle sound');
+  m.click('sound-toggle'); m.tick(); ok(m.get('audio.muted')&&m.beeps.length===6&&m.html().includes('Sound off')&&m.html().includes('Click the sound button')&&m.get('ui.pending.length')>0,'sound button mutes repeat, keeps alerts pending and explains how to unmute');
+  m.key('m');m.key('M');ok(m.get('audio.muted'),'m and M do not unmute sound');
+  m.click('sound-toggle'); ok(!m.get('audio.muted')&&m.beeps.length===12&&m.html().includes('Sound on'),'sound button unmutes and pending Act alarm sounds at once');
   m.ctx.askNewAstronaut(); m.ctx.handleKey('m',true); ok(!m.get('audio.muted'),'typing m in a text field does not mute'); }
 a.tick(); ok(a.beeps.length===12,'Act repeats on the 8 s timer');
 a.key('Enter'); ok(a.get('ui.screen')==='main'&&a.get('ui.activeId')===ANA&&a.get('ui.pending').some(x=>x.p.id===SAM)&&!a.html().includes('class="alarm'),'inside another profile crew alarms remain pending without a banner');
@@ -168,6 +172,7 @@ for(let i=0;i<20000;i++){ c.inputs['ci-inp']={value:vals[Math.floor(rnd()*vals.l
 ok(!c.get('crashed'),'20000 random keys, '+Object.keys(seen).length+' distinct screen states reached: no crash'); ok(!/undefined|NaN|\[object/.test(c.html()),'no "undefined"/"NaN" leaked into the page');
 
 console.log(process.exitCode?'\nSOME CHECKS FAILED':'\nAll '+passed+' behaviour checks passed');
+
 
 
 

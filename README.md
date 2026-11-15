@@ -79,7 +79,7 @@ Measurements are entered manually. The prototype does not connect directly to se
 | **Tab / Shift+Tab** | Next / previous crew tab |
 | **B** | On the crew page: Backup (make or load a backup file). Inside a profile: personal baselines |
 | **S** | Settings from the crew page: profiles, date, and sound test |
-| **M** | Sound on / off (also the button in the top bar) |
+| **Sound button** | Click the button in the top bar to turn sound on / off |
 | **D** | Start demo from the crew page; switch scenario during a demo |
 | **X** | Exit demo and restore the saved crew |
 | **↑ / ↓** | Choose an item |
@@ -175,5 +175,6 @@ npm test
 The checks cover offline packaging, indicator rules, sample reproducibility, crew navigation, alarms, keyboard input, demo isolation, baseline validation/provenance, and status explanations. Browser rendering still needs a manual check in Chromium, particularly at the target screen size.
 
 Developed as a participant project for NASA Space Apps Challenge 2026.
+
 
 

@@ -1283,12 +1283,12 @@ function topBar() {
     var w = worst(assessAll(p)), on = ui.screen === 'main' && ui.activeId === p.id;
     h += '<span class="tab st-' + w + (on ? ' on' : '') + '" data-click="open:' + p.id + '" title="' + STATUS[w].word + '">' + icon(w) + '<span class="tab-n">' + esc(p.name) + '</span>' + (on ? '<span class="tab-w">' + STATUS[w].word + '</span>' : '') + '</span>';
   });
-  return h + '<span class="hint" data-click="key:Tab"><kbd>Tab</kbd>Next</span><span class="sp"></span><span class="dim">' + niceDate(todayNum()) + '</span>' + '<button type="button" class="snd' + (audio.ok && !audio.muted ? '' : ' off') + '" data-click="key:m"><kbd>M</kbd>' + (audio.ok ? (audio.muted ? 'Sound off' : 'Sound on') : audio.tried ? 'No sound' : 'Sound off') + '</button></header>';
+  return h + (crew().length ? '<span class="hint" data-click="key:Tab"><kbd>Tab</kbd>Next</span>' : '') + '<span class="sp"></span><span class="dim">' + niceDate(todayNum()) + '</span>' + '<button type="button" class="snd' + (audio.ok && !audio.muted ? '' : ' off') + '" data-click="sound-toggle">' + (audio.ok ? (audio.muted ? 'Sound off' : 'Sound on') : audio.tried ? 'No sound' : 'Sound off') + '</button></header>';
 }
 function noticesHtml() {
   var notes = [], h = '<div class="notice">Prototype: illustrative rules and actions; not clinically validated.</div>';
   if (demoSession) h += '<div class="notice demo-note"><b>DEMO · Fictional data · Changes are temporary.</b> ' + esc(demoSession.guide) + ' <button type="button" data-click="key:d">D · Change scenario</button> <button type="button" data-click="key:x">X · Exit demo</button></div>';
-  if (audio.ok && audio.muted) notes.push('Sound is off: alarms are shown on screen only. Press M to turn the sound back on.');
+  if (audio.ok && audio.muted) notes.push('Sound is off: alarms are shown on screen only. Click the sound button to turn it back on.');
   if (!audio.ok) notes.push(audio.tried ? 'Sound is not available on this device. Alerts are shown on screen only.' : 'Sound is off. Press any key to turn the alarm sound on.');
   if (saveFailed) notes.push('This device is NOT saving. Make a backup file now (Backup: key 0, then B) and switch to the spare device.');
   if (loadWarning) notes.push(loadWarning);
@@ -1553,7 +1553,6 @@ function runCommand(it) {
 }
 function handleKey(k, inInput) {
   var isAck = (k === 'a' || k === 'A');
-  if ((k === 'm' || k === 'M') && !inInput && !ui.prompt) { toggleSound(); return true; }
   if (ui.baseline) { if (k === 'Escape') { ui.baseline = null; return true; } return false; }
   if (ui.modal) {
     var m = ui.modal;
@@ -1652,12 +1651,12 @@ function handleKey(k, inInput) {
 }
 /* Browsers allow sound only after a user action: the first key press or click anywhere turns it on. */
 function wakeAudio() { if (!audio.ok && !audio.tried) { initAudio(); if (audio.ok) { audio.woke = true; refreshAlarms(); } } }
-/* M or the header button. Muting lasts until M is pressed again or the page is reloaded; alerts stay on screen. */
+/* The header button toggles sound. Muting lasts until it is clicked again or the page is reloaded; alerts stay on screen. */
 function toggleSound() {
   if (audio.woke) return;                                  /* this press already turned the sound on: do not mute it again */
   if (!audio.ok) { initAudio(); if (!audio.ok) { say('Sound is not available on this device. Alerts are shown on screen only.', true); return; } audio.muted = true; }
   audio.muted = !audio.muted;
-  if (audio.muted) say('Sound is off. Alarms are shown on screen only. Press M to turn it back on.', true);
+  if (audio.muted) say('Sound is off. Alarms are shown on screen only. Click the sound button to turn it back on.', true);
   else { say('Sound is on.'); ui.pending.forEach(function (x) { delete announced[x.key]; }); refreshAlarms(); }   /* pending Act alarms sound again at once */
 }
 document.addEventListener('keydown', function (e) {
@@ -1679,7 +1678,8 @@ document.addEventListener('click', function (e) {
     wakeAudio();
     if (!el || el === document.body || !el.getAttribute) return;
     var cmd = el.getAttribute('data-click').split(':');
-    if (cmd[0] === 'history') openHistory(cmd[1] || null);
+    if (cmd[0] === 'sound-toggle') toggleSound();
+    else if (cmd[0] === 'history') openHistory(cmd[1] || null);
     else if (cmd[0] === 'reading') askRemoveReading(ui.items[+cmd[1]]);
     else if (cmd[0] === 'baseline-cancel') ui.baseline = null;
     else if (cmd[0] === 'open') openProfile(cmd[1]);
@@ -1700,6 +1700,7 @@ render();
 </script>
 </body>
 </html>
+
 
 
 
