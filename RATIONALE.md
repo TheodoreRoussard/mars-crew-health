@@ -4,7 +4,7 @@
 
 | Feature | Risk, hazard or pain point it answers |
 |---|---|
-| Overview headline ("YOU ARE OK", "KEEP WATCH", "ACT NOW") with one action, before any number. An action banner stays on every screen while an alert exists | Astronaut does not understand the information |
+| Overview headline with the current status and a concrete action, before any number. Indicator cards retain their advice after acknowledgement | Astronaut does not understand the information |
 | Crew page: one card per astronaut with status, every Act alert by name, action and check-in state. If a card is too full, secondary text goes first; an Act alert is never hidden or reduced to a count. The grid re-arranges for any crew size. Alarms sound for the whole crew on every screen | Central room, shared screen: anyone walking past sees who needs help. Screen breaks: the sound still covers everyone |
 | Top bar with one tab per astronaut, like browser tabs; `0` or the Crew tab leaves a profile | One way to move between people, always visible |
 | Four statuses only, each with a colour, a shape and a word | Same. Still readable for colour-blind crew or on a dim screen |
@@ -16,7 +16,7 @@
 | Guided daily check-in: one measurement per screen, interpreted at once. A question list lets you answer everything due or any single question. Weekly checks appear only when due | Long mission, daily use, no medical training |
 | Body view and Hazards view open the same card | One layout to learn. All 11 risks and 5 hazards are reachable |
 | 30-day SVG trend chart with baseline line. Point shape shows status | Slow changes: bone, body mass, SANS, fitness |
-| Two distinct sounds. Watch: two soft notes. Act: fast harsh pulses every 8 s until acknowledged. Always with a banner | Screen breaks, or nobody is looking |
+| Two distinct sounds. Watch: two soft notes. Act: fast harsh pulses every 8 s until acknowledged. Affected crew cards pulse from the same start time, with a steady labelled border for reduced motion; no global banner | Identifies the affected astronaut directly. Sound still works across views when nobody is looking |
 | The first key press or click turns the sound on; a notice says so until then | Browsers allow sound only after a user action |
 | "No data" for missing, impossible or old values, and for all values when the clock is behind the data | Fail safe: an old "OK" is a wrong status |
 | Single `index.html`: no network, no libraries, no build | Runs from `file://` on a Raspberry Pi 4. Fewer parts to fail |
@@ -32,3 +32,4 @@
 **NASA data used.** See `DATA-SOURCES.md`. The radiation and spacewalk-duration cards show a NASA reference line (ISS dosimetry 2014, EVA log 1965-2013), and the sample crew uses the real ISS daily doses and real spacewalk durations.
 
 **Limits.** All thresholds are illustrative design values, not validated clinical limits; flight surgeons must replace them (one table at the top of the script). Blood pressure uses the top number only. The tool supports the crew medical officer and does not replace them.
+

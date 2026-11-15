@@ -43,10 +43,10 @@ ok(a.html().includes('grid-template-columns:repeat(2,1fr);grid-template-rows:rep
   const acts=d.ctx.alertsOf(d.ctx.assessAll(s)).filter(x=>x.status==='act'), card=d.html().split('crew-card')[1];
   ok(acts.length===4&&acts.every(x=>card.includes(x.ind.label.replace(/ \(.*\)$/,''))&&card.includes(x.word))&&(card.match(/<li>/g)||[]).length===4,'crew card lists every Act alert (4) by name and word, not only the first');
   ok(!/\d+ Act</.test(card)&&card.includes('6 Watch'),'Act is never reduced to a count on the card; Watch stays a count'); }
-ok(a.get('ui.pending.length')>0&&a.beeps.length===0&&a.html().includes('ALARM – ACT: Sam Okafor'),'before any key: alarm banner visible, no sound yet');
+ok(a.get('ui.pending.length')>0&&a.beeps.length===0&&a.html().includes('alert-live alert-act')&&!a.html().includes('class="alarm'),'before any key: affected crew card is marked, no banner and no sound yet');
 a.key('ArrowRight'); ok(a.beeps.length===6&&a.beeps.every(b=>b.type==='square')&&a.html().includes('Sound on'),'first key press turns sound on: Act = 6 square pulses');
 a.tick(); ok(a.beeps.length===12,'Act repeats on the 8 s timer');
-a.key('Enter'); ok(a.get('ui.screen')==='main'&&a.get('ui.activeId')===ANA&&a.html().includes('ALARM – ACT: Sam Okafor'),'inside Ana\'s profile the banner still shows Sam\'s alarm');
+a.key('Enter'); ok(a.get('ui.screen')==='main'&&a.get('ui.activeId')===ANA&&a.get('ui.pending').some(x=>x.p.id===SAM)&&!a.html().includes('class="alarm'),'inside another profile crew alarms remain pending without a banner');
 const np=a.get('ui.pending.length'); a.key('a'); a.tick(); ok(a.get('ui.pending.length')===0&&a.beeps.length===12&&!a.html().includes('ALARM'),'A acknowledges all '+np+' crew alerts and silences the sound');
 a.beeps.length=0; a.ctx.playWatch(); ok(a.beeps.length===2&&a.beeps.every(b=>b.type==='sine')&&a.beeps[1].t-a.beeps[0].t>0.4,'Watch sound = 2 slow sine notes');
 a.get('ui.prompt=null'); a.ctx.askNewAstronaut(); a.inputs['prompt-inp']={value:'Zoé Martin'}; a.key('Enter');
@@ -105,7 +105,7 @@ a.key('Escape');
 a=mk(false); a.ctx.importText(sample); a.ctx.startSession(SAM);
 a.P(SAM).entries[29].values.vision=2; a.key('a'); a.key('3'); a.key('ArrowDown'); a.key('Enter');
 ok(a.html().includes('Earth is far away')&&a.html().includes('While you wait')&&a.html().includes('Flight surgeons on Earth'),'Earth card shows delay + while-waiting + owner');
-a.key('4'); ok(a.html().includes('Do now:'),'after A: steady banner still says what to do on other views');
+a.key('4'); a.key('Enter'); ok(a.html().includes('WHAT TO DO NOW')&&!a.html().includes('class="alarm'),'after A: indicator cards retain advice without an alert banner');
 a.key('Escape'); a.get('store.dateOffset=3'); let all=a.ctx.assessAll(a.P(SAM)); ok(all.filter(x=>x.ind.every===1).every(x=>x.status==='nodata'),'3-day-old daily readings -> No data');
 a.get('store.dateOffset=-5'); a.ctx.render(); ok(a.html().includes('clock looks wrong'),'clock-behind notice on the crew page');
 all=a.ctx.assessAll(a.P(SAM)); ok(all.every(x=>x.status==='nodata'&&x.word==='Date is wrong'),'clock behind data -> every check is No data');
@@ -161,5 +161,6 @@ for(let i=0;i<20000;i++){ c.inputs['ci-inp']={value:vals[Math.floor(rnd()*vals.l
 ok(!c.get('crashed'),'20000 random keys, '+Object.keys(seen).length+' distinct screen states reached: no crash'); ok(!/undefined|NaN|\[object/.test(c.html()),'no "undefined"/"NaN" leaked into the page');
 
 console.log(process.exitCode?'\nSOME CHECKS FAILED':'\nAll '+passed+' behaviour checks passed');
+
 
 
