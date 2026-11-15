@@ -1,6 +1,6 @@
 {
  "app": "crew-health-monitor",
- "version": 1,
+ "version": 2,
  "exportedAt": "2026-11-14",
  "sample": true,
  "note": "Sample crew for demonstration. Because \"sample\" is true, the tool moves the dates on load so the last day is today. Radiation doses are real NASA measurements (ISS TEPC dosimeter, daily dose equivalent, 16 Oct to 14 Nov 2014). Spacewalk durations are real (EVA 227 of 30 Aug 2012 and EVA 231 of 9 Jul 2013, NASA EVA log). All other values are invented, and all thresholds are illustrative.",

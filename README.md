@@ -98,6 +98,21 @@ Measurements are entered manually. The prototype does not connect directly to se
 
 Eyesight, grip strength, urine calcium, and medical-kit checks are scheduled weekly; routine indicators are scheduled daily. Suit-work follow-up questions appear after a logged event; unresolved symptoms are checked again. The Hazards view groups indicators under **space radiation, hostile closed environment, isolation and confinement, distance from Earth, and altered gravity**.
 
+## Multiple readings and correcting mistakes
+
+You can answer any check-in question again during the day. **Every new answer is appended with the device timestamp**, rather than replacing the previous answer. The latest active reading drives the current status. Daily charts, provisional baselines, and radiation totals use the latest active value for each day so repeated checks do not count as extra days or double-count the daily radiation dose.
+
+Open an indicator card and click **History / remove a reading**, or press **H** inside a profile to see all indicators. Each row shows its date, time, value, and whether it is the latest active reading for that day.
+
+- Click **Remove** next to the erroneous reading. Confirm the exact indicator, value, and time; **Cancel** is selected by default.
+- Only that reading is excluded from calculations. The previous active reading becomes effective, retaining its original date and age; if none remains, the indicator shows **No data**.
+- The excluded entry stays visible with a **Restore** button. Restoring it returns it to its original position, without making an old reading appear new.
+- Keyboard navigation: **Up/Down** selects a reading, **Enter** opens its Remove/Restore confirmation, **Esc** returns to the previous screen.
+
+Timestamps come from the device clock. The displayed day follows the application's date setting; correcting that setting does not rewrite existing timestamps. Older data is retained with **Time not recorded**, because no original capture time was stored.
+
+Backups now use **format version 2** to preserve the complete journal, including removed entries. Version 1 backups remain importable. Restore version 2 files with this version of the app or newer; older builds reject them instead of silently dropping history. Browser storage migrates by reading the existing version 1 data and saving subsequent changes under a separate version 2 key. Keep a backup before returning to an older build: it cannot see new version 2 measurements.
+
 ## Technical approach
 
 The complete application lives in **`index.html`**:
@@ -128,7 +143,7 @@ See [SETUP.md](SETUP.md) for the full setup, sound testing, backup rotation, and
 
 The application does not fetch NASA datasets over the network, and its thresholds are **not NASA-validated clinical limits**. The built-in demos use invented values. The separate sample crew combines fictional health readings with historical ISS radiation values and EVA durations, as documented in its generator; these values can be loaded through the sample file, but they are not an astronaut medical record.
 
-Current limitations include manual data entry, one stored value per indicator per day, systolic-only blood pressure, and no authentication or encrypted storage. Clinical rules and suggested actions require specialist review before any real-world use.
+Current limitations include manual data entry, systolic-only blood pressure, and no authentication or encrypted storage. Clinical rules and suggested actions require specialist review before any real-world use.
 
 Potential next steps include recording sensor location and measurement context, supporting multiple readings per day, and validating rules with specialists. Radiation cumulative-dose tracking and event-based EVA follow-ups are already implemented.
 
@@ -153,4 +168,5 @@ npm test
 The checks cover offline packaging, indicator rules, sample reproducibility, crew navigation, alarms, keyboard input, demo isolation, baseline validation/provenance, and status explanations. Browser rendering still needs a manual check in Chromium, particularly at the target screen size.
 
 Developed as a participant project for NASA Space Apps Challenge 2026.
+
 

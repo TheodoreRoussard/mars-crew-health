@@ -67,3 +67,16 @@ Keep a copy of `index.html` on both sticks: the whole tool is that one file. Eac
 - Changed references update statuses immediately. Their date and source survive JSON backup/export and import. Existing backups without this metadata remain supported.
 - Without an explicit baseline, the first 3–7 readings provide a provisional reference. This is not a validated pre-flight baseline.
 - Open an indicator card to read **Why this status?**: the value, applicable band, and personal or rolling reference when used. All rules and actions remain illustrative.
+
+
+## 7. Repeat a measurement or remove a mistaken entry
+
+1. Open the astronaut, press `2`, and choose any question to record it again. Earlier answers stay in history; the new answer receives the device timestamp.
+2. Open the indicator card and click **History / remove a reading**, or press `H` in the profile for all readings.
+3. Find the exact date, time, indicator, and value. Choose **Remove**, then confirm. Cancel is the default.
+4. The reading is excluded from calculations. The previous active reading is used with its original age, or **No data** if none remains. Other measurements are unchanged.
+5. Use **Restore** on an excluded row to undo removal. It keeps its original position in the history.
+
+Daily trends and radiation totals use one final active reading per day; they do not add repeated daily-dose readings together. Old measurements display **Time not recorded**. Check the device clock before recording new data. A date correction does not rewrite timestamps already captured.
+
+Backups use format version 2 and preserve all readings and removal markers. Version 1 backups can still be loaded. Use the updated application to restore a version 2 backup. The updated app saves to a separate browser-storage key; an older app build will not see new version 2 data.
