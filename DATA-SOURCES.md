@@ -93,6 +93,11 @@ Lecture : les incidents consignés concernent l'air respiré, la vue et la chale
 
 Les pistes 2 et 3 sont appliquées dans `index.html` ; les autres ne le sont pas.
 
+Données NASA reprises telles quelles dans l'outil :
+
+- **Fiches** : la fiche « Radiation dose » et la fiche « Spacewalk duration » affichent une ligne « NASA reference » tirée des deux analyses du §3.
+- **Équipage d'exemple** (`sample-data.json`) : les doses de radiation sont les 30 valeurs quotidiennes réelles du dosimètre ISS du 16 octobre au 14 novembre 2014 ; les durées de sortie sont celles des sorties n° 227 (30 août 2012, 8,3 h) et n° 231 (9 juillet 2013, 6,1 h). Toutes les autres valeurs de l'exemple sont inventées.
+
 1. **Référence personnelle prise avant le vol.** Les études sur équipages (Inspiration4, gènes du sang, MARS500) prennent des mesures avant le vol ou avant l'isolement pour servir de point de comparaison. L'outil accepte déjà des références d'avant vol, mais seulement via le fichier JSON ; sans elles, il se rabat sur les 3 à 7 premières mesures en vol, donc sur un corps déjà en train de s'adapter. Il manque un écran de saisie des références à la création du profil.
 2. **Radiation : écart au niveau habituel, emplacement et cumul (appliqué, sauf l'emplacement).** L'outil comparait la dose du jour à des seuils fixes. Les données montrent un niveau de fond très stable à emplacement constant ; une alerte sur l'écart au niveau habituel des 7 derniers jours serait plus juste, à condition de comparer des mesures prises au même endroit. La NASA dit mesurer pour « gérer la dose » : il manque le cumul depuis le départ.
 3. **EVA : un événement, pas une question quotidienne (appliqué).** La NASA consigne une ligne par sortie avec sa durée. L'outil posait chaque jour une question sur les mains et les épaules. Il serait plus cohérent de demander « sortie aujourd'hui ? », puis la durée et les symptômes que le journal fait ressortir : maux de tête (CO2), vue, surchauffe, mains.

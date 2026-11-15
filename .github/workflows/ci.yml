@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Rules, sample and behaviour
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Static checks (single file, no network, risk coverage, sample)
+        run: node tests/static.js
+      - name: Sample data matches its generator
+        run: node tools/make-sample.js --check
+      - name: Behaviour checks and keyboard fuzz
+        run: node tests/behaviour.js
+
+  browser:
+    name: Opens from file:// in Chromium
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Load index.html from disk in headless Chrome
+        run: |
+          set -euo pipefail
+          timeout 120 google-chrome --headless=new --no-sandbox --disable-gpu \
+            --virtual-time-budget=3000 --dump-dom "file://$PWD/index.html" > dom.html
+          grep -q 'No astronaut on this device yet' dom.html || { echo "The crew page did not render"; exit 1; }
+          grep -q '<div id="crash" hidden' dom.html || { echo "The crash screen is showing"; exit 1; }
+          echo "Rendered the crew page from file:// with no crash."

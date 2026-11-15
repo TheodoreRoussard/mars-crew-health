@@ -16,7 +16,40 @@ body{margin:0;background:var(--bg);color:var(--text);height:100vh;overflow:hidde
   font-family:system-ui,-apple-system,"Segoe UI","DejaVu Sans","Liberation Sans",Arial,sans-serif;line-height:1.25}
 .st-nominal{--c:var(--nominal)} .st-watch{--c:var(--watch)} .st-act{--c:var(--act)} .st-nodata{--c:var(--nodata)}
 #app{display:flex;flex-direction:column;height:100vh}
-header{display:flex;align-items:center;gap:1.2rem;height:2.6rem;padding:0 1rem;background:var(--panel);border-bottom:2px solid var(--line);flex:none}
+header{display:flex;align-items:center;gap:.35rem;height:2.6rem;padding:0 .8rem;background:var(--panel);border-bottom:2px solid var(--line);flex:none}
+header .dim{margin-left:.8rem;white-space:nowrap}
+header .hint{margin-left:.5rem;font-size:.8rem;color:var(--dim);white-space:nowrap;cursor:pointer}
+.tab{display:inline-flex;align-items:center;gap:.35rem;align-self:flex-end;height:2.1rem;padding:0 .7rem;min-width:0;border:2px solid var(--line);border-bottom:none;border-radius:.45rem .45rem 0 0;background:var(--bg);color:var(--dim);font-weight:600;white-space:nowrap;cursor:pointer}
+.tab.on{background:var(--panel2);border-color:var(--focus);color:var(--text)}
+.tab .tab-n{overflow:hidden;text-overflow:ellipsis}
+.tab:first-child{flex:none}
+header.many .tab{font-size:.82rem;padding:0 .45rem;gap:.25rem}
+header.many .dim{margin-left:.5rem;font-size:.85rem}
+.tab .tab-w{color:var(--c);font-weight:800;text-transform:uppercase;font-size:.85em}
+.crew-grid{flex:1;min-height:0;display:grid;gap:.6rem;font-size:1rem}
+.crew-grid.c3{font-size:.86rem}
+.crew-grid.c4{font-size:.74rem}
+.crew-card{display:flex;flex-direction:column;gap:.25em;min-height:0;overflow:hidden;padding:.6em .9em;background:var(--panel);border:3px solid transparent;border-left:.6rem solid var(--c);border-radius:.4rem;cursor:pointer}
+.crew-card.sel{border-color:var(--focus);border-left-color:var(--c);background:var(--panel2)}
+.cc-top{display:flex;align-items:center;gap:.7em}
+.cc-top .ico{width:2.8em;height:2.8em}
+.cc-id{min-width:0}
+.cc-name{font-size:1.4em;font-weight:700}
+.cc-role{font-size:.85em;color:var(--dim)}
+.cc-status{margin-left:auto;font-size:1.8em;font-weight:800;color:var(--c);white-space:nowrap}
+.cc-alert{font-size:1.2em;font-weight:700}
+.cc-do{font-size:1.12em;line-height:1.4}
+.cc-who{color:var(--dim)}
+.cc-foot{margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:.2em .9em;color:var(--dim);font-size:.9em}
+.cc-foot .sp{flex:1}
+.cc-n{display:inline-flex;align-items:center;gap:.3em;color:var(--c);font-weight:700}
+.sub{color:var(--dim);font-size:1rem;line-height:1.45}
+.r-state{flex:.7;color:var(--dim);white-space:nowrap}
+.r-state.todo{color:var(--text);font-weight:800}
+.compact .r-state+.r-val{display:block}
+.compact .row.big{font-size:1.1rem;padding:.3rem .5rem}
+.settings .row{font-size:1.1rem;padding:.3rem .7rem}
+.refline{font-size:.9rem;border-top:1px solid var(--line);padding-top:.35rem}
 header .brand{font-weight:700;letter-spacing:.06em}
 header .who{font-weight:700}
 header .sp{flex:1}
@@ -257,6 +290,7 @@ var INDICATORS = [
   {id: 'eva_dur', label: 'Spacewalk duration', region: 'eva', risk: 'Injury and compromised performance from spacewalks (EVA)', after: 'eva_done', once: true,
    type: 'number', unit: 'hours', dec: 1, min: 0.1, max: 12, metric: 'abs', every: 1, eps: 1,
    bands: [B(7.4, 'nominal', 'Usual length'), B(Infinity, 'watch', 'Very long sortie')],
+   ref: 'NASA reference, 368 timed spacewalks 1965 to 2013: half lasted under 6 hours, 9 in 10 under 7.4 hours, the longest 8.9 hours.',
    how: 'How many hours were you in the suit? For example 6.5.',
    why: 'Most spacewalks last about 6 hours, and longer ones drain water, energy and concentration.',
    actions: {watch: {t: 'Drink, eat and rest before any other task.', who: 'you'}}},
@@ -289,9 +323,10 @@ var INDICATORS = [
      bands apply to value / usual level. absBands are the fallback while no usual level exists, and their Act level
      always applies as a backstop so that a slowly drifting usual level can never hide a storm. */
   {id: 'rad', label: 'Radiation dose (last 24 hours)', hazard: 'radiation', risk: 'Space radiation',
-   type: 'number', unit: 'mSv', dec: 1, min: 0, max: 1000, metric: 'ratio', rolling: 7, cumulative: true, every: 1, eps: 0.4,
+   type: 'number', unit: 'mSv', dec: 2, min: 0, max: 1000, metric: 'ratio', rolling: 7, cumulative: true, every: 1, eps: 0.1,
    bands: [B(1.5, 'nominal', 'Normal for you'), B(4, 'watch', 'Above your usual level'), B(Infinity, 'act', 'Far above your usual level')],
    absBands: [B(2.5, 'nominal', 'Normal for deep space'), B(10, 'watch', 'Elevated'), B(Infinity, 'act', 'Solar storm level')],
+   ref: 'NASA reference, ISS dosimeter 2014 (low Earth orbit, fixed location): 0.62 to 0.75 mSv a day, about 20 % more at another location in the same module.',
    how: 'Read the 24-hour dose on your personal dosimeter. Type the number in mSv.',
    why: 'Outside Earth’s magnetic field you are exposed to radiation that adds up over the whole mission.',
    actions: {watch: {t: 'Spend your rest time in the best-shielded area today.', who: 'you'},
@@ -434,7 +469,7 @@ function loadStore() {
     if (typeof o.dateOffset === 'number' && isFinite(o.dateOffset)) store.dateOffset = Math.round(o.dateOffset);
   } catch (e) {
     try { localStorage.setItem(KEY + '.damaged', raw); } catch (e2) {}
-    loadWarning = 'Saved data on this device could not be read. Import your latest backup file (key 6).';
+    loadWarning = 'Saved data on this device could not be read. Load your latest backup file (Settings: key 0, then S).';
   }
 }
 function saveStore() {
@@ -502,7 +537,7 @@ function lastEventDay(p, gate, t) {
 function assess(p, ind) {
   var t = todayNum(), last = lastReading(p, ind, t), base = refFor(p, ind, last ? last.d : t);
   var a = {ind: ind, status: 'nodata', word: 'No data', note: 'Never measured', value: null, valueText: '', age: null, day: null, baseline: base, trend: null};
-  if (clockWrong(p)) { a.word = 'Date is wrong'; a.note = 'Set today’s date first (key 6)'; return a; }
+  if (clockWrong(p)) { a.word = 'Date is wrong'; a.note = 'Set today’s date first (Settings: key 0, then S)'; return a; }
   if (ind.after) {                       /* event follow-up: only meaningful relative to the last logged spacewalk */
     var gate = indById(ind.after), g = lastReading(p, gate, t), ev = lastEventDay(p, gate, t);
     if (!g || t - g.d > staleAfter(gate)) { a.note = 'Answer the spacewalk question in the check-in'; return a; }
@@ -552,7 +587,7 @@ function actionFor(a) {
     if (x) return x;
   }
   if (a.status === 'nominal') return {t: 'Nothing to do. Keep your normal routine.', who: 'you'};
-  if (a.word === 'Date is wrong') return {t: 'Set today’s date (key 6), then look again.', who: 'you'};
+  if (a.word === 'Date is wrong') return {t: 'Set today’s date in Settings (key 0, then S).', who: 'you'};
   return {t: 'Measure this in the daily check-in (key 2).', who: 'you'};
 }
 function dueSteps(p) {
@@ -592,8 +627,9 @@ function trendHtml(t) {
 }
 
 /* ---------- audio (Web Audio API, no files) ---------- */
-var audio = {ctx: null, ok: false};
+var audio = {ctx: null, ok: false, tried: false};
 function initAudio() {
+  audio.tried = true;
   try {
     var C = window.AudioContext || window.webkitAudioContext;
     if (!C) { audio.ok = false; return; }
@@ -623,8 +659,8 @@ function playAct() {
 
 /* ---------- UI state ---------- */
 var VIEWS = [{id: 'overview', name: 'Overview'}, {id: 'checkin', name: 'Check-in'}, {id: 'body', name: 'Body'},
-             {id: 'hazards', name: 'Hazards'}, {id: 'trends', name: 'Trends'}, {id: 'backup', name: 'Backup'}];
-var ui = {screen: 'start', activeId: null, view: 'overview', sel: 0, items: [], card: null, ci: null,
+             {id: 'hazards', name: 'Hazards'}, {id: 'trends', name: 'Trends'}];
+var ui = {screen: 'home', cols: 1, activeId: null, view: 'overview', sel: 0, items: [], card: null, ci: null,
           modal: null, prompt: null, msg: null, pending: []};
 var acked = {}, announced = {}, actTimer = null, crashed = false;
 var app = document.getElementById('app'), fileInput = document.getElementById('file');
@@ -632,17 +668,22 @@ function active() { return store.profiles[ui.activeId] || null; }
 function say(text, bad) { ui.msg = {text: text, bad: !!bad}; }
 
 /* ---------- alarms ---------- */
+function crew() { return Object.keys(store.profiles).map(function (id) { return store.profiles[id]; }); }
+/* Alarms cover the WHOLE crew and run on every screen. The key holds today's day number, so an alert that is
+   still there the next day is announced again. Nothing is marked "announced" while sound is still off. */
 function refreshAlarms() {
-  var p = active(); ui.pending = [];
-  if (!p || ui.screen !== 'main') { stopActLoop(); return; }
-  var newAct = false, newWatch = false, hasAct = false;
-  alertsOf(assessAll(p)).forEach(function (a) {
-    var key = p.id + '|' + a.ind.id + '|' + a.status + '|' + a.day;
-    if (acked[key]) return;
-    ui.pending.push({a: a, key: key});
-    if (a.status === 'act') hasAct = true;
-    if (!announced[key]) { announced[key] = true; if (a.status === 'act') newAct = true; else newWatch = true; }
+  var t = todayNum(), newAct = false, newWatch = false, hasAct = false;
+  ui.pending = [];
+  crew().forEach(function (p) {
+    alertsOf(assessAll(p)).forEach(function (a) {
+      var key = p.id + '|' + a.ind.id + '|' + a.status + '|' + a.day + '|' + t;
+      if (acked[key]) return;
+      ui.pending.push({a: a, key: key, p: p});
+      if (a.status === 'act') hasAct = true;
+      if (audio.ok && !announced[key]) { announced[key] = true; if (a.status === 'act') newAct = true; else newWatch = true; }
+    });
   });
+  ui.pending.sort(function (x, y) { return (y.a.status === 'act' ? 1 : 0) - (x.a.status === 'act' ? 1 : 0); });
   if (hasAct) {
     if (newAct) playAct();
     if (!actTimer) actTimer = setInterval(function () {
@@ -654,21 +695,29 @@ function stopActLoop() { if (actTimer) { clearInterval(actTimer); actTimer = nul
 function acknowledge() { ui.pending.forEach(function (x) { acked[x.key] = true; }); ui.pending = []; stopActLoop(); }
 
 /* ---------- session and profile actions ---------- */
-function startSession(id) {
-  initAudio();
-  acked = {}; announced = {};                 /* a new session re-announces every alert that is still there */
-  ui.screen = 'main'; ui.activeId = id; ui.view = 'overview'; ui.sel = 0; ui.card = null; ui.ci = null; ui.msg = null;
-  refreshAlarms();
+function goHome() {
+  var i = Object.keys(store.profiles).indexOf(ui.activeId);
+  ui.screen = 'home'; ui.activeId = null; ui.sel = i < 0 ? 0 : i; ui.card = null; ui.ci = null; ui.msg = null;
 }
-function endSession() { stopActLoop(); ui.pending = []; ui.screen = 'start'; ui.activeId = null; ui.sel = 0; ui.card = null; ui.ci = null; ui.msg = null; }
+function openProfile(id) {
+  if (!store.profiles[id]) return;
+  if (ui.screen !== 'main') ui.view = 'overview';        /* switching between astronauts keeps the same view, like browser tabs */
+  ui.screen = 'main'; ui.activeId = id; ui.sel = 0; ui.card = null; ui.ci = null; ui.msg = null;
+}
+function cycleTab(dir) {
+  var order = [null].concat(Object.keys(store.profiles)), cur = ui.screen === 'main' ? order.indexOf(ui.activeId) : 0;
+  var next = order[(cur + dir + order.length) % order.length];
+  if (next === null) goHome(); else openProfile(next);
+}
+function startSession(id) { initAudio(); openProfile(id); refreshAlarms(); }
+function endSession() { goHome(); }
 function askNewAstronaut() {
   ui.prompt = {title: 'New astronaut', help: 'Type your name, then press Enter.', value: '', err: '', ok: function (v) {
     var name = String(v).trim().slice(0, 40);
     if (!name) return 'Type a name first.';
     var p = {id: newId(), name: name, role: '', baselines: {}, entries: []};
     store.profiles[p.id] = p; saveStore();
-    if (ui.screen === 'start') ui.sel = Object.keys(store.profiles).indexOf(p.id);
-    say('Added ' + name + '. Baselines are set automatically after 3 readings.');
+    say('Added ' + name + '. Baselines are set automatically after 3 readings.'); refreshAlarms();
     return '';
   }};
 }
@@ -681,18 +730,20 @@ function askDate() {
     return '';
   }};
 }
-function exportProfile() {
-  var p = active(); if (!p) return;
+function exportBackup(ids) {
+  var list = (ids || []).map(function (id) { return store.profiles[id]; }).filter(Boolean);
+  if (!list.length) return say('There is no astronaut to back up yet.', true);
   try {
     var day = isoOf(todayNum());
-    var name = 'crew-health-' + (p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'astronaut') + '-' + day + '.json';
-    var data = JSON.stringify({app: APP, version: VERSION, exportedAt: day, profile: p}, null, 1);
+    var who = list.length === 1 ? (list[0].name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'astronaut') : 'whole-crew';
+    var name = 'crew-health-' + who + '-' + day + '.json';
+    var data = JSON.stringify({app: APP, version: VERSION, exportedAt: day, profiles: list}, null, 1);
     var url = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
     var a = document.createElement('a'); a.href = url; a.download = name;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function () { try { URL.revokeObjectURL(url); } catch (e) {} }, 3000);
-    store.lastExport[p.id] = day; saveStore();
-    say('Backup file made: ' + name + '. Save or copy it to the USB stick.');
+    list.forEach(function (p) { store.lastExport[p.id] = day; }); saveStore();
+    say('Backup file made: ' + name + ' (' + list.length + ' astronaut' + (list.length > 1 ? 's' : '') + '). Save or copy it to the USB stick.');
   } catch (e) { say('The backup file could not be made. Try again, or use the spare device.', true); }
 }
 function importText(text) {
@@ -700,22 +751,28 @@ function importText(text) {
   try { o = JSON.parse(text); } catch (e) { return say('That file is damaged or is not a backup file. Nothing was changed.', true); }
   if (!o || typeof o !== 'object' || o.app !== APP) return say('That file is not a Crew Health backup. Nothing was changed.', true);
   if (o.version !== VERSION) return say('That backup was made by a different version of this tool. Nothing was changed.', true);
-  if (!o.profile || !Array.isArray(o.profile.entries)) return say('That backup has no measurements in it. Nothing was changed.', true);
-  var p = sanitizeProfile(o.profile);
-  if (!p) return say('That backup has no astronaut name in it. Nothing was changed.', true);
-  if (o.sample === true && p.entries.length) {   /* demo file: move its dates so that the last day is today */
-    var shift = todayNum() - dayOf(p.entries[p.entries.length - 1].date);
-    p.entries.forEach(function (e) { e.date = isoOf(dayOf(e.date) + shift); });
+  var raw = Array.isArray(o.profiles) ? o.profiles : (o.profile ? [o.profile] : []), byId = {}, list = [];
+  if (!raw.length) return say('That backup has no astronaut in it. Nothing was changed.', true);
+  for (var i = 0; i < raw.length; i++) {              /* validate everything before touching storage */
+    if (!raw[i] || !Array.isArray(raw[i].entries)) return say('That backup has no measurements in it. Nothing was changed.', true);
+    var q = sanitizeProfile(raw[i]);
+    if (!q) return say('That backup has an astronaut without a name. Nothing was changed.', true);
+    byId[q.id] = q;
+  }
+  Object.keys(byId).forEach(function (id) { list.push(byId[id]); });
+  if (o.sample === true) {                            /* demo file: move its dates so that its last day is today */
+    var lastDay = -Infinity;
+    list.forEach(function (q) { if (q.entries.length) lastDay = Math.max(lastDay, dayOf(q.entries[q.entries.length - 1].date)); });
+    if (isFinite(lastDay)) list.forEach(function (q) { q.entries.forEach(function (e) { e.date = isoOf(dayOf(e.date) + todayNum() - lastDay); }); });
   }
   var commit = function () {
-    store.profiles[p.id] = p; saveStore();
-    if (ui.screen === 'start') ui.sel = Object.keys(store.profiles).indexOf(p.id);
-    say('Imported ' + p.name + ': ' + p.entries.length + ' days of data.' + (saveFailed ? ' WARNING: it could not be saved on this device.' : ''));
+    list.forEach(function (q) { store.profiles[q.id] = q; }); saveStore();
+    say('Loaded ' + list.map(function (q) { return q.name + ' (' + q.entries.length + ' days)'; }).join(', ') + '.' + (saveFailed ? ' WARNING: it could not be saved on this device.' : ''));
     refreshAlarms();
   };
-  var old = store.profiles[p.id];
-  if (old) ui.modal = {title: 'Replace the data on this device?',
-    text: p.name + ' is already on this device with ' + old.entries.length + ' days of data. The file has ' + p.entries.length + ' days. Replacing cannot be undone.',
+  var olds = list.filter(function (q) { return store.profiles[q.id]; });
+  if (olds.length) ui.modal = {title: 'Replace the data on this device?',
+    text: 'Already on this device: ' + olds.map(function (q) { return q.name + ' (' + store.profiles[q.id].entries.length + ' days here, ' + q.entries.length + ' in the file)'; }).join(', ') + '. Replacing cannot be undone.',
     sel: 0, options: [{label: 'Cancel – keep current data'}, {label: 'Replace with the file', fn: commit}]};
   else commit();
 }
@@ -730,15 +787,18 @@ fileInput.addEventListener('change', function () {
 });
 
 /* ---------- check-in ---------- */
-function startCheckin() {
-  var p = active(), steps = dueSteps(p);
-  if (clockWrong(p)) { ui.ci = null; say('The date on this device is wrong. Set today’s date first (key 6). No measurement was changed.', true); return; }
-  if (!steps.length) steps = INDICATORS.filter(function (i) { return i.every === 1 && !i.after; }).map(function (i) { return i.id; });
-  ui.ci = {steps: steps, i: 0, phase: 'ask', sel: 0, err: '', skipArmed: false, text: ''};
+/* ids = the questions to ask. all = true for the full run (ends on a summary); false returns to the question list. */
+function startCheckin(ids, all) {
+  var p = active();
+  if (clockWrong(p)) { ui.ci = null; say('The date on this device is wrong. Set today’s date first (Settings: key 0, then S). No measurement was changed.', true); return; }
+  if (!ids || !ids.length) return;
+  ui.ci = {steps: ids.slice(), i: 0, phase: 'ask', sel: 0, err: '', skipArmed: false, text: '', all: !!all};
 }
 function ciNext() {
   var c = ui.ci; c.i++; c.sel = 0; c.err = ''; c.skipArmed = false; c.text = '';
-  c.phase = c.i >= c.steps.length ? 'done' : 'ask';
+  if (c.i < c.steps.length) c.phase = 'ask';
+  else if (c.all) c.phase = 'done';
+  else ui.ci = null;
 }
 function ciConfirm() {
   var c = ui.ci, ind = indById(c.steps[c.i]), p = active();
@@ -800,7 +860,7 @@ function chartSvg(p, ind) {
     [hi - (hi - lo) * 0.08, (hi + lo) / 2, lo + (hi - lo) * 0.08].forEach(function (v) {
       o += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="#1d2835"/><text x="' + (L - 8) + '" y="' + (Y(v) + 5) + '" text-anchor="end">' + v.toFixed(ind.dec) + '</text>';
     });
-    if (base != null) o += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(base) + '" y2="' + Y(base) + '" stroke="#7cc4ff" stroke-width="2" stroke-dasharray="7 5"/><text x="' + (W - R - 6) + '" y="' + (Y(base) - 6) + '" text-anchor="end" fill="#7cc4ff">' + (ind.rolling ? 'your usual level' : 'your baseline') + '</text>';
+    if (base != null) o += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(base) + '" y2="' + Y(base) + '" stroke="#7cc4ff" stroke-width="2" stroke-dasharray="7 5"/><text x="' + (L + 6) + '" y="' + (Y(base) - 6) + '" fill="#7cc4ff">' + (ind.rolling ? 'your usual level' : 'your baseline') + '</text>';
   }
   o += '<text x="' + L + '" y="' + (H - 8) + '">30 days ago</text><text x="' + (W - R) + '" y="' + (H - 8) + '" text-anchor="end">Today</text></g>';
   var path = '';
@@ -827,7 +887,7 @@ function cardHtml(p, a, withChart) {
     '<div class="value">' + (a.value == null ? (st === 'nominal' ? 'Nothing to report' : 'No data') : esc(a.valueText) + ' <small>measured ' + ago(a.age) + '</small>') + '</div>' +
     (a.note ? '<div class="meta">' + esc(a.note) + '</div>' : '') +
     (baseTxt ? '<div class="meta">' + esc(baseTxt) + '</div>' : '') + (cumTxt ? '<div class="meta">' + esc(cumTxt) + '</div>' : '') + '<div class="meta">' + trendHtml(a.trend) + '</div>' +
-    '<div class="why">' + esc(ind.why) + '</div>';
+    '<div class="why">' + esc(ind.why) + '</div>' + (ind.ref ? '<div class="why refline">' + esc(ind.ref) + '</div>' : '');
   var right = '<div class="action"><div class="action-h">WHAT TO DO NOW</div><div class="action-t">' + esc(act.t) + '</div>' +
     '<div class="action-w">Who handles it: <b>' + OWNERS[act.who] + '</b></div>' +
     (act.who === 'earth' ? '<div class="delay">Earth is far away: a message takes up to about 20 minutes each way, so expect 40 minutes or more for an answer. <b>While you wait:</b> ' + esc(act.wait || 'tell the crew medical officer.') + '</div>' : '') +
@@ -841,22 +901,80 @@ function keysHtml(list) {
 }
 function navKeys() { return VIEWS.map(function (v, i) { return [String(i + 1), v.name, String(i + 1), ui.view === v.id && !ui.card]; }); }
 
-function renderStart() {
-  var ids = Object.keys(store.profiles), items = [], rows = '';
-  ids.forEach(function (id) { items.push({kind: 'profile', id: id}); });
-  items.push({kind: 'new'}); items.push({kind: 'import'});
-  if (ui.sel >= items.length) ui.sel = items.length - 1;
-  items.forEach(function (it, i) {
-    var label = it.kind === 'profile' ? store.profiles[it.id].name : it.kind === 'new' ? 'Add a new astronaut' : 'Import an astronaut from a backup file';
-    var sub = it.kind === 'profile' ? (store.profiles[it.id].entries.length + ' days of data') : '';
-    rows += '<div class="row big' + (i === ui.sel ? ' sel' : '') + '" data-click="pick:' + i + '"><span class="r-label">' + esc(label) + '</span><span class="r-val">' + esc(sub) + '</span></div>';
+function topBar() {
+  var h = '<header' + (crew().length > 4 ? ' class="many"' : '') + '><span class="tab' + (ui.screen !== 'main' ? ' on' : '') + '" data-click="key:0"><kbd>0</kbd>Crew</span>';
+  crew().forEach(function (p) {
+    var w = worst(assessAll(p)), on = ui.screen === 'main' && ui.activeId === p.id;
+    h += '<span class="tab st-' + w + (on ? ' on' : '') + '" data-click="open:' + p.id + '" title="' + STATUS[w].word + '">' + icon(w) + '<span class="tab-n">' + esc(p.name) + '</span>' + (on ? '<span class="tab-w">' + STATUS[w].word + '</span>' : '') + '</span>';
   });
+  return h + '<span class="hint" data-click="key:Tab"><kbd>Tab</kbd>Next</span><span class="sp"></span><span class="dim">' + niceDate(todayNum()) + '</span><span class="dim">Sound ' + (audio.ok ? 'on' : 'OFF') + '</span></header>';
+}
+/* Unacknowledged alerts of ANY astronaut blink here on every screen. Inside a profile, once everything is
+   acknowledged, that astronaut's top alert stays as a steady banner so every view still says what to do. */
+function alertBar(p, all) {
+  var live = ui.pending.length > 0, alerts = p ? alertsOf(all) : [];
+  if (!live && !alerts.length) return '';
+  var top = live ? ui.pending[0].a : alerts[0], who = live ? ui.pending[0].p : p, n = live ? ui.pending.length : alerts.length, act = actionFor(top);
+  return '<div class="alarm st-' + top.status + (live ? ' live' : '') + '"' + (live ? ' data-click="key:a"' : '') + '>' + icon(top.status) +
+    '<span>' + (top.status === 'act' ? (live ? 'ALARM – ACT: ' : 'ACT: ') : 'WATCH: ') + esc(who.name) + ' · ' + esc(top.ind.label) + ' – ' + esc(top.word) + (n > 1 ? ' (+' + (n - 1) + ' more)' : '') + '</span>' +
+    '<span class="do">Do now: ' + esc(act.t) + ' (' + OWNERS[act.who] + ')</span><span class="sp"></span>' +
+    (live ? '<span><kbd>A</kbd>Acknowledge' + (top.status === 'act' ? ' and silence' : '') + '</span>' : '<span class="do"><kbd>1</kbd>Details</span>') + '</div>';
+}
+function noticesHtml() {
+  var notes = [], h = '';
+  if (!audio.ok) notes.push(audio.tried ? 'Sound is not available on this device. Alerts are shown on screen only.' : 'Sound is off. Press any key to turn the alarm sound on.');
+  if (saveFailed) notes.push('This device is NOT saving. Make a backup file now (Settings: key 0, then S) and switch to the spare device.');
+  if (loadWarning) notes.push(loadWarning);
+  var wrong = crew().filter(clockWrong)[0];
+  if (wrong) notes.push('The clock looks wrong: a reading of ' + wrong.name + ' is dated ' + niceDate(dayOf(wrong.entries[wrong.entries.length - 1].date)) + '. Set today’s date (Settings: key 0, then S).');
+  notes.forEach(function (n) { h += '<div class="notice"><b>NOTICE:</b> ' + esc(n) + '</div>'; });
+  return h;
+}
+/* Main page: one card per astronaut. The grid re-arranges itself for any crew size. */
+function renderHome() {
+  var list = crew(), n = list.length, cols = n <= 1 ? 1 : n <= 4 ? 2 : n <= 9 ? 3 : 4, rows = Math.ceil(n / cols) || 1, html = '';
+  if (ui.sel >= n) ui.sel = Math.max(0, n - 1);
+  ui.items = list.map(function (p) { return {kind: 'profile', id: p.id}; }); ui.cols = cols;
+  list.forEach(function (p, i) {
+    var all = assessAll(p), w = worst(all), al = alertsOf(all), wrong = clockWrong(p), due = wrong ? 0 : dueSteps(p).length;
+    var missing = all.filter(function (a) { return a.status === 'nodata'; }).length, top = al[0], act = top ? actionFor(top) : null;
+    var title = w === 'act' ? 'ACT NOW' : w === 'watch' ? 'KEEP WATCH' : w === 'nominal' ? 'OK' : 'NO DATA', counts = '';
+    ['act', 'watch', 'nodata'].forEach(function (st) {
+      var k = all.filter(function (a) { return a.status === st; }).length;
+      if (k) counts += '<span class="cc-n st-' + st + '">' + icon(st) + k + ' ' + STATUS[st].word + '</span>';
+    });
+    html += '<div class="crew-card st-' + w + (i === ui.sel ? ' sel' : '') + '" data-click="pick:' + i + '">' +
+      '<div class="cc-top">' + icon(w) + '<div class="cc-id"><div class="cc-name">' + esc(p.name) + '</div><div class="cc-role">' + esc(p.role) + '</div></div><div class="cc-status">' + title + '</div></div>' +
+      (top ? '<div class="cc-alert">' + esc(top.ind.label + ': ' + top.word) + (al.length > 1 ? ' (+' + (al.length - 1) + ' more)' : '') + '</div><div class="cc-do">Do now: ' + esc(act.t) + '</div><div class="cc-who">Who handles it: ' + OWNERS[act.who] + '</div>'
+           : '<div class="cc-alert">' + (w === 'nominal' ? 'Every check is normal.' : wrong ? 'The date on this device is wrong.' : missing + ' of ' + all.length + ' checks have no data.') + '</div><div class="cc-do">' + (w === 'nominal' ? (due ? 'Do today’s check-in.' : 'Nothing to do.') : wrong ? 'Set today’s date in Settings.' : 'Do the daily check-in.') + '</div>') +
+      '<div class="cc-foot">' + counts + '<span class="sp"></span><span>' + (wrong ? '' : due ? 'Check-in: ' + due + ' to do' : 'Check-in done') + '</span></div></div>';
+  });
+  var body = n ? '<div class="crew-grid c' + cols + '" style="grid-template-columns:repeat(' + cols + ',1fr);grid-template-rows:repeat(' + rows + ',1fr)">' + html + '</div>'
+    : '<div class="center"><div class="title-xl">CREW HEALTH MONITOR</div><div class="lead">No astronaut on this device yet.</div><div class="how">Press <kbd>Enter</kbd> to add one, or <kbd>S</kbd> for Settings to load a backup file.</div></div>';
+  return topBar() + alertBar(null) + noticesHtml() + '<main>' + body + msgHtml() + '</main><footer>' +
+    keysHtml((n ? [['← → ↑ ↓', 'Choose astronaut', 'ArrowRight'], ['Enter', 'Open', 'Enter']] : [['Enter', 'Add an astronaut', 'Enter']]).concat([['S', 'Settings', 's'], '|']).concat(ui.pending.length ? [['A', 'Acknowledge alarm', 'a']] : [])) + '</footer>';
+}
+function settingsItems() {
+  var list = crew(), items = [];
+  if (list.length) items.push({cmd: 'export', ids: list.map(function (p) { return p.id; }), label: 'Make a backup file: whole crew (' + list.length + ')'});
+  if (list.length > 1) list.forEach(function (p) { items.push({cmd: 'export', ids: [p.id], label: 'Make a backup file: only ' + p.name}); });
+  return items.concat([
+    {cmd: 'import', label: 'Load a backup file'},
+    {cmd: 'new', label: 'Add a new astronaut'},
+    {cmd: 'date', label: 'Set today’s date'},
+    {cmd: 'tw', label: 'Test the Watch sound (two soft notes)'},
+    {cmd: 'ta', label: 'Test the Act sound (fast harsh beeps)'}]);
+}
+function renderSettings() {
+  var items = settingsItems(), rows = '', info = '';
+  if (ui.sel >= items.length) ui.sel = items.length - 1;
+  items.forEach(function (it, i) { rows += '<div class="row' + (i === ui.sel ? ' sel' : '') + '" data-click="pick:' + i + '"><span class="r-label">' + esc(it.label) + '</span></div>'; });
   ui.items = items;
-  return '<main><div class="center"><div class="title-xl">CREW HEALTH MONITOR</div>' +
-    '<div class="lead">' + (ids.length ? 'Who are you? Choose your name and press Enter to start. Starting also turns the alarm sound on.' : 'No astronaut on this device yet. Add one, or import a backup file.') + '</div>' +
-    '<div class="list">' + rows + '</div>' + msgHtml() +
-    '<div class="lead" style="font-size:1rem">Today is ' + niceDate(todayNum()) + '. ' + storageNote() + '</div></div></main>' +
-    '<footer>' + keysHtml([['↑ ↓', 'Choose', 'ArrowDown'], ['Enter', 'Start session', 'Enter']]) + '</footer>';
+  crew().forEach(function (p) { var le = store.lastExport[p.id]; info += esc(p.name) + ': <b>' + p.entries.length + ' days</b>, last backup <b>' + (le ? ago(Math.max(0, todayNum() - dayOf(le))) : 'never') + '</b><br>'; });
+  return topBar() + alertBar(null) + noticesHtml() + '<main><h1>Settings</h1><div class="cols"><div class="list settings">' + rows + '</div><aside><div class="box"><h2>This device</h2>' +
+    (info || 'No astronaut yet.<br>') + 'Today: <b>' + niceDate(todayNum()) + '</b><br>' + storageNote() + '</div>' +
+    '<div class="box"><h2>If hardware breaks</h2>Open index.html on the spare device, press S, choose “Load a backup file” and pick the newest file on the USB stick.</div></aside></div>' + msgHtml() + '</main><footer>' +
+    keysHtml([['↑ ↓', 'Move', 'ArrowDown'], ['Enter', 'Do it', 'Enter'], ['Esc', 'Back to the crew page', 'Escape'], '|'].concat(ui.pending.length ? [['A', 'Acknowledge alarm', 'a']] : [])) + '</footer>';
 }
 function storageNote() { return saveFailed ? '<b style="color:var(--watch)">This device is NOT saving data.</b>' : 'Data is saved on this device.'; }
 function msgHtml() { return ui.msg ? '<div class="msg' + (ui.msg.bad ? ' bad' : '') + '">' + esc(ui.msg.text) + '</div>' : ''; }
@@ -872,7 +990,7 @@ function renderOverview(p, all) {
     todo = act.t; who = 'Who handles it: ' + OWNERS[act.who];
     if (act.who === 'earth') who += '. A message takes up to about 20 minutes each way. While you wait: ' + (act.wait || 'tell the crew medical officer.');
   } else if (w === 'nominal') { title = 'YOU ARE OK'; sub = 'Every check is normal.'; todo = 'Nothing to do. Next check-in tomorrow.'; }
-  else if (clockWrong(p)) { title = 'NO DATA'; sub = 'The date on this device is wrong, so no reading can be trusted.'; todo = 'Set today’s date (key 6).'; }
+  else if (clockWrong(p)) { title = 'NO DATA'; sub = 'The date on this device is wrong, so no reading can be trusted.'; todo = 'Set today’s date in Settings (key 0, then S).'; }
   else if (missing === all.length) { title = 'NO DATA YET'; sub = 'Nothing has been measured recently.'; todo = 'Do the daily check-in now (key 2).'; }
   else { title = 'NO PROBLEM FOUND SO FAR'; sub = missing + ' of ' + all.length + ' checks have no data.'; todo = 'Do the daily check-in to complete them (key 2).'; }
   if (due.length && !clockWrong(p)) { items.push({kind: 'checkin'}); }
@@ -893,7 +1011,7 @@ function renderOverview(p, all) {
   return '<div class="hero st-' + w + '">' + icon(w) + '<div><div class="hero-title">' + title + '</div><div class="hero-sub">' + esc(sub) + '</div>' +
     '<div class="hero-do">' + esc(todo) + '</div><div class="hero-who">' + esc(who) + '</div></div></div>' +
     '<div class="cols"><div class="list">' + rows + '</div><aside><div class="box"><h2>All ' + all.length + ' checks</h2>' + counts + '</div>' +
-    '<div class="box"><h2>Backup</h2>Last backup file: <b>' + bk + '</b>' + (overdue ? '<br><b style="color:var(--watch)">Make a backup this week (key 6).</b>' : '') + '</div></aside></div>';
+    '<div class="box"><h2>Backup</h2>Last backup file: <b>' + bk + '</b>' + (overdue ? '<br><b style="color:var(--watch)">Make a backup this week (Settings: key 0, then S).</b>' : '') + '</div></aside></div>';
 }
 function renderGrouped(p, all, groups, field, withBody) {
   var items = [], html = '', regSt = {}, selGroup = null;
@@ -927,35 +1045,28 @@ function renderTrends(p, all) {
   return '<div class="cols"><div class="list compact" style="flex:1.1">' + rows + '</div><div class="side"><div class="box st-' + a.status + '"><div class="count">' + icon(a.status) + STATUS[a.status].word + ' · ' + esc(a.word) + '</div>' +
     '<div style="font-size:1.2rem;font-weight:700">' + esc(a.ind.label) + '</div><div class="meta">' + trendHtml(a.trend) + '</div></div><div class="chart">' + chartSvg(p, a.ind) + '</div></div></div>';
 }
-var BACKUP_ITEMS = [
-  {cmd: 'export', label: 'Make a backup file (save it to the USB stick)'},
-  {cmd: 'import', label: 'Load a backup file'},
-  {cmd: 'switch', label: 'End session / switch astronaut'},
-  {cmd: 'new', label: 'Add a new astronaut'},
-  {cmd: 'date', label: 'Set today’s date'},
-  {cmd: 'tw', label: 'Test the Watch sound (two soft notes)'},
-  {cmd: 'ta', label: 'Test the Act sound (fast harsh beeps)'}
-];
-function renderBackup(p) {
-  var rows = '';
-  if (ui.sel >= BACKUP_ITEMS.length) ui.sel = BACKUP_ITEMS.length - 1;
-  BACKUP_ITEMS.forEach(function (it, i) { rows += '<div class="row big' + (i === ui.sel ? ' sel' : '') + '" data-click="pick:' + i + '"><span class="r-label">' + esc(it.label) + '</span></div>'; });
-  ui.items = BACKUP_ITEMS;
-  var le = store.lastExport[p.id];
-  return '<h1>Backup and settings</h1><div class="cols"><div class="list">' + rows + '</div><aside><div class="box"><h2>This device</h2>' +
-    'Astronaut: <b>' + esc(p.name) + '</b><br>Days of data: <b>' + p.entries.length + '</b><br>Last backup file: <b>' + (le ? niceDate(dayOf(le)) : 'never') + '</b><br>' +
-    'Today: <b>' + niceDate(todayNum()) + '</b><br>' + storageNote() + '<br>Sound: <b>' + (audio.ok ? 'on' : 'not available – alerts are shown on screen only') + '</b></div>' +
-    '<div class="box"><h2>If hardware breaks</h2>Open index.html on the spare device, choose “Import”, and pick your newest backup file from the USB stick.</div></aside></div>';
-}
 function renderCheckin(p) {
   var c = ui.ci;
-  if (!c) {
-    var due = dueSteps(p);
+  if (!c) {                                             /* question list: answer everything due, or pick any single question */
     ui.items = [];
-    if (clockWrong(p)) return '<div class="center"><div class="title-xl">Daily check-in</div><div class="lead">The date on this device is wrong. Set today’s date first.</div><div class="how">Press <kbd>6</kbd>, then choose “Set today’s date”.</div></div>';
-    return '<div class="center"><div class="title-xl">Daily check-in</div><div class="lead">' +
-      (due.length ? due.length + ' measurements to do. About ' + Math.max(1, Math.round(due.length / 3)) + ' minutes. One question per screen.' : 'Today’s check-in is done. You can measure again if something feels different.') +
-      '</div><div class="how">Press <kbd>Enter</kbd> to ' + (due.length ? 'start' : 'measure again') + '.</div></div>';
+    if (clockWrong(p)) return '<div class="center"><div class="title-xl">Daily check-in</div><div class="lead">The date on this device is wrong. Set today’s date first.</div><div class="how">Press <kbd>0</kbd>, then <kbd>S</kbd>, then choose “Set today’s date”.</div></div>';
+    var due = dueSteps(p), t = todayNum(), items = [], rows = '';
+    if (due.length) items.push({kind: 'all'});
+    INDICATORS.forEach(function (ind) {
+      if (ind.after && lastEventDay(p, indById(ind.after), t) === null) return;      /* spacewalk follow-ups need a spacewalk */
+      items.push({kind: 'q', id: ind.id});
+    });
+    if (ui.sel >= items.length) ui.sel = items.length - 1;
+    items.forEach(function (it, i) {
+      var sel = i === ui.sel ? ' sel' : '';
+      if (it.kind === 'all') { rows += '<div class="row big' + sel + '" data-click="pick:' + i + '"><span class="r-label">Answer all ' + due.length + ' questions that are due</span><span class="r-val">about ' + Math.max(1, Math.round(due.length / 3)) + ' min</span></div>'; return; }
+      var ind = indById(it.id), last = lastReading(p, ind, t), isDue = due.indexOf(ind.id) >= 0;
+      var state = isDue ? 'To do' : last && last.d === t ? 'Done today' : 'Not due yet';
+      var val = !last ? 'Never answered' : (ind.type === 'choice' ? ind.options[last.v].w : fmtValue(ind, last.v)) + (last.d === t ? '' : ', ' + ago(t - last.d));
+      rows += '<div class="row' + sel + '" data-click="pick:' + i + '"><span class="r-label">' + esc(ind.label) + '</span><span class="r-state' + (isDue ? ' todo' : '') + '">' + state + '</span><span class="r-val">' + esc(val) + '</span></div>';
+    });
+    ui.items = items;
+    return '<h1>Daily check-in</h1><div class="sub">' + (due.length ? 'Answer everything that is due, or choose any single question.' : 'Everything due is done. You can still choose a question and answer it again.') + '</div><div class="list compact">' + rows + '</div>';
   }
   if (c.phase === 'done') {
     var all = assessAll(p), w = worst(all), n = alertsOf(all).length;
@@ -963,7 +1074,7 @@ function renderCheckin(p) {
       '<div class="lead">' + (n ? n + ' thing' + (n > 1 ? 's need' : ' needs') + ' attention. The Overview shows what to do.' : w === 'nominal' ? 'Everything is normal. Nothing to do.' : 'No problem found, but some checks have no data.') + '</div>' +
       '<div class="how">Press <kbd>Enter</kbd> to see the Overview.</div></div>';
   }
-  var ind = indById(c.steps[c.i]), head = '<div class="step">Step ' + (c.i + 1) + ' of ' + c.steps.length + '</div>';
+  var ind = indById(c.steps[c.i]), head = '<div class="step">Question ' + (c.i + 1) + ' of ' + c.steps.length + '</div>';
   if (c.phase === 'result') return head + cardHtml(p, assess(p, ind), false);
   var body;
   if (ind.type === 'choice') {
@@ -979,45 +1090,25 @@ function renderCheckin(p) {
 }
 function renderMain() {
   var p = active();
-  if (!p) { endSession(); return renderStart(); }
-  var all = assessAll(p), w = worst(all), body, foot;
-  var head = '<header><span class="brand">CREW HEALTH</span><span class="who">' + esc(p.name) + '</span><span class="sp"></span>' +
-    '<span class="dim">' + niceDate(todayNum()) + '</span><span class="dim">Sound ' + (audio.ok ? 'on' : 'OFF') + '</span>' +
-    '<span class="chip st-' + w + '">' + icon(w) + STATUS[w].word + '</span></header>';
-  var alerts = alertsOf(all);
-  if (alerts.length) {   /* always visible while an alert exists: blinking until acknowledged, steady afterwards */
-    var live = ui.pending.length > 0, top = live ? ui.pending[0].a : alerts[0], n = live ? ui.pending.length : alerts.length, tact = actionFor(top);
-    head += '<div class="alarm st-' + top.status + (live ? ' live' : '') + '"' + (live ? ' data-click="key:a"' : '') + '>' + icon(top.status) +
-      '<span>' + (top.status === 'act' ? (live ? 'ALARM – ACT: ' : 'ACT: ') : 'WATCH: ') + esc(top.ind.label) + ' – ' + esc(top.word) + (n > 1 ? ' (+' + (n - 1) + ' more)' : '') + '</span>' +
-      '<span class="do">Do now: ' + esc(tact.t) + ' (' + OWNERS[tact.who] + ')</span><span class="sp"></span>' +
-      (live ? '<span><kbd>A</kbd>Acknowledge' + (top.status === 'act' ? ' and silence' : '') + '</span>' : '<span class="do"><kbd>1</kbd>Details</span>') + '</div>';
-  }
-  var notes = [];
-  if (saveFailed) notes.push('This device is NOT saving. Make a backup file now (key 6) and switch to the spare device.');
-  if (loadWarning) notes.push(loadWarning);
-  var lastEntry = p.entries[p.entries.length - 1];
-  if (lastEntry && dayOf(lastEntry.date) > todayNum()) notes.push('The clock looks wrong: your last reading is dated ' + niceDate(dayOf(lastEntry.date)) + '. Set today’s date (key 6).');
-  notes.forEach(function (n) { head += '<div class="notice"><b>NOTICE:</b> ' + esc(n) + '</div>'; });
-
-  if (ui.view === 'checkin') {
+  if (!p) { goHome(); return renderHome(); }
+  var all = assessAll(p), body, foot, c = ui.ci;
+  if (ui.view === 'checkin' && c) {
     body = renderCheckin(p);
-    var c = ui.ci;
-    if (!c) foot = navKeys().concat(['|', ['Enter', 'Start', 'Enter']]);
-    else if (c.phase === 'ask') foot = (indById(c.steps[c.i]).type === 'choice' ? [['1-4', 'or ↑ ↓ Choose', 'ArrowDown']] : [['0-9', 'Type the number', 'x']]).concat([['Enter', 'Confirm', 'Enter'], ['Esc', 'Stop check-in (answers so far are saved)', 'Escape']]);
-    else foot = [['Enter', c.phase === 'done' ? 'Go to Overview' : 'Next', 'Enter'], ['Esc', 'Stop check-in', 'Escape']];
+    if (c.phase === 'ask') foot = (indById(c.steps[c.i]).type === 'choice' ? [['1-4', 'or ↑ ↓ Choose', 'ArrowDown']] : [['0-9', 'Type the number', 'x']]).concat([['Enter', 'Confirm', 'Enter'], ['Esc', 'Back to the question list (answers so far are saved)', 'Escape']]);
+    else foot = [['Enter', c.phase === 'done' ? 'Go to Overview' : 'Next', 'Enter'], ['Esc', 'Back to the question list', 'Escape']];
   } else if (ui.card) {
     body = cardHtml(p, assess(p, indById(ui.card.ids[ui.card.i])), true);
     foot = [['Esc', 'Back', 'Escape'], ['← →', 'Previous / next check (' + (ui.card.i + 1) + ' of ' + ui.card.ids.length + ')', 'ArrowRight'], '|'].concat(navKeys());
   } else {
     if (ui.view === 'overview') body = renderOverview(p, all);
+    else if (ui.view === 'checkin') body = renderCheckin(p);
     else if (ui.view === 'body') body = renderGrouped(p, all, REGIONS, 'region', true);
     else if (ui.view === 'hazards') body = renderGrouped(p, all, HAZARDS, 'hazard', false);
-    else if (ui.view === 'trends') body = renderTrends(p, all);
-    else body = renderBackup(p);
-    foot = navKeys().concat(['|', ['↑ ↓', 'Move', 'ArrowDown'], ['Enter', ui.view === 'backup' ? 'Do it' : 'Open', 'Enter']]);
+    else body = renderTrends(p, all);
+    foot = navKeys().concat(['|', ['↑ ↓', 'Move', 'ArrowDown'], ['Enter', ui.view === 'checkin' ? 'Answer' : 'Open', 'Enter'], ['Esc', 'Crew page', 'Escape']]);
   }
   if (ui.pending.length) foot = foot.concat([['A', 'Acknowledge alarm', 'a']]);
-  return head + '<main>' + body + msgHtml() + '</main><footer>' + keysHtml(foot) + '</footer>';
+  return topBar() + alertBar(ui.view === 'overview' && !ui.card ? null : p, all) + noticesHtml() + '<main>' + body   /* the Overview headline already says it */ + msgHtml() + '</main><footer>' + keysHtml(foot) + '</footer>';
 }
 function renderOverlay() {
   if (ui.modal) {
@@ -1034,7 +1125,7 @@ function renderOverlay() {
 function render() {
   if (crashed) return;
   try {
-    app.innerHTML = (ui.screen === 'start' ? renderStart() : renderMain()) + renderOverlay();
+    app.innerHTML = (ui.screen === 'home' ? renderHome() : ui.screen === 'settings' ? renderSettings() : renderMain()) + renderOverlay();
     var f = app.querySelector('[data-autofocus]');
     if (f) { f.focus(); try { f.setSelectionRange(f.value.length, f.value.length); } catch (e) {} }
     else if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
@@ -1056,10 +1147,10 @@ function move(k, n) {
   return false;
 }
 function setView(id) { ui.view = id; ui.sel = 0; ui.card = null; ui.ci = null; ui.msg = null; }
-function runCommand(cmd) {
-  if (cmd === 'export') exportProfile();
+function runCommand(it) {
+  var cmd = it.cmd;
+  if (cmd === 'export') exportBackup(it.ids);
   else if (cmd === 'import') { try { fileInput.click(); } catch (e) { say('The file chooser could not open.', true); } }
-  else if (cmd === 'switch') endSession();
   else if (cmd === 'new') askNewAstronaut();
   else if (cmd === 'date') askDate();
   else if (cmd === 'tw') { initAudio(); playWatch(); say(audio.ok ? 'Watch sound played: two soft rising notes.' : 'Sound is not available on this device.', !audio.ok); }
@@ -1082,24 +1173,13 @@ function handleKey(k, inInput) {
       if (err) { ui.prompt.value = v; ui.prompt.err = err; } else ui.prompt = null;
       return true;
     }
-    return false;
+    return k === 'Tab' || k === 'ShiftTab' ? 'block' : false;
   }
-  if (ui.screen === 'start') {
-    if (move(k, ui.items.length)) return true;
-    if (k === 'Enter') {
-      var it = ui.items[ui.sel]; ui.msg = null;
-      if (!it) return true;
-      if (it.kind === 'profile') startSession(it.id);
-      else if (it.kind === 'new') askNewAstronaut();
-      else runCommand('import');
-      return true;
-    }
-    return false;
-  }
-  if (ui.view === 'checkin' && ui.ci) {
+  if (ui.screen === 'main' && ui.view === 'checkin' && ui.ci) {       /* answering a question: digits and letters belong to it */
     var c = ui.ci, ind = c.phase === 'ask' ? indById(c.steps[c.i]) : null;
-    if (k === 'Escape') { setView('overview'); return true; }
-    if (isAck && ui.pending.length) {                               /* letters are never an answer here, so A always acknowledges */
+    if (k === 'Escape') { ui.ci = null; return true; }
+    if (k === 'Tab' || k === 'ShiftTab') return 'block';
+    if (isAck && ui.pending.length) {
       var cur = document.getElementById('ci-inp'); if (cur) c.text = cur.value;
       acknowledge(); return true;
     }
@@ -1118,7 +1198,26 @@ function handleKey(k, inInput) {
     return false;                                                   /* digits, Backspace, etc. go to the input */
   }
   if (isAck && !inInput && ui.pending.length) { acknowledge(); return true; }
-  if (/^[1-6]$/.test(k)) { setView(VIEWS[+k - 1].id); return true; }
+  if (k === 'Tab') { cycleTab(1); return true; }
+  if (k === 'ShiftTab') { cycleTab(-1); return true; }
+  if (k === '0') { goHome(); return true; }
+  if (ui.screen === 'home') {
+    var cnt = ui.items.length, cols = ui.cols || 1;
+    if (k === 's' || k === 'S') { ui.screen = 'settings'; ui.sel = 0; ui.msg = null; return true; }
+    if (cnt && k === 'ArrowRight') { ui.sel = (ui.sel + 1) % cnt; return true; }
+    if (cnt && k === 'ArrowLeft') { ui.sel = (ui.sel + cnt - 1) % cnt; return true; }
+    if (cnt && k === 'ArrowDown') { if (ui.sel + cols < cnt) ui.sel += cols; return true; }
+    if (cnt && k === 'ArrowUp') { if (ui.sel - cols >= 0) ui.sel -= cols; return true; }
+    if (k === 'Enter') { ui.msg = null; if (cnt) openProfile(ui.items[ui.sel].id); else askNewAstronaut(); return true; }
+    return false;
+  }
+  if (ui.screen === 'settings') {
+    if (k === 'Escape') { goHome(); return true; }
+    if (move(k, ui.items.length)) return true;
+    if (k === 'Enter') { var it = ui.items[ui.sel]; ui.msg = null; if (it) runCommand(it); return true; }
+    return false;
+  }
+  if (/^[1-5]$/.test(k)) { setView(VIEWS[+k - 1].id); return true; }
   if (ui.card) {
     var cd = ui.card, len = cd.ids.length;
     if (k === 'Escape' || k === 'Backspace') { ui.card = null; return true; }
@@ -1126,7 +1225,7 @@ function handleKey(k, inInput) {
     if (k === 'ArrowLeft' || k === 'ArrowUp') { cd.i = (cd.i + len - 1) % len; return true; }
     return false;
   }
-  if (ui.view === 'checkin') { if (k === 'Enter') { startCheckin(); return true; } return false; }
+  if (k === 'Escape') { goHome(); return true; }
   if (move(k, ui.items.length)) return true;
   if (k === 'Enter') {
     var x = ui.items[ui.sel];
@@ -1134,30 +1233,36 @@ function handleKey(k, inInput) {
     if (x.kind === 'ind') {
       var ids = ui.items.filter(function (y) { return y.kind === 'ind'; }).map(function (y) { return y.id; });
       ui.card = {ids: ids, i: ids.indexOf(x.id)};
-    } else if (x.kind === 'checkin') { setView('checkin'); startCheckin(); }
-    else if (x.cmd) { ui.msg = null; runCommand(x.cmd); }
+    } else if (x.kind === 'checkin') { setView('checkin'); startCheckin(dueSteps(active()), true); }
+    else if (x.kind === 'all') startCheckin(dueSteps(active()), true);
+    else if (x.kind === 'q') startCheckin([x.id], false);
     return true;
   }
   return false;
 }
+/* Browsers allow sound only after a user action: the first key press or click anywhere turns it on. */
+function wakeAudio() { if (!audio.ok && !audio.tried) { initAudio(); if (audio.ok) refreshAlarms(); } }
 document.addEventListener('keydown', function (e) {
   if (crashed) { if (e.key === 'r' || e.key === 'R') location.reload(); return; }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   var t = e.target, inInput = !!(t && t.tagName === 'INPUT' && t.type !== 'file');
-  var r = guard(function () { return handleKey(e.key, inInput); });
+  var key = e.key === 'Tab' ? (e.shiftKey ? 'ShiftTab' : 'Tab') : e.key;
+  var r = guard(function () { wakeAudio(); return handleKey(key, inInput); });
   if (r) e.preventDefault();
-  if (r === true) render();
+  if (r === true || !inInput) render();
 });
 document.addEventListener('click', function (e) {
   if (crashed) return;
   var el = e.target;
   while (el && el !== document.body && !(el.getAttribute && el.getAttribute('data-click'))) el = el.parentNode;
-  if (!el || el === document.body || !el.getAttribute) return;
-  var cmd = el.getAttribute('data-click').split(':');
   guard(function () {
-    if (cmd[0] === 'pick') {
+    wakeAudio();
+    if (!el || el === document.body || !el.getAttribute) return;
+    var cmd = el.getAttribute('data-click').split(':');
+    if (cmd[0] === 'open') openProfile(cmd[1]);
+    else if (cmd[0] === 'pick') {
       var i = +cmd[1];
-      if (ui.modal) ui.modal.sel = i; else if (ui.view === 'checkin' && ui.ci && ui.screen === 'main') ui.ci.sel = i; else ui.sel = i;
+      if (ui.modal) ui.modal.sel = i; else if (ui.screen === 'main' && ui.view === 'checkin' && ui.ci) ui.ci.sel = i; else ui.sel = i;
       handleKey('Enter', false);
     } else handleKey(cmd[1], false);
   });
@@ -1166,7 +1271,7 @@ document.addEventListener('click', function (e) {
 window.addEventListener('error', function (e) { crash(e && e.error); });
 window.addEventListener('unhandledrejection', function (e) { crash(e && e.reason); });
 
-guard(function () { loadStore(); });
+guard(function () { loadStore(); refreshAlarms(); });
 render();
 </script>
 </body>
