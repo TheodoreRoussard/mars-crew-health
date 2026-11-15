@@ -54,7 +54,7 @@ Keep a copy of `index.html` on both sticks: the whole tool is that one file. Eac
 ## 5. Good to know
 
 - Each device keeps its own copy. Data moves between devices only through a backup file.
-- Loading a backup replaces the astronauts it contains. The tool lists them and asks first; the default answer is Cancel. To restore one person only, use that person's own backup file.
+- Loading a backup replaces the astronauts it contains. The tool lists them and asks first; the default answer is Cancel. A backup file always holds the whole crew. Older one-astronaut backup files can still be loaded.
 - To remove an astronaut from this device (crew change, test profile), press `S` and choose **Remove an astronaut**. The tool asks twice and the default answer is Cancel. Make a backup first: removing erases that person's measurements on this device.
 - Do not clear Chromium's browsing data and do not use an incognito window: saved measurements would be lost. Backup files are not affected.
 

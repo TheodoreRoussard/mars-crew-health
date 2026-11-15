@@ -991,14 +991,14 @@ function askDate() {
     return '';
   }};
 }
-function exportBackup(ids) {
+/* Always the whole crew: one file per week to look after, and no astronaut can be left out by mistake. */
+function exportBackup() {
   if (demoSession) { say('Demo data is temporary. Exit the demo to export your saved crew.', true); return; }
-  var list = (ids || []).map(function (id) { return store.profiles[id]; }).filter(Boolean);
+  var list = crew();
   if (!list.length) return say('There is no astronaut to back up yet.', true);
   try {
     var day = isoOf(todayNum());
-    var who = list.length === 1 ? (list[0].name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'astronaut') : 'whole-crew';
-    var name = 'crew-health-' + who + '-' + day + '.json';
+    var name = 'crew-health-whole-crew-' + day + '.json';
     var data = JSON.stringify({app: APP, version: VERSION, exportedAt: day, profiles: list}, null, 1);
     var url = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
     var a = document.createElement('a'); a.href = url; a.download = name;
@@ -1227,8 +1227,7 @@ function renderHome() {
 /* Backup and Settings are two screens: B for files that leave the device, S for everything else. */
 function backupItems() {
   var list = crew(), items = [];
-  if (list.length) items.push({cmd: 'export', ids: list.map(function (p) { return p.id; }), label: 'Make a backup file: whole crew (' + list.length + ')'});
-  if (list.length > 1) list.forEach(function (p) { items.push({cmd: 'export', ids: [p.id], label: 'Make a backup file: only ' + p.name}); });
+  if (list.length) items.push({cmd: 'export', label: 'Make a backup file: whole crew (' + list.length + ')'});
   return items.concat([{cmd: 'import', label: 'Load a backup file'}]);
 }
 function settingsItems() {
@@ -1431,7 +1430,7 @@ function move(k, n) {
 function setView(id) { ui.history = null; ui.view = id; ui.sel = 0; ui.card = null; ui.ci = null; ui.msg = null; }
 function runCommand(it) {
   var cmd = it.cmd;
-  if (cmd === 'export') exportBackup(it.ids);
+  if (cmd === 'export') exportBackup();
   else if (cmd === 'import') { try { fileInput.click(); } catch (e) { say('The file chooser could not open.', true); } }
   else if (cmd === 'new') askNewAstronaut();
   else if (cmd === 'remove') askRemoveAstronaut();
