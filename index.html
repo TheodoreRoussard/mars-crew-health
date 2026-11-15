@@ -1124,7 +1124,7 @@ function chartSvg(p, ind) {
   var W = 640, H = 240, L = ind.type === 'choice' ? 118 : 80, R = 20, T = 24, Bm = 40;
   var t = todayNum(), s = chartReadings(p, ind, t, 30), base = refFor(p, ind, t);
   if (!s.length) return '<div class="nochart">No data in the last 30 days.</div>';
-  var lo, hi, i;
+  var lo, hi, i, okBand = false;
   if (ind.type === 'choice') { lo = 0; hi = ind.options.length - 1; }
   else {
     lo = Infinity; hi = -Infinity;
@@ -1145,6 +1145,17 @@ function chartSvg(p, ind) {
     [hi - (hi - lo) * 0.08, (hi + lo) / 2, lo + (hi - lo) * 0.08].forEach(function (v) {
       o += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="#1d2835"/><text x="' + (L - 8) + '" y="' + (Y(v) + 5) + '" text-anchor="end">' + v.toFixed(ind.dec) + '</text>';
     });
+    /* Shade the values that would be OK today, so a wobble inside the band does not look like a problem on a fitted scale. */
+    var N = 60, from = null;
+    for (i = 0; i <= N + 1; i++) {
+      var v = lo + (hi - lo) * i / N, okv = i <= N && evaluate(ind, v, base).status === 'nominal';
+      if (okv && from === null) from = v;
+      if (!okv && from !== null) {
+        var top = Math.min(hi, lo + (hi - lo) * (i - 1) / N);
+        o += '<rect class="ok-band" x="' + (L + 1) + '" y="' + Y(top).toFixed(1) + '" width="' + (W - L - R - 2) + '" height="' + Math.max(2, Y(from) - Y(top)).toFixed(1) + '" fill="#4ade80" fill-opacity=".13"/>';
+        from = null; okBand = true;
+      }
+    }
     if (base != null) o += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(base) + '" y2="' + Y(base) + '" stroke="#7cc4ff" stroke-width="2" stroke-dasharray="7 5"/><text x="' + (L + 6) + '" y="' + (Y(base) - 6) + '" fill="#7cc4ff">' + (ind.rolling ? 'your usual level' : 'your baseline') + '</text>';
   }
   function axisLabel(x) { return x.date.slice(5) + (first.d === last.d && x.recordedAt ? ' ' + timeLabel(x.recordedAt) : ''); }
@@ -1167,7 +1178,7 @@ function chartSvg(p, ind) {
   return o + '</svg><div class="chart-cap">' + s.length + ' readings · last 30 days · fitted time axis. ' +
     (ind.type === 'choice' ? '' : 'Linear auto-scale (' + esc(ind.unit) + '). ') +
     'Hover: value/time · H: full history. ' + (s.some(function (x) { return !x.recordedAt; }) ? 'Unknown times placed at midday. ' : '') +
-    'Circle = OK, triangle = Watch, square = Act.</div>';
+    (okBand ? 'Green band = OK range today. ' : '') + 'Circle = OK, triangle = Watch, square = Act.</div>';
 }
 function cardHtml(p, a, withChart) {
   var ind = a.ind, act = actionFor(a), st = a.status;
