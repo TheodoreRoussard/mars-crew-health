@@ -57,7 +57,9 @@ Each indicator card now includes **Why this status?** It explains the recorded v
 - **Action-oriented overview:** prioritizes alerts and shows a next step and its responsible person.
 - **Body and Hazards views:** explore measurements by body region or by the five mission hazards.
 - **Personal baselines and trends:** heart rate, body mass, and grip strength are evaluated relative to a baseline; indicator cards show 30-day SVG charts.
-- **Visual and audible alerts:** distinct Watch and Act sounds; Act alarms repeat every eight seconds until acknowledged. Unresolved alerts are announced again on the next day; alarms cover the whole crew on every screen.
+- **Visual and audible alerts:** affected crew cards show labelled red or yellow borders. Finite visual pulses share the sound's start time; Act repeats every eight seconds until acknowledged with **A**. Reduced-motion users get steady borders. Acknowledging stops the pulses and sound without clearing the underlying status. Sound still covers the whole crew on every screen; the global alert banner has been removed.
+- **Prioritized Trends:** Act first, then Watch, OK, and No data; indicators within each group are alphabetical. Body section titles keep their status word and color without repeating the large status icon on every heading.
+- **Concrete next steps:** advice starts with an immediate action and includes medical escalation where appropriate. Low temperature and fever, or mass gain and loss, get different guidance. See [action guidance and sources](ACTION-GUIDANCE.md).
 - **Local profiles and backups:** measurements are saved in the browser, with JSON export/import for transfer between devices.
 - **Data-quality handling:** missing or stale readings, missing baselines, and a device date behind the recorded data are surfaced instead of presenting a normal status.
 - **Keyboard and mouse controls:** navigation shortcuts remain visible in the footer.

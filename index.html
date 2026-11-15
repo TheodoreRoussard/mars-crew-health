@@ -72,12 +72,10 @@ header .sp{flex:1}
 header .dim{color:var(--dim)}
 .chip{display:inline-flex;align-items:center;gap:.4rem;padding:.1rem .7rem;border:2px solid var(--c);border-radius:1rem;color:var(--c);font-weight:700;text-transform:uppercase}
 .ico{width:1.3em;height:1.3em;flex:none;vertical-align:middle}
-.alarm{display:flex;flex-wrap:wrap;align-items:center;gap:.1rem .8rem;padding:.25rem 1rem;border:3px solid var(--c);background:#000;color:var(--c);font-weight:700;font-size:1.05rem;flex:none}
-.alarm.live{cursor:pointer}
-.alarm.live.st-act{animation:blink 1s steps(2,start) infinite}
-.alarm .do{color:var(--text);font-weight:600;font-size:.95rem}
-@keyframes blink{50%{border-color:#000}}
-.alarm .sp{flex:1}
+.crew-card.alert-live{border-width:4px;border-color:var(--pulse-color)}
+.crew-card.alert-act{--pulse-color:var(--act)}
+.crew-card.alert-watch{--pulse-color:var(--watch)}
+.cc-pending{color:var(--pulse-color);font-size:.85em;font-weight:700}
 .notice{padding:.25rem 1rem;background:var(--panel2);border-bottom:1px solid var(--line);color:var(--text);flex:none}
 .notice b{color:var(--watch)}
 main{flex:1;min-height:0;padding:.6rem 1rem;display:flex;flex-direction:column;gap:.5rem}
@@ -233,7 +231,7 @@ var INDICATORS = [
    how: 'Rest for 5 minutes first. Read the beats per minute on the finger sensor.',
    why: 'Without gravity the heart and blood vessels change, and a shifted resting pulse is an early sign.',
    actions: {watch: {t: 'Rest for 10 minutes, drink water, then measure again.', who: 'you'},
-             act: {t: 'Stop exercise and see the crew medical officer now.', who: 'cmo'}}},
+             act: {t: 'Stop exertion, secure yourself in a resting position and record your pulse and symptoms. Call the crew medical officer now; use the emergency protocol for chest pain, fainting or trouble breathing.', who: 'cmo'}}},
   {id: 'bp', label: 'Blood pressure (top number)', region: 'heart', hazard: 'gravity', risk: 'Cardiovascular adaptation',
    type: 'number', unit: 'mmHg', dec: 0, min: 50, max: 260, metric: 'abs', every: 1, eps: 5,
    bands: [B(89, 'act', 'Very low'), B(99, 'watch', 'Slightly low'), B(134, 'nominal', 'Normal'),
@@ -241,7 +239,7 @@ var INDICATORS = [
    how: 'Put the cuff on your upper arm and press Start. Type the top (larger) number.',
    why: 'Body fluids move toward the head in space, which changes the pressure your heart works against.',
    actions: {watch: {t: 'Stay still and calm for 5 minutes, then measure again.', who: 'you'},
-             act: {t: 'See the crew medical officer now.', who: 'cmo'}}},
+             act: {t: 'Stop exertion and rest in a supported position. Call the crew medical officer now with the reading; do not delay the emergency protocol for chest pain, weakness or trouble breathing.', who: 'cmo'}}},
   {id: 'temp', label: 'Body temperature', region: 'immune', hazard: 'closed', risk: 'Altered immune system',
    type: 'number', unit: '°C', dec: 1, min: 30, max: 43, metric: 'abs', every: 1, eps: 0.3,
    bands: [B(34.9, 'act', 'Very low'), B(35.9, 'watch', 'Slightly low'), B(37.5, 'nominal', 'Normal'),
@@ -249,16 +247,16 @@ var INDICATORS = [
    how: 'Use the ear thermometer. Type the number in degrees Celsius, for example 36.8.',
    why: 'The immune system is weaker in space, so a fever can mean an infection is starting.',
    actions: {watch: {t: 'Rest, drink water and measure again in 2 hours.', who: 'you'},
-             act: {t: 'See the crew medical officer now and keep away from shared food.', who: 'cmo'}}},
+             act: {t: 'Rest, take small drinks if fully alert and able to swallow, and record your temperature and symptoms. Avoid preparing shared food; call the crew medical officer now.', who: 'cmo'}}},
   {id: 'mass', label: 'Body mass', region: 'immune', hazard: 'distance', risk: 'Inadequate food and nutrition',
    type: 'number', unit: 'kg', dec: 1, min: 30, max: 150, metric: 'pct', every: 1, eps: 0.5,
    bands: [B(-10, 'act', 'Much lower than your normal'), B(-5, 'watch', 'Lower than your normal'),
            B(5, 'nominal', 'Normal for you'), B(Infinity, 'watch', 'Higher than your normal')],
    how: 'Use the body mass device before breakfast. Type the number in kilograms.',
    why: 'Losing body mass means you are not eating enough, and no new food can be sent from Earth.',
-   actions: {watch: {t: 'Eat every planned meal and add one snack today.', who: 'you'},
-             act: {t: 'Send your food log to the flight surgeons.', who: 'earth',
-                   wait: 'eat all planned meals plus two snacks a day, and weigh again tomorrow.'}}},
+   actions: {watch: {t: 'Check the mass device and repeat under the same conditions. Log missed meals, appetite and fluids; follow your planned meals and review the change with the crew medical officer.', who: 'you'},
+             act: {t: 'Check the measurement and record recent meals, appetite and symptoms. Arrange an onboard review now and send the mass trend and food log to the flight surgeons.', who: 'earth',
+                   wait: 'follow the agreed meal plan, record intake and remeasure under the same conditions; do not change portions without reviewing the cause.'}}},
   {id: 'exercise', label: 'Exercise (last 24 hours)', region: 'muscles', hazard: 'gravity',
    risk: 'Cardiorespiratory and musculoskeletal fitness',
    type: 'number', unit: 'min', dec: 0, min: 0, max: 300, metric: 'abs', every: 1, eps: 15,
@@ -272,7 +270,7 @@ var INDICATORS = [
    how: 'How many hours did you really sleep? For example 6.5.',
    why: 'Poor sleep in a closed, isolated ship quickly leads to mistakes and low mood.',
    actions: {watch: {t: 'Dim the lights and stop screen use 1 hour before sleep tonight.', who: 'you'},
-             act: {t: 'See the crew medical officer before any critical task.', who: 'cmo'}}},
+             act: {t: 'Hand over safety-critical tasks and protect a quiet, dark sleep period. Record sleep interruptions and review the schedule with the crew medical officer before returning to critical work.', who: 'cmo'}}},
   {id: 'dizzy', label: 'Dizziness and balance', region: 'head', hazard: 'gravity',
    risk: 'Altered sensorimotor and vestibular function', type: 'choice', every: 1, eps: 0.5,
    options: [O('No dizziness', 'nominal', 'None'), O('Some dizziness or clumsy hands', 'watch', 'Mild'),
@@ -280,22 +278,22 @@ var INDICATORS = [
    how: 'Turn your head left and right, then touch your nose with each hand. How do you feel?',
    why: 'The balance organs and movement control re-tune in altered gravity, which can make precise tasks unsafe.',
    actions: {watch: {t: 'Move slowly and avoid quick head turns today.', who: 'you'},
-             act: {t: 'Stop precision tasks and see the crew medical officer.', who: 'cmo'}}},
+             act: {t: 'Stop precision tasks, secure yourself and keep your head still. Ask a crewmate to stay with you and call the crew medical officer now.', who: 'cmo'}}},
   {id: 'mood', label: 'Mood', hazard: 'isolation', risk: 'Isolation and confinement', type: 'choice', every: 1, eps: 0.5,
    options: [O('Good or normal', 'nominal', 'Good'), O('Low, irritable or withdrawn', 'watch', 'Low'),
              O('Very low or hopeless', 'act', 'Very low')],
    how: 'Think about the last 24 hours. Which line fits best?',
    why: 'Months of isolation and confinement wear down mood, and low mood affects the whole crew.',
    actions: {watch: {t: 'Talk with a crewmate or record a message home today.', who: 'you'},
-             act: {t: 'Talk to the crew medical officer today.', who: 'cmo'}}},
+             act: {t: 'Pause non-essential tasks and ask a trusted crewmate to stay and talk with you. Arrange private support with the crew medical officer today; if you feel unsafe, seek help immediately.', who: 'cmo'}}},
   {id: 'immune', label: 'Skin, mouth and wounds', region: 'immune', hazard: 'closed', risk: 'Altered immune system',
    type: 'choice', every: 1, eps: 0.5,
    options: [O('Nothing unusual', 'nominal', 'Clear'), O('Cold sore, rash or a slow-healing cut', 'watch', 'Mild signs'),
              O('Spreading rash, or a hot, swollen wound', 'act', 'Strong signs')],
    how: 'Look at your lips, skin and any cuts. Which line fits best?',
    why: 'A weaker immune system lets old viruses wake up and makes wounds heal slowly.',
-   actions: {watch: {t: 'Show it to the crew medical officer at the next meal.', who: 'cmo'},
-             act: {t: 'See the crew medical officer today.', who: 'cmo'}}},
+   actions: {watch: {t: 'Photograph the affected area and note when it started. For a small cut, rinse with clean water and cover with a clean dressing; arrange an onboard review.', who: 'cmo'},
+             act: {t: 'Photograph the redness or swelling and note any fever. Keep wounds clean and covered; obtain prompt onboard assessment, urgently if redness spreads or you feel unwell.', who: 'cmo'}}},
   {id: 'gut', label: 'Stomach and gut', region: 'immune', hazard: 'closed', risk: 'Host–microorganism interactions',
    type: 'choice', every: 1, eps: 0.5,
    options: [O('Normal', 'nominal', 'Normal'), O('Bloating, cramps or loose stools', 'watch', 'Upset'),
@@ -303,15 +301,15 @@ var INDICATORS = [
    how: 'How has your stomach and gut been in the last 24 hours?',
    why: 'Microbes behave differently in a sealed ship and can upset the balance between you and your gut bacteria.',
    actions: {watch: {t: 'Drink water, eat plain food and wash your hands often.', who: 'you'},
-             act: {t: 'See the crew medical officer and use your own hygiene kit.', who: 'cmo'}}},
+             act: {t: 'Take frequent small sips if fully alert and able to swallow, and log vomiting, stools and urine. Use your own hygiene kit; obtain urgent onboard help if fluids will not stay down or you feel faint.', who: 'cmo'}}},
   {id: 'dcs', label: 'Pressure-change symptoms', region: 'muscles', hazard: 'closed', risk: 'Decompression sickness',
    type: 'choice', every: 1, eps: 0.5,
    options: [O('No symptoms', 'nominal', 'None'), O('Joint ache, tingling or itchy skin', 'watch', 'Mild'),
              O('Strong joint pain, chest pain, trouble breathing or confusion', 'act', 'Severe')],
    how: 'After any suit work or cabin pressure change: do you feel any of these?',
    why: 'When pressure drops, gas bubbles can form in the body and cause decompression sickness.',
-   actions: {watch: {t: 'Tell the crew medical officer and check again in 1 hour.', who: 'cmo'},
-             act: {t: 'Breathe pure oxygen now and call the crew medical officer.', who: 'cmo'}}},
+   actions: {watch: {t: 'Stop suit work, secure yourself and note symptom onset and the pressure-change timeline. Contact the crew medical officer immediately and follow the onboard pressure-incident procedure.', who: 'cmo'},
+             act: {t: 'Stop suit work and call for immediate crew help. Start the onboard pressure-emergency protocol, including oxygen as trained; avoid further pressure changes unless directed by that protocol.', who: 'cmo'}}},
   /* Spacewalks are EVENTS, as in NASA's own EVA log: one record per sortie. 'eva_done' is the daily gate question;
      the indicators marked after:'eva_done' are asked only after a sortie, then daily until the symptom is gone.
      Symptom list follows what that log reports most: suit CO2, eye irritation and fogging, heat and fatigue, gloves. */
@@ -333,8 +331,8 @@ var INDICATORS = [
              O('Confused, dizzy, or had to stop the sortie', 'act', 'Severe')],
    how: 'Think about the time in the suit and the hours after it. Which line fits best?',
    why: 'Carbon dioxide build-up and overheating in the suit are the problems most often logged during spacewalks.',
-   actions: {watch: {t: 'Tell the crew medical officer and have the suit CO2 canister checked.', who: 'cmo'},
-             act: {t: 'See the crew medical officer now and tag that suit as not to be used.', who: 'cmo'}}},
+   actions: {watch: {t: 'Pause suit work and record the suit CO2, cooling readings and symptoms. Have the life-support system checked before reuse and report symptoms to the crew medical officer.', who: 'cmo'},
+             act: {t: 'Stop work and use the trained assisted-return procedure if still outside. Request immediate crew medical help and isolate the suit for life-support checks before reuse.', who: 'cmo'}}},
   {id: 'eva_eyes', label: 'Eyes and skin after the suit', region: 'eva', risk: 'Injury and compromised performance from spacewalks (EVA)', after: 'eva_done',
    type: 'choice', every: 1, eps: 0.5,
    options: [O('Normal', 'nominal', 'Normal'), O('Stinging eyes, fogged vision or irritated skin', 'watch', 'Irritated'),
@@ -349,8 +347,8 @@ var INDICATORS = [
              O('Pain or injury that limits your work', 'act', 'Limiting')],
    how: 'Check your hands, fingernails, shoulders and skin after suit work.',
    why: 'The stiff pressurised suit strains hands and shoulders, and small injuries get worse with every spacewalk.',
-   actions: {watch: {t: 'Show the sore area to the crew medical officer.', who: 'cmo'},
-             act: {t: 'Stop suit work and get treated by the crew medical officer.', who: 'cmo'}}},
+   actions: {watch: {t: 'Rest the sore hand or shoulder, avoid the movement that triggers pain and record the location. Check glove fit and pressure points before the next sortie with the crew medical officer.', who: 'cmo'},
+             act: {t: 'Stop suit work and avoid loading the injured area. Cover open skin with a clean dressing and ask for onboard assessment before returning to duty.', who: 'cmo'}}},
   /* Radiation is judged against the crew member's own usual level (median of the previous 7 days), because a year of
      ISS dosimetry shows a very stable background (about 6 % spread at a fixed location): the departure is the signal.
      bands apply to value / usual level. absBands are the fallback while no usual level exists, and their Act level
@@ -363,7 +361,7 @@ var INDICATORS = [
    how: 'Read the 24-hour dose on your personal dosimeter. Type the number in mSv.',
    why: 'Outside Earth’s magnetic field you are exposed to radiation that adds up over the whole mission.',
    actions: {watch: {t: 'Spend your rest time in the best-shielded area today.', who: 'you'},
-             act: {t: 'Go to the storm shelter now and stay until the level drops.', who: 'you'}}},
+             act: {t: 'Move to the designated shielded shelter and follow the radiation-event checklist. Track dosimeter readings and remain sheltered until the crew radiation procedure gives clearance.', who: 'you'}}},
   {id: 'co2', label: 'Cabin air CO2', hazard: 'closed', risk: 'Hostile closed environment',
    type: 'number', unit: 'mmHg', dec: 1, min: 0, max: 40, metric: 'abs', every: 1, eps: 0.5,
    bands: [B(4, 'nominal', 'Normal'), B(6, 'watch', 'Slightly high'), B(Infinity, 'act', 'Too high')],
@@ -378,8 +376,8 @@ var INDICATORS = [
    how: 'Read the eye chart card at arm’s length, one eye at a time.',
    why: 'Fluid shifting toward the head presses on the back of the eye and can change your vision.',
    actions: {watch: {t: 'Repeat the eye chart tomorrow at the same time.', who: 'you'},
-             act: {t: 'Send your eye test and eye scan to the flight surgeons.', who: 'earth',
-                   wait: 'rest your eyes, avoid fine close-up work and tell the crew medical officer.'}}},
+             act: {t: 'Stop visually demanding or safety-critical tasks and record when the change began. Seek immediate onboard assessment for sudden loss or blind spots; send available eye-test results to the flight surgeons.', who: 'earth',
+                   wait: 'stay with a crewmate if vision limits safe movement and follow the onboard eye-emergency procedure; do not wait for an Earth reply for sudden vision loss.'}}},
   {id: 'grip', label: 'Grip strength', region: 'muscles', hazard: 'gravity', risk: 'Cardiorespiratory and musculoskeletal fitness',
    type: 'number', unit: 'kg', dec: 0, min: 5, max: 90, metric: 'pct', every: 7, eps: 2,
    bands: [B(-20, 'act', 'Much weaker than your normal'), B(-10, 'watch', 'Weaker than your normal'),
@@ -387,7 +385,7 @@ var INDICATORS = [
    how: 'Squeeze the hand grip meter as hard as you can with your stronger hand. Type the kg number.',
    why: 'Muscles shrink when they do not work against gravity, and grip strength shows it early.',
    actions: {watch: {t: 'Add the hand and arm resistance set to your next session.', who: 'you'},
-             act: {t: 'Ask the flight surgeons for a new exercise plan.', who: 'earth',
+             act: {t: 'Check the grip-meter setup and log pain, fatigue and the strength trend. Avoid adding heavy loads and request a reviewed exercise plan from the flight surgeons.', who: 'earth',
                    wait: 'keep doing your normal exercise sessions and do not add heavy loads on your own.'}}},
   {id: 'ucal', label: 'Urine calcium strip', region: 'muscles', hazard: 'gravity', risk: 'Spaceflight-induced bone changes',
    type: 'choice', every: 7, eps: 0.5,
@@ -395,17 +393,17 @@ var INDICATORS = [
              O('Strip shows very high', 'act', 'Very high')],
    how: 'Dip a calcium test strip in your first urine of the day. Compare it with the colour card.',
    why: 'Bones lose calcium without gravity, and the lost calcium leaves the body in urine.',
-   actions: {watch: {t: 'Drink one extra litre of water today.', who: 'you'},
-             act: {t: 'Report the strip result to the flight surgeons.', who: 'earth',
-                   wait: 'drink extra water and keep doing your resistance exercise.'}}},
+   actions: {watch: {t: 'Check the strip expiry and reading time, and log the result. Follow your prescribed hydration plan and arrange review before changing fluids or supplements.', who: 'you'},
+             act: {t: 'Check the strip procedure and record the result with fluid intake and any flank pain. Arrange onboard review and send the record to the flight surgeons.', who: 'earth',
+                   wait: 'follow your existing hydration plan; get urgent onboard help for severe flank pain, fever or trouble passing urine.'}}},
   {id: 'medkit', label: 'Medical kit check', hazard: 'distance', risk: 'Distance from Earth',
    type: 'choice', every: 7, eps: 0.5,
    options: [O('Complete', 'nominal', 'Complete'), O('Some items running low', 'watch', 'Running low'),
              O('A critical item is missing or expired', 'act', 'Item missing')],
    how: 'Open your personal medical kit and compare it with the list inside the lid.',
    why: 'Nothing can be resupplied and help from Earth is delayed, so the kit on board is all you have.',
-   actions: {watch: {t: 'Tell the crew medical officer which items are low.', who: 'cmo'},
-             act: {t: 'Report the missing item to the flight surgeons.', who: 'earth',
+   actions: {watch: {t: 'Count the remaining supplies, check expiry dates and update the inventory. Locate onboard reserves with the crew medical officer before the next planned use.', who: 'cmo'},
+             act: {t: 'Mark the missing or expired item in the inventory and check onboard reserves. Ask the crew medical officer to verify approved alternatives and send the shortage to the flight surgeons.', who: 'earth',
                    wait: 'ask the crew medical officer for the on-board substitute list.'}}}
 ];
 function validValue(ind, v) {
@@ -644,6 +642,13 @@ function alertsOf(list) {
 }
 function actionFor(a) {
   if (a.status === 'act' || a.status === 'watch') {
+    if (a.ind.id === 'temp' && a.value < 36) return {
+      t:a.status === 'act' ? 'Move to a warm area, replace wet clothing and wrap in dry layers. Call for immediate onboard medical help; do not use direct heat or rub the limbs.' : 'Move to a warm area and add dry layers. Check thermometer placement and repeat the reading; seek onboard help if it stays low or you feel unwell.',
+      who:a.status === 'act' ? 'cmo' : 'you'
+    };
+    if (a.ind.id === 'mass' && a.status === 'watch' && a.value > a.baseline) return {
+      t:'Check the device and repeat under the same conditions. Log the increase and any swelling; review fluid balance and the trend with the crew medical officer before changing food intake.', who:'you'
+    };
     var x = a.ind.actions[a.status] || a.ind.actions.watch || a.ind.actions.act;
     if (x) return x;
   }
@@ -908,10 +913,12 @@ function beep(f, at, dur, type, vol) {
 }
 /* Watch = two slow, soft rising notes. Act = six fast, harsh alternating pulses. Different rhythm AND pitch. */
 function playWatch() {
+  pulseCrew('watch');
   if (!audio.ok) return;
   try { var t = audio.ctx.currentTime + 0.05; beep(523, t, 0.35, 'sine', 0.25); beep(659, t + 0.45, 0.45, 'sine', 0.25); } catch (e) {}
 }
 function playAct() {
+  pulseCrew('act');
   if (!audio.ok) return;
   try { var t = audio.ctx.currentTime + 0.05; for (var i = 0; i < 3; i++) { beep(988, t + i * 0.42, 0.14, 'square', 0.18); beep(740, t + i * 0.42 + 0.17, 0.14, 'square', 0.18); } } catch (e) {}
 }
@@ -922,11 +929,42 @@ var VIEWS = [{id: 'overview', name: 'Overview'}, {id: 'checkin', name: 'Check-in
 var ui = {screen: 'home', cols: 1, activeId: null, view: 'overview', sel: 0, items: [], card: null, ci: null,
           modal: null, prompt: null, msg: null, pending: []};
 var acked = {}, announced = {}, actTimer = null, crashed = false;
+var crewPulse = {act:null, watch:null};
 var app = document.getElementById('app'), fileInput = document.getElementById('file');
 function active() { return store.profiles[ui.activeId] || null; }
 function say(text, bad) { ui.msg = {text: text, bad: !!bad}; }
 
 /* ---------- alarms ---------- */
+/* Visual pulses share the sound's start time. Three slow flashes pair with the
+   six Act notes; reduced-motion users keep a steady, labelled border instead. */
+function pulseCrew(level) {
+  crewPulse[level] = Date.now() + 50;
+  syncCrewPulses();
+}
+function syncCrewPulses() {
+  if (!app.querySelectorAll) return;
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var cards = app.querySelectorAll('.crew-card[data-alert-level]');
+  for (var i = 0; i < cards.length; i++) {
+    var card = cards[i], level = card.getAttribute('data-alert-level'), epoch = crewPulse[level];
+    if (!card.animate || epoch == null) continue;
+    if (reduced) { if (card.getAnimations) card.getAnimations().forEach(function (a) { a.cancel(); }); continue; }
+    if (card._pulseEpoch === epoch) continue;
+    card._pulseEpoch = epoch;
+    if (card.getAnimations) card.getAnimations().forEach(function (a) { a.cancel(); });
+    var elapsed = Date.now() - epoch, duration = level === 'act' ? 1400 : 1000;
+    if (elapsed >= duration) continue;
+    var color = level === 'act' ? '#ff6b5e' : '#ffbf24', frames = [];
+    var times = level === 'act' ? [0, 150, 420, 570, 840, 990, 1400] : [0, 200, 450, 650, 1000];
+    times.forEach(function (ms, k) { frames.push({offset:ms / duration, boxShadow:k % 2 === 0 && k < times.length - 1 ? 'inset 0 0 0 5px ' + color : 'inset 0 0 0 0px ' + color}); });
+    var animation = card.animate(frames, {duration:duration, delay:Math.max(0, -elapsed), easing:'steps(1, end)'});
+    if (elapsed > 0) animation.currentTime = elapsed;
+  }
+}
+function pendingLevel(id) {
+  var pending = ui.pending.filter(function (x) { return x.p.id === id; });
+  return pending.some(function (x) { return x.a.status === 'act'; }) ? 'act' : pending.length ? 'watch' : '';
+}
 function crew() { return Object.keys(store.profiles).map(function (id) { return store.profiles[id]; }); }
 /* Alarms cover the WHOLE crew and run on every screen. The key holds today's day number, so an alert that is
    still there the next day is announced again. Nothing is marked "announced" while sound is still off. */
@@ -944,6 +982,10 @@ function refreshAlarms() {
     });
   });
   ui.pending.sort(function (x, y) { return (y.a.status === 'act' ? 1 : 0) - (x.a.status === 'act' ? 1 : 0); });
+  if (!hasAct) crewPulse.act = null;
+  if (!ui.pending.some(function (x) { return x.a.status === 'watch'; })) crewPulse.watch = null;
+  if (hasAct && crewPulse.act == null) crewPulse.act = Date.now() + 50;
+  if (ui.pending.some(function (x) { return x.a.status === 'watch'; }) && crewPulse.watch == null) crewPulse.watch = Date.now() + 50;
   if (hasAct) {
     if (newAct) playAct();
     if (!actTimer) actTimer = setInterval(function () {
@@ -952,7 +994,7 @@ function refreshAlarms() {
   } else { stopActLoop(); if (newWatch) playWatch(); }
 }
 function stopActLoop() { if (actTimer) { clearInterval(actTimer); actTimer = null; } }
-function acknowledge() { ui.pending.forEach(function (x) { acked[x.key] = true; }); ui.pending = []; stopActLoop(); }
+function acknowledge() { ui.pending.forEach(function (x) { acked[x.key] = true; }); ui.pending = []; crewPulse = {act:null,watch:null}; stopActLoop(); }
 
 /* ---------- session and profile actions ---------- */
 function goHome() {
@@ -1115,9 +1157,9 @@ function rowHtml(a, i, big) {
   return '<div class="row st-' + st + (i === ui.sel ? ' sel' : '') + (big ? ' big' : '') + '" data-click="pick:' + i + '">' + icon(st) +
     '<span class="r-label">' + esc(a.ind.label) + '</span><span class="r-word">' + esc(word) + '</span><span class="r-val">' + esc(val) + '</span></div>';
 }
-function groupHtml(name, list) {
+function groupHtml(name, list, hideIcon) {
   var w = worst(list);
-  return '<div class="grp st-' + w + '">' + icon(w) + '<span>' + esc(name) + '</span><span class="g-word">' + STATUS[w].word + '</span></div>';
+  return '<div class="grp st-' + w + '">' + (hideIcon ? '' : icon(w)) + '<span>' + esc(name) + '</span><span class="g-word">' + STATUS[w].word + '</span></div>';
 }
 /* Chart every active capture; keep series() daily for baselines and dose totals.
    Use the entry's effective date and the device's local time of capture. Legacy
@@ -1236,22 +1278,6 @@ function topBar() {
   });
   return h + '<span class="hint" data-click="key:Tab"><kbd>Tab</kbd>Next</span><span class="sp"></span><span class="dim">' + niceDate(todayNum()) + '</span>' + (audio.ok ? '<span class="dim">Sound on</span>' : '<span class="snd-off">Sound off</span>') + '</header>';
 }
-/* Unacknowledged alerts of ANY astronaut blink here on every screen. Inside a profile, once everything is
-   acknowledged, that astronaut's top alert stays as a steady banner so every view still says what to do. */
-function alertBar(p, all) {
-  var live = ui.pending.length > 0, alerts = p ? alertsOf(all) : [];
-  if (!live && !alerts.length) return '';
-  var top = live ? ui.pending[0].a : alerts[0], who = live ? ui.pending[0].p : p, act = actionFor(top);
-  /* "+N more" counts only this astronaut's alerts; other astronauts are named as a separate count */
-  var n = live ? ui.pending.filter(function (x) { return x.p.id === who.id; }).length : alerts.length, others = {};
-  if (live) ui.pending.forEach(function (x) { if (x.p.id !== who.id) others[x.p.id] = true; });
-  var nOthers = Object.keys(others).length;
-  return '<div class="alarm st-' + top.status + (live ? ' live' : '') + '"' + (live ? ' data-click="key:a"' : '') + '>' + icon(top.status) +
-    '<span>' + (top.status === 'act' ? (live ? 'ALARM – ACT: ' : 'ACT: ') : 'WATCH: ') + esc(who.name) + ' · ' + esc(top.ind.label) + ' – ' + esc(top.word) + (n > 1 ? ' (+' + (n - 1) + ' more)' : '') +
-    (nOthers ? ' · ' + nOthers + ' other astronaut' + (nOthers > 1 ? 's' : '') + ' also need' + (nOthers > 1 ? '' : 's') + ' attention' : '') + '</span>' +
-    '<span class="do">Do now: ' + esc(act.t) + ' (' + OWNERS[act.who] + ')</span><span class="sp"></span>' +
-    (live ? '<span><kbd>A</kbd>Acknowledge' + (top.status === 'act' ? ' and silence' : '') + '</span>' : '<span class="do"><kbd>1</kbd>Details</span>') + '</div>';
-}
 function noticesHtml() {
   var notes = [], h = '<div class="notice">Prototype: illustrative rules and actions; not clinically validated.</div>';
   if (demoSession) h += '<div class="notice demo-note"><b>DEMO · Fictional data · Changes are temporary.</b> ' + esc(demoSession.guide) + ' <button type="button" data-click="key:d">D · Change scenario</button> <button type="button" data-click="key:x">X · Exit demo</button></div>';
@@ -1272,12 +1298,14 @@ function renderHome() {
     var all = assessAll(p), w = worst(all), al = alertsOf(all), wrong = clockWrong(p), due = wrong ? 0 : dueSteps(p).length;
     var missing = all.filter(function (a) { return a.status === 'nodata'; }).length, top = al[0], act = top ? actionFor(top) : null;
     var acts = al.filter(function (a) { return a.status === 'act'; }), nWatch = al.length - acts.length;
+    var pending = pendingLevel(p.id);
     var title = w === 'act' ? 'ACT NOW' : w === 'watch' ? 'KEEP WATCH' : w === 'nominal' ? 'NO ALERTS' : 'NO DATA', counts = '';
     ['watch', 'nodata'].forEach(function (st) {               /* Act is listed in full above, never only as a count */
       var k = all.filter(function (a) { return a.status === st; }).length;
       if (k) counts += '<span class="cc-n st-' + st + '">' + icon(st) + k + ' ' + STATUS[st].word + '</span>';
     });
-    html += '<div class="crew-card st-' + w + (i === ui.sel ? ' sel' : '') + '" data-click="pick:' + i + '">' +
+    html += '<div class="crew-card st-' + w + (i === ui.sel ? ' sel' : '') + (pending ? ' alert-live alert-' + pending : '') + '"' + (pending ? ' data-alert-level="' + pending + '"' : '') + ' data-click="pick:' + i + '">' +
+      (pending ? '<div class="cc-pending">Unacknowledged ' + STATUS[pending].word + ' · A: acknowledge</div>' : '') +
       '<div class="cc-top">' + icon(w) + '<div class="cc-id"><div class="cc-name">' + esc(p.name) + '</div><div class="cc-role">' + esc(p.role) + '</div></div><div class="cc-status">' + title + '</div></div>' +
       (acts.length ? '<ul class="cc-acts' + (acts.length > 3 ? ' many' : '') + '">' + acts.map(function (a) { return '<li>' + icon('act') + '<span><b>' + esc(a.ind.label.replace(/ \(.*\)$/, '')) + '<span class="p">' + esc((a.ind.label.match(/ \(.*\)$/) || [''])[0]) + '</span></b><span class="w">: ' + esc(a.word) + '</span></span></li>'; }).join('') + '</ul>' +
           '<div class="cc-do">Do now: ' + esc(act.t) + '</div>' + (acts.length === 1 ? '<div class="cc-who">Who handles it: ' + OWNERS[act.who] + '</div>' : '')
@@ -1287,7 +1315,7 @@ function renderHome() {
   });
   var body = n ? '<div class="crew-grid c' + cols + '" style="grid-template-columns:repeat(' + cols + ',1fr);grid-template-rows:repeat(' + rows + ',1fr)">' + html + '</div>'
     : '<div class="center"><div class="title-xl">CREW HEALTH MONITOR</div><div class="lead">No astronaut on this device yet.</div><div class="how">Press <kbd>Enter</kbd> to add one, or <kbd>B</kbd> to load a backup file.</div></div>';
-  return topBar() + alertBar(null) + noticesHtml() + '<main>' + body + msgHtml() + '</main><footer>' +
+  return topBar() + noticesHtml() + '<main>' + body + msgHtml() + '</main><footer>' +
     keysHtml((n ? [['← → ↑ ↓', 'Choose astronaut', 'ArrowRight'], ['Enter', 'Open', 'Enter']] : [['Enter', 'Add an astronaut', 'Enter']]).concat([['B', 'Backup', 'b'], ['S', 'Settings', 's'], ['D', 'Start demo', 'd'], '|']).concat(ui.pending.length ? [['A', 'Acknowledge alarm', 'a']] : [])) + '</footer>';
 }
 /* Backup and Settings are two screens: B for files that leave the device, S for everything else. */
@@ -1307,7 +1335,7 @@ function renderMenu(title, items, aside) {
   if (ui.sel >= items.length) ui.sel = items.length - 1;
   items.forEach(function (it, i) { rows += '<div class="row' + (i === ui.sel ? ' sel' : '') + '" data-click="pick:' + i + '"><span class="r-label">' + esc(it.label) + '</span></div>'; });
   ui.items = items;
-  return topBar() + alertBar(null) + noticesHtml() + '<main><h1>' + title + '</h1><div class="cols"><div class="list settings">' + rows + '</div><aside>' + aside + '</aside></div>' + msgHtml() + '</main><footer>' +
+  return topBar() + noticesHtml() + '<main><h1>' + title + '</h1><div class="cols"><div class="list settings">' + rows + '</div><aside>' + aside + '</aside></div>' + msgHtml() + '</main><footer>' +
     keysHtml([['↑ ↓', 'Move', 'ArrowDown'], ['Enter', 'Do it', 'Enter'], ['Esc', 'Back to the crew page', 'Escape'], '|'].concat(ui.pending.length ? [['A', 'Acknowledge alarm', 'a']] : [])) + '</footer>';
 }
 function renderBackup() {
@@ -1361,7 +1389,7 @@ function renderGrouped(p, all, groups, field, withBody) {
   groups.forEach(function (g) {
     var list = all.filter(function (a) { return a.ind[field] === g.id; });
     regSt[g.id] = worst(list);
-    html += groupHtml(g.name, list);
+    html += groupHtml(g.name, list, withBody);
     list.forEach(function (a) { if (items.length === ui.sel) selGroup = g.id; html += rowHtml(a, items.length); items.push({kind: 'ind', id: a.ind.id}); });
   });
   if (ui.sel >= items.length) ui.sel = items.length - 1;
@@ -1383,6 +1411,8 @@ function renderGrouped(p, all, groups, field, withBody) {
   return '<div class="cols">' + side + '<div class="list">' + html + '</div></div>';
 }
 function renderTrends(p, all) {
+  var rank = {act:0, watch:1, nominal:2, nodata:3};
+  all = all.slice().sort(function (a, b) { return rank[a.status] - rank[b.status] || a.ind.label.localeCompare(b.ind.label, 'en'); });
   var items = [], rows = '';
   all.forEach(function (a, i) { rows += rowHtml(a, i); items.push({kind: 'ind', id: a.ind.id}); });
   if (ui.sel >= items.length) ui.sel = items.length - 1;
@@ -1457,7 +1487,7 @@ function renderMain() {
     foot = navKeys().concat(['|', ['↑ ↓', 'Move', 'ArrowDown'], ['Enter', ui.view === 'checkin' ? 'Answer' : 'Open', 'Enter'], ['Esc', 'Crew page', 'Escape']]);
   }
   if (ui.pending.length) foot = foot.concat([['A', 'Acknowledge alarm', 'a']]);
-  return topBar() + alertBar(ui.view === 'overview' && !ui.card ? null : p, all) + noticesHtml() + '<main>' + body   /* the Overview headline already says it */ + msgHtml() + '</main><footer>' + keysHtml(foot) + '</footer>';
+  return topBar() + noticesHtml() + '<main>' + body   /* the Overview headline already says it */ + msgHtml() + '</main><footer>' + keysHtml(foot) + '</footer>';
 }
 function renderOverlay() {
   if (ui.baseline) return baselineForm();
@@ -1480,6 +1510,7 @@ function render() {
     if (f) { f.focus(); try { f.setSelectionRange(f.value.length, f.value.length); } catch (e) {} }
     else if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     fitCards();
+    syncCrewPulses();
     var s = app.querySelector('.list .row.sel');
     if (s && s.scrollIntoView) s.scrollIntoView({block: 'nearest'});
   } catch (e) { crash(e); }
@@ -1653,5 +1684,6 @@ render();
 </script>
 </body>
 </html>
+
 
 

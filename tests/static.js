@@ -16,7 +16,7 @@ ok(!/\beval\s*\(|new Function\s*\(|document\.write/.test(html), 'no eval, new Fu
 const kb = fs.statSync(path.join(root, 'index.html')).size / 1024;
 ok(kb < 200, 'index.html is ' + kb.toFixed(0) + ' KB (budget 200 KB for a Raspberry Pi 4)');
 ok(/<meta charset="utf-8">/i.test(html) && /<html lang="en">/.test(html), 'charset and language declared');
-ok(!/animation:[^;}]*infinite/.test(html.replace(/\.alarm\.live\.st-act\{[^}]*\}/, '')), 'no continuous animation except the Act alarm border');
+ok(!/animation:[^;}]*infinite/.test(html), 'no continuous CSS animation; crew pulses are finite and alarm-driven');
 
 // 2. The rules table.
 const core = html.split('/*==CORE-BEGIN==')[1].split('/*==CORE-END==*/')[0].replace(/^[^\n]*\n/, '');
@@ -73,3 +73,4 @@ ok(invalid === 0, 'every sample value is valid for its indicator');
 ok(sample.profiles.some(p => p.entries.length >= 30), 'sample holds 30 days for at least one astronaut');
 ok(st.watch >= 1 && st.act >= 1, 'sample contains Watch (' + st.watch + ') and Act (' + st.act + ') readings');
 console.log(process.exitCode ? '\nSOME CHECKS FAILED' : '\nAll ' + passed + ' static checks passed');
+

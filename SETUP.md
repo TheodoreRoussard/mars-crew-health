@@ -28,7 +28,7 @@ To try the tool with an example crew, press `B`, choose **Load a backup file** a
 
 Open your profile, press `2`, then either answer everything that is due or pick a single question.
 
-The sound turns on at the first key press after the page is opened. An **Act** alarm of any astronaut repeats every 8 seconds, on every screen, until someone presses `A`. The alert stays on screen. It sounds again the next day if the problem is still there.
+The sound turns on at the first key press after the page is opened. An **Act** alarm of any astronaut repeats every 8 seconds, on every screen, until someone presses `A`. On the crew page, each affected astronaut's card shows a labelled red or yellow border and pulses with its alert sound. Reduced-motion settings keep the border steady. `A` stops sound and pulses; the medical status and advice remain. There is no global alert banner: press `0` to locate the affected crew member. An unresolved alert sounds again the next day.
 
 ## 3. Every week: backup (1 minute)
 

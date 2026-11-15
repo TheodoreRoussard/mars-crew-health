@@ -32,6 +32,7 @@ jobs:
         run: |
           node tests/features.cjs
           node tests/history.cjs
+          node tests/crew-ux.cjs
 
   browser:
     name: Opens from file:// in Chromium
@@ -54,4 +55,11 @@ jobs:
           timeout 120 google-chrome --headless=new --no-sandbox --disable-gpu \
             --virtual-time-budget=3000 --dump-dom "file://$PWD/.history-browser.html" > history-dom.html
           grep -q 'id="history-test-result">PASS browser history:' history-dom.html || { cat history-dom.html; exit 1; }
+      - name: Crew alerts, reduced motion and trend navigation in Chromium
+        run: |
+          set -euo pipefail
+          node tests/browser-crew.cjs
+          timeout 120 google-chrome --headless=new --no-sandbox --disable-gpu \
+            --window-size=1280,800 --virtual-time-budget=3000 --dump-dom "file://$PWD/.crew-browser.html" > crew-dom.html
+          grep -q 'id="crew-test-result">PASS browser crew:' crew-dom.html || { cat crew-dom.html; exit 1; }
 
