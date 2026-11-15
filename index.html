@@ -144,6 +144,15 @@ header .snd-off{margin-left:.8rem;white-space:nowrap;color:var(--watch);font-wei
 #crash[hidden]{display:none}
 /* multi-line prose gets more leading; single-line rows and headlines stay compact to fit 720p */
 .why,.how,.lead,.delay,.box,.hero-do,.dialog>div,.msg,.notice{line-height:1.45}
+.dialog{max-height:92vh;overflow:auto}
+.baseline-form label{display:block;width:100%;font-size:.95rem}
+.baseline-form input{display:block;width:100%;font:inherit;padding:.35rem;background:var(--bg);color:var(--text);border:1px solid var(--focus);border-radius:.25rem}
+.baseline-fields{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;width:100%}
+button{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--focus);border-radius:.3rem;padding:.3rem .6rem;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.demo-note{border-left:4px solid var(--focus);font-size:.85rem}
+.explanation{font-size:.9rem;line-height:1.4}
+.card-grid>div{overflow:auto}
 </style>
 </head>
 <body>
@@ -433,6 +442,7 @@ function indById(id) { for (var i = 0; i < INDICATORS.length; i++) if (INDICATOR
 function newId() { return 'a' + Date.now().toString(36) + Math.floor(Math.random() * 1296).toString(36); }
 
 /* ---------- storage (never throws) ---------- */
+var demoSession = null;
 var KEY = 'crewHealth.v1';
 var store = {app: APP, version: VERSION, profiles: {}, lastExport: {}, dateOffset: 0};
 var saveFailed = false, loadWarning = '';
@@ -445,6 +455,13 @@ function sanitizeProfile(r) {
            role: typeof r.role === 'string' ? r.role.trim().slice(0, 40) : '', baselines: {}, entries: []};
   var b = (r.baselines && typeof r.baselines === 'object') ? r.baselines : {};
   INDICATORS.forEach(function (ind) { if (ind.type === 'number' && validValue(ind, b[ind.id])) p.baselines[ind.id] = b[ind.id]; });
+  p.baselineMeta = {};
+  var meta = r.baselineMeta || {};
+  ['hr', 'mass', 'grip'].forEach(function (id) {
+    var m = meta[id];
+    if (p.baselines[id] !== undefined && m && typeof m.source === 'string' && !isNaN(dayOf(m.date)))
+      p.baselineMeta[id] = {source: m.source.trim().slice(0, 80), date: m.date};
+  });
   var byDate = {};
   if (Array.isArray(r.entries)) r.entries.forEach(function (e) {
     if (!e || typeof e !== 'object' || isNaN(dayOf(e.date))) return;
@@ -476,6 +493,7 @@ function loadStore() {
   }
 }
 function saveStore() {
+  if (demoSession) return;
   try { localStorage.setItem(KEY, JSON.stringify(store)); saveFailed = false; }
   catch (e) { saveFailed = true; }
 }
@@ -614,6 +632,115 @@ function setValue(p, ind, v) {
   saveStore();
 }
 
+/* Baselines are explicit references, with provenance retained in backups. */
+function openBaselines(p) { ui.baseline = {id: p.id}; }
+function baselineForm() {
+  var p = store.profiles[ui.baseline.id], fields = '';
+  ['hr', 'mass', 'grip'].forEach(function (id) {
+    var ind = indById(id), v = p.baselines[id];
+    fields += '<label>' + esc(ind.label + ' (' + ind.unit + ')') + '<input ' + (id === 'hr' ? 'data-autofocus ' : '') + 'name="' + id + '" inputmode="decimal" value="' + (v === undefined ? '' : esc(v)) + '"></label>';
+  });
+  return '<div class="veil"><form id="baseline-form" class="dialog baseline-form" role="dialog" aria-modal="true" aria-labelledby="baseline-title">' +
+    '<h1 id="baseline-title">Personal baselines · ' + esc(p.name) + '</h1><div>Enter known reference measurements, ideally taken before flight. Blank values keep the existing reference. Without an explicit reference, the app uses the first 3–7 readings; this is provisional, not a clinical baseline.</div>' +
+    '<div class="baseline-fields">' + fields + '</div><label>Reference measurement date<input name="date" type="date" required max="' + isoOf(todayNum()) + '" value="' + isoOf(todayNum()) + '"></label>' +
+    '<label>Source / context<input name="source" required maxlength="80" placeholder="e.g. Pre-flight medical assessment"></label>' +
+    '<div id="baseline-error" class="err" role="alert"></div><div><button type="submit">Save baselines</button> <button type="button" data-click="baseline-cancel">Cancel / skip</button></div><div>Only changed values receive the new date and source. Escape cancels without changing your references.</div></form></div>';
+}
+function applyBaselines(p, values, date, source) {
+  var updates = {}, ids = ['hr', 'mass', 'grip'];
+  if (isNaN(dayOf(date)) || dayOf(date) > todayNum()) return 'Choose a valid reference date no later than today.';
+  source = String(source || '').trim();
+  if (!source || source.length > 80) return 'Enter a source or context (up to 80 characters).';
+  for (var i = 0; i < ids.length; i++) {
+    var id = ids[i], raw = String(values[id] || '').trim().replace(',', '.'), ind = indById(id);
+    if (!raw) continue;
+    var v = /^\d+(\.\d+)?$/.test(raw) ? Number(raw) : NaN;
+    if (!validValue(ind, v)) return ind.label + ': enter a value between ' + ind.min + ' and ' + ind.max + ' ' + ind.unit + '.';
+    if (v !== p.baselines[id]) updates[id] = v;
+  }
+  p.baselineMeta = p.baselineMeta || {};
+  Object.keys(updates).forEach(function (id) { p.baselines[id] = updates[id]; p.baselineMeta[id] = {date: date, source: source}; });
+  saveStore(); refreshAlarms();
+  return '';
+}
+document.addEventListener('submit', function (e) {
+  if (e.target.id !== 'baseline-form') return;
+  e.preventDefault();
+  var f = e.target.elements, err = applyBaselines(store.profiles[ui.baseline.id], {hr: f.hr.value, mass: f.mass.value, grip: f.grip.value}, f.date.value, f.source.value);
+  if (err) { document.getElementById('baseline-error').textContent = err; return; }
+  ui.baseline = null; say('Personal baselines saved. Statuses have been recalculated.'); render();
+});
+function referenceSource(p, ind) {
+  if (p.baselines[ind.id] !== undefined) {
+    var m = p.baselineMeta && p.baselineMeta[ind.id];
+    return m ? 'Reference: ' + m.source + ' (' + m.date + ').' : 'Explicit reference; date and source not recorded.';
+  }
+  return 'Provisional reference: mean of the first 3–7 readings, not a pre-flight assessment.';
+}
+function explainStatus(p, a) {
+  var ind = a.ind;
+  if (a.status === 'nodata') return (a.note || a.word) + '. No normal status is inferred from missing or outdated data.';
+  if (a.value === null) return a.word + '. This event-specific check does not currently have a reading to evaluate.';
+  if (ind.after && evaluate(ind, a.value, a.baseline).status !== a.status) return a.word + '. The previous event reading is historical; this status reflects the event timing.';
+  if (ind.type === 'choice') return 'You selected “' + ind.options[a.value].label + '”. The illustrative rule maps this answer to ' + STATUS[a.status].word + '.';
+  var bands = ind.bands, x = a.value, unit = ind.unit, detail = 'Recorded: ' + a.valueText + '. ';
+  if (ind.metric === 'ratio') {
+    if (!(a.baseline > 0) || bandOf(ind.absBands, a.value).status === 'act') {
+      bands = ind.absBands;
+      detail += a.baseline > 0 ? 'The absolute safety backstop applies. ' : 'Not enough recent readings for a usual level; fixed limits apply. ';
+    } else { x = a.value / a.baseline; unit = '× usual level'; detail += 'Previous ' + ind.rolling + '-day median: ' + a.baseline.toFixed(ind.dec) + ' ' + ind.unit + '. Ratio: ' + x.toFixed(2) + '×. '; }
+  } else if (ind.metric === 'delta' || ind.metric === 'pct') {
+    x = ind.metric === 'pct' ? (a.value - a.baseline) / a.baseline * 100 : a.value - a.baseline;
+    unit = ind.metric === 'pct' ? '% from reference' : ind.unit + ' from reference';
+    detail += 'Baseline: ' + a.baseline.toFixed(ind.dec) + ' ' + ind.unit + '. Change: ' + (x > 0 ? '+' : '') + x.toFixed(1) + ' ' + unit + '. ' + referenceSource(p, ind) + ' ';
+  }
+  for (var i = 0; i < bands.length; i++) if (x <= bands[i].max) {
+    var low = i ? bands[i - 1].max : -Infinity, high = bands[i].max;
+    var range = low === -Infinity ? '≤ ' + high : high === Infinity ? '> ' + low : '> ' + low + ' and ≤ ' + high;
+    return detail + 'Illustrative ' + STATUS[bands[i].s].word + ' band: ' + range + ' ' + unit + '. Not clinically validated.';
+  }
+  return detail;
+}
+
+/* Demo store exists only in memory. The real store and alarm state are restored on exit. */
+var DEMOS = [
+  {name: 'Routine check', guide: 'All recorded checks are nominal. Open Trends (5) to explore 30 days of readings.'},
+  {name: 'Progressive change', guide: 'Body mass and grip strength have fallen relative to pre-flight references. Open an alert to see the calculation.'},
+  {name: 'Radiation alert', guide: 'A dose spike triggers Act. Open the radiation alert, inspect the rule, then press A to silence the sound.'}
+];
+function chooseDemo() {
+  ui.modal = {title: 'Choose a demo scenario', text: 'Fictional data in a temporary workspace. Your saved crew is restored when you exit or reload.', sel: 0,
+    options: DEMOS.map(function (d, i) { return {label: d.name, fn: function () { startDemo(i); }}; }).concat([{label: 'Cancel'}])};
+}
+function demoProfile(index) {
+  var p = {id: 'demo-astronaut', name: 'Demo astronaut', role: DEMOS[index].name, baselines: {hr: 60, mass: 75, grip: 45}, baselineMeta: {}, entries: []};
+  ['hr', 'mass', 'grip'].forEach(function (id) { p.baselineMeta[id] = {date: isoOf(todayNum() - 40), source: 'Fictional pre-flight assessment'}; });
+  for (var n = 0; n < 30; n++) {
+    var v = {spo2:98, hr:60, bp:120, temp:36.7, mass:75, exercise:120, sleep:7.5, dizzy:0, mood:0, immune:0, gut:0, dcs:0, eva_done:0, rad:1.8, co2:3, vision:0, grip:45, ucal:0, medkit:0};
+    if (index === 1) { v.mass = Math.round((75 - n * 0.18) * 10) / 10; v.grip = Math.round(45 - n * 0.23); }
+    if (index === 2 && n === 29) v.rad = 12;
+    p.entries.push({date: isoOf(todayNum() - 29 + n), values:v});
+  }
+  return p;
+}
+function startDemo(index) {
+  stopActLoop();
+  if (!demoSession) demoSession = {store:store, acked:acked, announced:announced, saveFailed:saveFailed, loadWarning:loadWarning};
+  demoSession.guide = DEMOS[index].guide;
+  var offset = demoSession.store.dateOffset;
+  store = {app:APP, version:VERSION, profiles:{}, lastExport:{}, dateOffset:offset};
+  var p = demoProfile(index); store.profiles[p.id] = p;
+  acked = {}; announced = {}; saveFailed = false; loadWarning = '';
+  ui.modal = null; ui.prompt = null; ui.baseline = null; goHome(); openProfile(p.id); initAudio(); refreshAlarms();
+}
+function exitDemo() {
+  if (!demoSession) return;
+  stopActLoop();
+  store = demoSession.store; acked = demoSession.acked; announced = demoSession.announced;
+  saveFailed = demoSession.saveFailed; loadWarning = demoSession.loadWarning; demoSession = null;
+  ui.modal = null; ui.prompt = null; ui.baseline = null; goHome(); refreshAlarms();
+}
+
 /* ---------- icons (inline SVG: shape + colour + word, never colour alone) ---------- */
 function icon(st) {
   var c = 'var(--' + st + ')', s = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">';
@@ -720,7 +847,7 @@ function askNewAstronaut() {
     if (!name) return 'Type a name first.';
     var p = {id: newId(), name: name, role: '', baselines: {}, entries: []};
     store.profiles[p.id] = p; saveStore();
-    say('Added ' + name + '. Baselines are set automatically after 3 readings.'); refreshAlarms();
+    openProfile(p.id); openBaselines(p); refreshAlarms();
     return '';
   }};
 }
@@ -753,6 +880,7 @@ function askDate() {
   }};
 }
 function exportBackup(ids) {
+  if (demoSession) { say('Demo data is temporary. Exit the demo to export your saved crew.', true); return; }
   var list = (ids || []).map(function (id) { return store.profiles[id]; }).filter(Boolean);
   if (!list.length) return say('There is no astronaut to back up yet.', true);
   try {
@@ -909,6 +1037,7 @@ function cardHtml(p, a, withChart) {
     '<div class="value">' + (a.value == null ? (st === 'nominal' ? 'Nothing to report' : 'No data') : esc(a.valueText) + ' <small>measured ' + ago(a.age) + '</small>') + '</div>' +
     (a.note ? '<div class="meta">' + esc(a.note) + '</div>' : '') +
     (baseTxt ? '<div class="meta">' + esc(baseTxt) + '</div>' : '') + (cumTxt ? '<div class="meta">' + esc(cumTxt) + '</div>' : '') + '<div class="meta">' + trendHtml(a.trend) + '</div>' +
+    '<div class="box explanation"><h2>Why this status?</h2>' + esc(explainStatus(p, a)) + '</div>' +
     '<div class="why">' + esc(ind.why) + '</div>' + (ind.ref ? '<div class="why refline">' + esc(ind.ref) + '</div>' : '');
   var right = '<div class="action"><div class="action-h">WHAT TO DO NOW</div><div class="action-t">' + esc(act.t) + '</div>' +
     '<div class="action-w">Who handles it: <b>' + OWNERS[act.who] + '</b></div>' +
@@ -921,7 +1050,7 @@ function cardHtml(p, a, withChart) {
 function keysHtml(list) {
   return list.map(function (k) { return k === '|' ? '<span class="sep"></span>' : '<span data-click="key:' + k[2] + '"' + (k[3] ? ' class="on"' : '') + '><kbd>' + k[0] + '</kbd>' + esc(k[1]) + '</span>'; }).join('');
 }
-function navKeys() { return VIEWS.map(function (v, i) { return [String(i + 1), v.name, String(i + 1), ui.view === v.id && !ui.card]; }); }
+function navKeys() { return VIEWS.map(function (v, i) { return [String(i + 1), v.name, String(i + 1), ui.view === v.id && !ui.card]; }).concat([['B', 'Baselines', 'b']]); }
 
 function topBar() {
   var h = '<header' + (crew().length > 4 ? ' class="many"' : '') + '><span class="tab' + (ui.screen !== 'main' ? ' on' : '') + '" data-click="key:0"><kbd>0</kbd>Crew</span>';
@@ -948,7 +1077,8 @@ function alertBar(p, all) {
     (live ? '<span><kbd>A</kbd>Acknowledge' + (top.status === 'act' ? ' and silence' : '') + '</span>' : '<span class="do"><kbd>1</kbd>Details</span>') + '</div>';
 }
 function noticesHtml() {
-  var notes = [], h = '';
+  var notes = [], h = '<div class="notice">Prototype: illustrative rules and actions; not clinically validated.</div>';
+  if (demoSession) h += '<div class="notice demo-note"><b>DEMO · Fictional data · Changes are temporary.</b> ' + esc(demoSession.guide) + ' <button type="button" data-click="key:d">D · Change scenario</button> <button type="button" data-click="key:x">X · Exit demo</button></div>';
   if (!audio.ok) notes.push(audio.tried ? 'Sound is not available on this device. Alerts are shown on screen only.' : 'Sound is off. Press any key to turn the alarm sound on.');
   if (saveFailed) notes.push('This device is NOT saving. Make a backup file now (Backup: key 0, then B) and switch to the spare device.');
   if (loadWarning) notes.push(loadWarning);
@@ -965,7 +1095,7 @@ function renderHome() {
   list.forEach(function (p, i) {
     var all = assessAll(p), w = worst(all), al = alertsOf(all), wrong = clockWrong(p), due = wrong ? 0 : dueSteps(p).length;
     var missing = all.filter(function (a) { return a.status === 'nodata'; }).length, top = al[0], act = top ? actionFor(top) : null;
-    var title = w === 'act' ? 'ACT NOW' : w === 'watch' ? 'KEEP WATCH' : w === 'nominal' ? 'OK' : 'NO DATA', counts = '';
+    var title = w === 'act' ? 'ACT NOW' : w === 'watch' ? 'KEEP WATCH' : w === 'nominal' ? 'NO ALERTS' : 'NO DATA', counts = '';
     ['act', 'watch', 'nodata'].forEach(function (st) {
       var k = all.filter(function (a) { return a.status === st; }).length;
       if (k) counts += '<span class="cc-n st-' + st + '">' + icon(st) + k + ' ' + STATUS[st].word + '</span>';
@@ -973,13 +1103,13 @@ function renderHome() {
     html += '<div class="crew-card st-' + w + (i === ui.sel ? ' sel' : '') + '" data-click="pick:' + i + '">' +
       '<div class="cc-top">' + icon(w) + '<div class="cc-id"><div class="cc-name">' + esc(p.name) + '</div><div class="cc-role">' + esc(p.role) + '</div></div><div class="cc-status">' + title + '</div></div>' +
       (top ? '<div class="cc-alert">' + esc(top.ind.label + ': ' + top.word) + (al.length > 1 ? ' (+' + (al.length - 1) + ' more)' : '') + '</div><div class="cc-do">Do now: ' + esc(act.t) + '</div><div class="cc-who">Who handles it: ' + OWNERS[act.who] + '</div>'
-           : '<div class="cc-alert">' + (w === 'nominal' ? 'Every check is normal.' : wrong ? 'The date on this device is wrong.' : missing + ' of ' + all.length + ' checks have no data.') + '</div><div class="cc-do">' + (w === 'nominal' ? (due ? 'Do today’s check-in.' : 'Nothing to do.') : wrong ? 'Set today’s date in Settings.' : 'Do the daily check-in.') + '</div>') +
+           : '<div class="cc-alert">' + (w === 'nominal' ? 'No alerts in recorded checks.' : wrong ? 'The date on this device is wrong.' : missing + ' of ' + all.length + ' checks have no data.') + '</div><div class="cc-do">' + (w === 'nominal' ? (due ? 'Do today’s check-in.' : 'Nothing to do.') : wrong ? 'Set today’s date in Settings.' : 'Do the daily check-in.') + '</div>') +
       '<div class="cc-foot">' + counts + '<span class="sp"></span><span>' + (wrong ? '' : due ? 'Check-in: ' + due + ' to do' : 'Check-in done') + '</span></div></div>';
   });
   var body = n ? '<div class="crew-grid c' + cols + '" style="grid-template-columns:repeat(' + cols + ',1fr);grid-template-rows:repeat(' + rows + ',1fr)">' + html + '</div>'
     : '<div class="center"><div class="title-xl">CREW HEALTH MONITOR</div><div class="lead">No astronaut on this device yet.</div><div class="how">Press <kbd>Enter</kbd> to add one, or <kbd>B</kbd> to load a backup file.</div></div>';
   return topBar() + alertBar(null) + noticesHtml() + '<main>' + body + msgHtml() + '</main><footer>' +
-    keysHtml((n ? [['← → ↑ ↓', 'Choose astronaut', 'ArrowRight'], ['Enter', 'Open', 'Enter']] : [['Enter', 'Add an astronaut', 'Enter']]).concat([['B', 'Backup', 'b'], ['S', 'Settings', 's'], '|']).concat(ui.pending.length ? [['A', 'Acknowledge alarm', 'a']] : [])) + '</footer>';
+    keysHtml((n ? [['← → ↑ ↓', 'Choose astronaut', 'ArrowRight'], ['Enter', 'Open', 'Enter']] : [['Enter', 'Add an astronaut', 'Enter']]).concat([['S', 'Settings', 's'], ['D', 'Start demo', 'd'], '|']).concat(ui.pending.length ? [['A', 'Acknowledge alarm', 'a']] : [])) + '</footer>';
 }
 /* Backup and Settings are two screens: B for files that leave the device, S for everything else. */
 function backupItems() {
@@ -1024,7 +1154,7 @@ function renderOverview(p, all) {
     sub = a.ind.label + ': ' + a.word + (alerts.length > 1 ? '  (+' + (alerts.length - 1) + ' more below)' : '');
     todo = act.t; who = 'Who handles it: ' + OWNERS[act.who];
     if (act.who === 'earth') who += '. A message takes up to about 20 minutes each way. While you wait: ' + (act.wait || 'tell the crew medical officer.');
-  } else if (w === 'nominal') { title = 'YOU ARE OK'; sub = 'Every check is normal.'; todo = 'Nothing to do. Next check-in tomorrow.'; }
+  } else if (w === 'nominal') { title = 'NO ALERTS'; sub = 'No alerts in your recorded checks.'; todo = 'Nothing to do. Next check-in tomorrow.'; }
   else if (clockWrong(p)) { title = 'NO DATA'; sub = 'The date on this device is wrong, so no reading can be trusted.'; todo = 'Set today’s date in Settings (key 0, then S).'; }
   else if (missing === all.length) { title = 'NO DATA YET'; sub = 'Nothing has been measured recently.'; todo = 'Do the daily check-in now (key 2).'; }
   else { title = 'NO PROBLEM FOUND SO FAR'; sub = missing + ' of ' + all.length + ' checks have no data.'; todo = 'Do the daily check-in to complete them (key 2).'; }
@@ -1146,6 +1276,7 @@ function renderMain() {
   return topBar() + alertBar(ui.view === 'overview' && !ui.card ? null : p, all) + noticesHtml() + '<main>' + body   /* the Overview headline already says it */ + msgHtml() + '</main><footer>' + keysHtml(foot) + '</footer>';
 }
 function renderOverlay() {
+  if (ui.baseline) return baselineForm();
   if (ui.modal) {
     var m = ui.modal, btn = '';
     m.options.forEach(function (o, i) { btn += '<div class="row big' + (i === m.sel ? ' sel' : '') + '" data-click="pick:' + i + '" style="width:100%"><span class="r-label">' + esc(o.label) + '</span></div>'; });
@@ -1194,6 +1325,7 @@ function runCommand(it) {
 }
 function handleKey(k, inInput) {
   var isAck = (k === 'a' || k === 'A');
+  if (ui.baseline) { if (k === 'Escape') { ui.baseline = null; return true; } return false; }
   if (ui.modal) {
     var m = ui.modal;
     if (k === 'ArrowDown' || k === 'ArrowRight') { m.sel = (m.sel + 1) % m.options.length; return true; }
@@ -1235,6 +1367,9 @@ function handleKey(k, inInput) {
     return false;                                                   /* digits, Backspace, etc. go to the input */
   }
   if (isAck && !inInput && ui.pending.length) { acknowledge(); return true; }
+  if (k === 'd' || k === 'D') { chooseDemo(); return true; }
+  if ((k === 'b' || k === 'B') && active()) { openBaselines(active()); return true; }
+  if ((k === 'x' || k === 'X') && demoSession) { exitDemo(); return true; }
   if (k === 'Tab') { cycleTab(1); return true; }
   if (k === 'ShiftTab') { cycleTab(-1); return true; }
   if (k === '0') { goHome(); return true; }
@@ -1287,17 +1422,19 @@ document.addEventListener('keydown', function (e) {
   var key = e.key === 'Tab' ? (e.shiftKey ? 'ShiftTab' : 'Tab') : e.key;
   var r = guard(function () { wakeAudio(); return handleKey(key, inInput); });
   if (r) e.preventDefault();
-  if (r === true || !inInput) render();
+  if (r === true || (!inInput && !ui.baseline)) render();
 });
 document.addEventListener('click', function (e) {
   if (crashed) return;
   var el = e.target;
   while (el && el !== document.body && !(el.getAttribute && el.getAttribute('data-click'))) el = el.parentNode;
+  if (ui.baseline && (!el || el === document.body || !el.getAttribute)) return;
   guard(function () {
     wakeAudio();
     if (!el || el === document.body || !el.getAttribute) return;
     var cmd = el.getAttribute('data-click').split(':');
-    if (cmd[0] === 'open') openProfile(cmd[1]);
+    if (cmd[0] === 'baseline-cancel') ui.baseline = null;
+    else if (cmd[0] === 'open') openProfile(cmd[1]);
     else if (cmd[0] === 'pick') {
       var i = +cmd[1];
       if (ui.modal) ui.modal.sel = i; else if (ui.screen === 'main' && ui.view === 'checkin' && ui.ci) ui.ci.sel = i; else ui.sel = i;
@@ -1314,3 +1451,4 @@ render();
 </script>
 </body>
 </html>
+

@@ -44,7 +44,9 @@ a.tick(); ok(a.beeps.length===12,'Act repeats on the 8 s timer');
 a.key('Enter'); ok(a.get('ui.screen')==='main'&&a.get('ui.activeId')===ANA&&a.html().includes('ALARM – ACT: Sam Okafor'),'inside Ana\'s profile the banner still shows Sam\'s alarm');
 const np=a.get('ui.pending.length'); a.key('a'); a.tick(); ok(a.get('ui.pending.length')===0&&a.beeps.length===12&&!a.html().includes('ALARM'),'A acknowledges all '+np+' crew alerts and silences the sound');
 a.beeps.length=0; a.ctx.playWatch(); ok(a.beeps.length===2&&a.beeps.every(b=>b.type==='sine')&&a.beeps[1].t-a.beeps[0].t>0.4,'Watch sound = 2 slow sine notes');
-a.get('ui.prompt=null'); a.ctx.askNewAstronaut(); a.inputs['prompt-inp']={value:'Zoé Martin'}; a.key('Enter'); a.key('0');
+a.get('ui.prompt=null'); a.ctx.askNewAstronaut(); a.inputs['prompt-inp']={value:'Zoé Martin'}; a.key('Enter');
+ok(a.html().includes('Personal baselines') && a.get('ui.baseline') !== null, 'new astronaut opens optional baseline form');
+a.key('Escape'); a.key('0');
 ok(a.html().includes('Zoé Martin')&&a.html().includes('grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr)'),'adding a 5th astronaut re-arranges the grid to 3 x 2');
 
 // 3. tabs and navigation
@@ -150,3 +152,4 @@ for(let i=0;i<20000;i++){ c.inputs['ci-inp']={value:vals[Math.floor(rnd()*vals.l
 ok(!c.get('crashed'),'20000 random keys, '+Object.keys(seen).length+' distinct screen states reached: no crash'); ok(!/undefined|NaN|\[object/.test(c.html()),'no "undefined"/"NaN" leaked into the page');
 
 console.log(process.exitCode?'\nSOME CHECKS FAILED':'\nAll '+passed+' behaviour checks passed');
+
