@@ -156,7 +156,22 @@ check('chart keeps coincident captures and breaks lines when the device clock mo
  rs[2].recordedAt=new Date(2026,10,15,8).toISOString();
  const svg=c.chartSvg(q,temp);
  assert.equal((svg.match(/class="chart-reading"/g)||[]).length,3);
- assert.match(svg,/<path d="M[\d.]+ [\d.]+L[\d.]+ [\d.]+M[\d.]+ [\d.]+" fill="none"/);
+ assert.match(svg,/<path class="chart-line" d="M[\d.]+ [\d.]+L[\d.]+ [\d.]+M[\d.]+ [\d.]+" fill="none"/);
+});
+check('legacy same-day reading links to the latest capture with an explicit dashed segment',()=>{
+ const q=c.sanitizeProfile({name:'Legacy bridge',entries:[{date:day,values:{temp:37}}]});
+ c.setValue(q,temp,38);
+ q.entries[0].readings[1].recordedAt=new Date(2026,10,15,8).toISOString();
+ let svg=c.chartSvg(q,temp);
+ assert.match(svg,/<path class="chart-estimated" d="M[\d.]+ [\d.]+L[\d.]+ [\d.]+"[^>]*stroke-dasharray="5 4"/);
+ assert.ok(svg.includes('Time not recorded'));assert.ok(svg.includes('dashed links = approximate timing'));
+ assert.equal(q.entries[0].readings[0].recordedAt,null);
+ q.entries[0].readings[0].removedAt=new Date().toISOString();
+ svg=c.chartSvg(q,temp);assert.ok(!svg.includes('class="chart-estimated"'));
+});
+check('chart leaves long unmeasured gaps disconnected even with unknown legacy times',()=>{
+ const q=c.sanitizeProfile({name:'Gap',entries:[{date:c.isoOf(c.todayNum()-7),values:{temp:37}},{date:day,values:{temp:38}}]});
+ assert.ok(!c.chartSvg(q,temp).includes('class="chart-estimated"'));
 });
 assert.equal(c.crashed,false);
 console.log(`All ${count} history checks passed`);

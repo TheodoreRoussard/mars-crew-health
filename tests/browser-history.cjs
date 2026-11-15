@@ -56,6 +56,12 @@ const script = `
       assert(box.x >= 0 && box.y >= 0 && box.x + box.width <= 640 && box.y + box.height <= 240, 'Extreme point clipped');
     });
     chart.remove();
+    var legacy = sanitizeProfile({name:'Legacy',entries:[{date:isoOf(todayNum()),values:{temp:37}}]});
+    setValue(legacy,indById('temp'),38);
+    chart.innerHTML=chartSvg(legacy,indById('temp'));document.body.appendChild(chart);
+    assert(chart.querySelector('.chart-estimated').getTotalLength()>0,'Latest capture has no visible link to legacy reading');
+    assert(chart.querySelectorAll('.chart-reading').length===2,'Legacy link lost a point');
+    chart.remove();
     result.textContent = 'PASS browser history: ' + count + ' assertions';
   } catch (error) { result.textContent = 'FAIL browser history: ' + error.message; }
   stopActLoop(); document.body.appendChild(result);

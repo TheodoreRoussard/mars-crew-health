@@ -12,7 +12,7 @@ function profile(id,values){const p=c.sanitizeProfile({id,name:id,baselines:{hr:
 const red=profile('Red',{temp:39,bp:180,hr:60}),yellow=profile('Yellow',{temp:38}),green=profile('Green',{temp:37}),empty=profile('Empty',{});
 c.refreshAlarms();c.render();
 assert.equal(c.pendingLevel('Red'),'act');assert.equal(c.pendingLevel('Yellow'),'watch');assert.equal(c.pendingLevel('Green'),'');assert.equal(c.pendingLevel('Empty'),'');
-assert.ok(el.innerHTML.includes('alert-live alert-act'));assert.ok(el.innerHTML.includes('alert-live alert-watch'));assert.ok(!el.innerHTML.includes('class="alarm'));
+assert.ok(el.innerHTML.includes('alert-live alert-act'));assert.ok(el.innerHTML.includes('alert-live alert-watch'));assert.ok(!el.innerHTML.includes('class="alarm'));assert.ok(!el.innerHTML.includes('Unacknowledged'));
 const redPending=c.ui.pending.filter(x=>x.p.id==='Red');assert.equal(redPending.filter(x=>x.a.status==='act').length,2);
 // Pulses and sound start at the same instant and repeat without requiring a render.
 const notes=[];c.audio.ok=true;c.audio.ctx={currentTime:12};c.beep=(...args)=>notes.push(args);c.refreshAlarms();c.render();
@@ -25,8 +25,12 @@ c.openProfile('Red');c.setView('trends');c.render();
 const ordered=c.ui.items.map(item=>c.assess(red,c.indById(item.id))),rank={act:0,watch:1,nominal:2,nodata:3};
 for(let i=1;i<ordered.length;i++){const a=ordered[i-1],b=ordered[i];assert.ok(rank[a.status]<rank[b.status]||rank[a.status]===rank[b.status]&&a.ind.label.localeCompare(b.ind.label,'en')<=0);}
 assert.equal(c.ui.items[0].id,'bp');c.handleKey('Enter',false);c.render();assert.equal(c.ui.card.ids[c.ui.card.i],'bp');
-c.setView('body');c.render();const headings=[...el.innerHTML.matchAll(/<div class="grp[^>]*>(.*?)<\/div>/g)];assert.ok(headings.length);assert.ok(headings.every(x=>!x[1].includes('<svg')));assert.ok(el.innerHTML.includes('class="ico"'));
-c.setView('hazards');c.render();assert.match(el.innerHTML,/<div class="grp[^>]*><svg/);
+for(const view of ['body','hazards','trends']){
+ c.setView(view);c.render();const main=el.innerHTML.split('<main>')[1].split('</main>')[0];
+ assert.ok(!main.includes('class="ico"'),view);assert.ok(el.innerHTML.split('</header>')[0].includes('class="ico"'));
+ assert.ok(main.includes('text-status'));c.handleKey('Enter',false);c.render();
+ assert.ok(!el.innerHTML.split('<main>')[1].split('</main>')[0].includes('class="ico"'),view+' card');
+}
 // Advice is directional, with an immediate action before escalation.
 function advice(id,value){c.setValue(red,c.indById(id),value);return c.actionFor(c.assess(red,c.indById(id))).t;}
 assert.match(advice('temp',34),/warm area/);assert.doesNotMatch(advice('temp',34),/shared food|fever/);
