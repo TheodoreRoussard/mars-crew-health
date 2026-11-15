@@ -135,7 +135,8 @@ var REGIONS = [
   {id: 'head',    name: 'Head and eyes'},
   {id: 'heart',   name: 'Heart and lungs'},
   {id: 'muscles', name: 'Muscles, bones and joints'},
-  {id: 'immune',  name: 'Immunity, food and gut'}
+  {id: 'immune',  name: 'Immunity, food and gut'},
+  {id: 'eva',     name: 'Spacewalks and suit work'}
 ];
 var HAZARDS = [
   {id: 'radiation', name: 'Space radiation'},
@@ -245,19 +246,54 @@ var INDICATORS = [
    why: 'When pressure drops, gas bubbles can form in the body and cause decompression sickness.',
    actions: {watch: {t: 'Tell the crew medical officer and check again in 1 hour.', who: 'cmo'},
              act: {t: 'Breathe pure oxygen now and call the crew medical officer.', who: 'cmo'}}},
-  {id: 'eva', label: 'Spacewalk and suit injuries', region: 'muscles', hazard: 'closed',
-   risk: 'Injury and compromised performance from spacewalks (EVA)', type: 'choice', every: 1, eps: 0.5,
-   options: [O('No suit work, or no pain', 'nominal', 'None'), O('Sore hands, shoulders or skin, but able to work', 'watch', 'Minor'),
+  /* Spacewalks are EVENTS, as in NASA's own EVA log: one record per sortie. 'eva_done' is the daily gate question;
+     the indicators marked after:'eva_done' are asked only after a sortie, then daily until the symptom is gone.
+     Symptom list follows what that log reports most: suit CO2, eye irritation and fogging, heat and fatigue, gloves. */
+  {id: 'eva_done', label: 'Spacewalk or suit work', region: 'eva', risk: 'Injury and compromised performance from spacewalks (EVA)', type: 'choice', every: 1, eps: 0.5,
+   options: [O('No suit work since the last check-in', 'nominal', 'None'), O('Yes, I worked in the pressurised suit', 'nominal', 'Logged')],
+   how: 'Count spacewalks and any other work in the pressurised suit since your last check-in.',
+   why: 'Every sortie is logged so that symptoms in the following days can be linked to it.',
+   actions: {watch: {t: 'Answer the spacewalk questions in the daily check-in.', who: 'you'}}},
+  {id: 'eva_dur', label: 'Spacewalk duration', region: 'eva', risk: 'Injury and compromised performance from spacewalks (EVA)', after: 'eva_done', once: true,
+   type: 'number', unit: 'hours', dec: 1, min: 0.1, max: 12, metric: 'abs', every: 1, eps: 1,
+   bands: [B(7.4, 'nominal', 'Usual length'), B(Infinity, 'watch', 'Very long sortie')],
+   how: 'How many hours were you in the suit? For example 6.5.',
+   why: 'Most spacewalks last about 6 hours, and longer ones drain water, energy and concentration.',
+   actions: {watch: {t: 'Drink, eat and rest before any other task.', who: 'you'}}},
+  {id: 'eva_air', label: 'Breathing and heat in the suit', region: 'eva', risk: 'Injury and compromised performance from spacewalks (EVA)', after: 'eva_done',
+   type: 'choice', every: 1, eps: 0.5,
+   options: [O('Felt normal', 'nominal', 'Normal'), O('Headache, short of breath, very hot or very tired', 'watch', 'Some symptoms'),
+             O('Confused, dizzy, or had to stop the sortie', 'act', 'Severe')],
+   how: 'Think about the time in the suit and the hours after it. Which line fits best?',
+   why: 'Carbon dioxide build-up and overheating in the suit are the problems most often logged during spacewalks.',
+   actions: {watch: {t: 'Tell the crew medical officer and have the suit CO2 canister checked.', who: 'cmo'},
+             act: {t: 'See the crew medical officer now and tag that suit as not to be used.', who: 'cmo'}}},
+  {id: 'eva_eyes', label: 'Eyes and skin after the suit', region: 'eva', risk: 'Injury and compromised performance from spacewalks (EVA)', after: 'eva_done',
+   type: 'choice', every: 1, eps: 0.5,
+   options: [O('Normal', 'nominal', 'Normal'), O('Stinging eyes, fogged vision or irritated skin', 'watch', 'Irritated'),
+             O('Cannot see clearly, or a chemical smell or burn', 'act', 'Severe')],
+   how: 'Check your eyes and any skin that touched the suit. Which line fits best?',
+   why: 'Helmet fogging, sweat in the eyes and coolant contamination have cut spacewalks short.',
+   actions: {watch: {t: 'Rinse your eyes and skin with clean water.', who: 'you'},
+             act: {t: 'Rinse with water now and call the crew medical officer.', who: 'cmo'}}},
+  {id: 'eva_hands', label: 'Hands and shoulders after the suit', region: 'eva', risk: 'Injury and compromised performance from spacewalks (EVA)', after: 'eva_done',
+   type: 'choice', every: 1, eps: 0.5,
+   options: [O('No pain', 'nominal', 'None'), O('Sore hands, fingernails, shoulders or skin, but able to work', 'watch', 'Minor'),
              O('Pain or injury that limits your work', 'act', 'Limiting')],
    how: 'Check your hands, fingernails, shoulders and skin after suit work.',
    why: 'The stiff pressurised suit strains hands and shoulders, and small injuries get worse with every spacewalk.',
    actions: {watch: {t: 'Show the sore area to the crew medical officer.', who: 'cmo'},
              act: {t: 'Stop suit work and get treated by the crew medical officer.', who: 'cmo'}}},
+  /* Radiation is judged against the crew member's own usual level (median of the previous 7 days), because a year of
+     ISS dosimetry shows a very stable background (about 6 % spread at a fixed location): the departure is the signal.
+     bands apply to value / usual level. absBands are the fallback while no usual level exists, and their Act level
+     always applies as a backstop so that a slowly drifting usual level can never hide a storm. */
   {id: 'rad', label: 'Radiation dose (last 24 hours)', hazard: 'radiation', risk: 'Space radiation',
-   type: 'number', unit: 'mSv', dec: 1, min: 0, max: 1000, metric: 'abs', every: 1, eps: 0.4,
-   bands: [B(2.5, 'nominal', 'Normal for deep space'), B(10, 'watch', 'Elevated'), B(Infinity, 'act', 'Solar storm level')],
+   type: 'number', unit: 'mSv', dec: 1, min: 0, max: 1000, metric: 'ratio', rolling: 7, cumulative: true, every: 1, eps: 0.4,
+   bands: [B(1.5, 'nominal', 'Normal for you'), B(4, 'watch', 'Above your usual level'), B(Infinity, 'act', 'Far above your usual level')],
+   absBands: [B(2.5, 'nominal', 'Normal for deep space'), B(10, 'watch', 'Elevated'), B(Infinity, 'act', 'Solar storm level')],
    how: 'Read the 24-hour dose on your personal dosimeter. Type the number in mSv.',
-   why: 'Outside Earth’s magnetic field you are exposed to radiation that raises long-term health risk.',
+   why: 'Outside Earth’s magnetic field you are exposed to radiation that adds up over the whole mission.',
    actions: {watch: {t: 'Spend your rest time in the best-shielded area today.', who: 'you'},
              act: {t: 'Go to the storm shelter now and stay until the level drops.', who: 'you'}}},
   {id: 'co2', label: 'Cabin air CO2', hazard: 'closed', risk: 'Hostile closed environment',
@@ -309,6 +345,10 @@ function validValue(ind, v) {
   if (ind.type === 'choice') return Math.floor(v) === v && v >= 0 && v < ind.options.length;
   return v >= ind.min && v <= ind.max;
 }
+function bandOf(bands, x) {
+  for (var i = 0; i < bands.length; i++) if (x <= bands[i].max) return {status: bands[i].s, word: bands[i].w};
+  return {status: 'nodata', word: 'No data'};
+}
 /* The single place where a value becomes a status. Never throws. */
 function evaluate(ind, value, baseline) {
   var none = {status: 'nodata', word: 'No data'};
@@ -316,6 +356,11 @@ function evaluate(ind, value, baseline) {
     if (!ind || !validValue(ind, value)) return none;
     if (ind.type === 'choice') { var o = ind.options[value]; return {status: o.s, word: o.w}; }
     var x = value;
+    if (ind.metric === 'ratio') {
+      var abs = bandOf(ind.absBands, value);
+      if (typeof baseline !== 'number' || !isFinite(baseline) || baseline <= 0 || abs.status === 'act') return abs;
+      return bandOf(ind.bands, value / baseline);
+    }
     if (ind.metric !== 'abs') {
       if (!validValue(ind, baseline) || baseline === 0) return {status: 'nodata', word: 'No baseline yet'};
       x = ind.metric === 'pct' ? (value - baseline) / baseline * 100 : value - baseline;
@@ -367,6 +412,10 @@ function sanitizeProfile(r) {
     if (!e || typeof e !== 'object' || isNaN(dayOf(e.date))) return;
     var vals = {}, src = (e.values && typeof e.values === 'object') ? e.values : {};
     INDICATORS.forEach(function (ind) { if (validValue(ind, src[ind.id])) vals[ind.id] = src[ind.id]; });
+    if (src.eva === 0 || src.eva === 1 || src.eva === 2) {     /* files made before spacewalks became events */
+      if (vals.eva_done === undefined) vals.eva_done = src.eva ? 1 : 0;
+      if (src.eva && vals.eva_hands === undefined) vals.eva_hands = src.eva;
+    }
     byDate[e.date] = {date: e.date, values: vals};
   });
   p.entries = Object.keys(byDate).sort().map(function (k) { return byDate[k]; });
@@ -428,10 +477,46 @@ function fmtValue(ind, v) {
 function staleAfter(ind) { return ind.every > 1 ? ind.every + 1 : 1; }
 /* True when the newest reading is dated after "today": the device clock is behind, so no age can be trusted. */
 function clockWrong(p) { var e = p.entries[p.entries.length - 1]; return !!e && dayOf(e.date) > todayNum(); }
+/* Reference a reading taken on 'day' is compared with: rolling usual level, or the personal baseline. */
+function refFor(p, ind, day) {
+  if (!ind.rolling) return baselineOf(p, ind);
+  var s = series(p, ind, day - 1, ind.rolling).map(function (x) { return x.v; }).sort(function (a, b) { return a - b; });
+  if (s.length < 3) return null;
+  var m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+function cumulative(p, ind) {
+  var t = todayNum(), sum = 0, n = 0, first = null;
+  for (var i = 0; i < p.entries.length; i++) {
+    var d = dayOf(p.entries[i].date), v = p.entries[i].values[ind.id];
+    if (d <= t && validValue(ind, v)) { sum += v; n++; if (first === null) first = d; }
+  }
+  return {sum: sum, days: n, missing: first === null ? 0 : (t - first + 1) - n};
+}
+function lastEventDay(p, gate, t) {
+  for (var i = p.entries.length - 1; i >= 0; i--) {
+    if (dayOf(p.entries[i].date) <= t && p.entries[i].values[gate.id] === 1) return dayOf(p.entries[i].date);
+  }
+  return null;
+}
 function assess(p, ind) {
-  var t = todayNum(), last = lastReading(p, ind, t), base = baselineOf(p, ind);
+  var t = todayNum(), last = lastReading(p, ind, t), base = refFor(p, ind, last ? last.d : t);
   var a = {ind: ind, status: 'nodata', word: 'No data', note: 'Never measured', value: null, valueText: '', age: null, day: null, baseline: base, trend: null};
   if (clockWrong(p)) { a.word = 'Date is wrong'; a.note = 'Set today’s date first (key 6)'; return a; }
+  if (ind.after) {                       /* event follow-up: only meaningful relative to the last logged spacewalk */
+    var gate = indById(ind.after), g = lastReading(p, gate, t), ev = lastEventDay(p, gate, t);
+    if (!g || t - g.d > staleAfter(gate)) { a.note = 'Answer the spacewalk question in the check-in'; return a; }
+    if (ev === null) { a.status = 'nominal'; a.word = 'No spacewalk yet'; a.note = ''; return a; }
+    if (!last || last.d < ev) { a.note = 'Not answered after the spacewalk ' + ago(t - ev); return a; }
+    a.age = t - last.d; a.day = last.d; a.value = last.v; a.valueText = fmtValue(ind, last.v);
+    var r = evaluate(ind, last.v, base);
+    a.note = 'Last spacewalk: ' + ago(t - ev);
+    if (r.status === 'nominal') { a.status = 'nominal'; a.word = r.word; }
+    else if (a.age <= 1) { a.status = r.status; a.word = r.word; }
+    else if (ind.once) { a.status = 'nominal'; a.word = 'No recent spacewalk'; }
+    else { a.word = 'No recent data'; a.note = 'Symptom last reported ' + ago(a.age); }
+    return a;
+  }
   if (!last) return a;
   a.age = t - last.d; a.day = last.d; a.value = last.v; a.valueText = fmtValue(ind, last.v);
   if (a.age > staleAfter(ind)) { a.word = 'No recent data'; a.note = 'Last measured ' + ago(a.age); return a; }
@@ -474,6 +559,11 @@ function dueSteps(p) {
   var t = todayNum();
   return INDICATORS.filter(function (ind) {
     var last = lastReading(p, ind, t);
+    if (ind.after) {      /* asked again only while a reported symptom is not yet back to normal */
+      if (ind.once || !last || t - last.d < 1) return false;
+      var ev = lastEventDay(p, indById(ind.after), t);
+      return ev !== null && last.d >= ev && evaluate(ind, last.v, null).status !== 'nominal';
+    }
     return !last || (t - last.d) >= ind.every;
   }).map(function (ind) { return ind.id; });
 }
@@ -643,7 +733,7 @@ fileInput.addEventListener('change', function () {
 function startCheckin() {
   var p = active(), steps = dueSteps(p);
   if (clockWrong(p)) { ui.ci = null; say('The date on this device is wrong. Set today’s date first (key 6). No measurement was changed.', true); return; }
-  if (!steps.length) steps = INDICATORS.filter(function (i) { return i.every === 1; }).map(function (i) { return i.id; });
+  if (!steps.length) steps = INDICATORS.filter(function (i) { return i.every === 1 && !i.after; }).map(function (i) { return i.id; });
   ui.ci = {steps: steps, i: 0, phase: 'ask', sel: 0, err: '', skipArmed: false, text: ''};
 }
 function ciNext() {
@@ -655,6 +745,10 @@ function ciConfirm() {
   if (ind.type === 'choice') {
     if (c.sel >= ind.options.length) return ciNext();           /* "Skip" */
     setValue(p, ind, c.sel);
+    if (c.sel === 1) {                                         /* a spacewalk was logged: ask its follow-up questions next */
+      var extra = INDICATORS.filter(function (x) { return x.after === ind.id && c.steps.indexOf(x.id, c.i + 1) < 0; }).map(function (x) { return x.id; });
+      c.steps = c.steps.slice(0, c.i + 1).concat(extra, c.steps.slice(c.i + 1));
+    }
   } else {
     var el = document.getElementById('ci-inp'), raw = (el ? el.value : '').trim().replace(',', '.');
     c.text = raw;
@@ -675,7 +769,7 @@ function ciConfirm() {
 function rowHtml(a, i, big) {
   var st = a.status;
   var word = st === 'nodata' ? a.word : STATUS[st].word + ' · ' + a.word;
-  var val = st === 'nodata' ? a.note : (a.ind.type === 'choice' ? ago(a.age) : a.valueText);
+  var val = st === 'nodata' ? a.note : (a.ind.type === 'choice' ? (a.age == null ? '' : ago(a.age)) : a.valueText);
   return '<div class="row st-' + st + (i === ui.sel ? ' sel' : '') + (big ? ' big' : '') + '" data-click="pick:' + i + '">' + icon(st) +
     '<span class="r-label">' + esc(a.ind.label) + '</span><span class="r-word">' + esc(word) + '</span><span class="r-val">' + esc(val) + '</span></div>';
 }
@@ -685,7 +779,7 @@ function groupHtml(name, list) {
 }
 function chartSvg(p, ind) {
   var W = 640, H = 240, L = ind.type === 'choice' ? 118 : 70, R = 16, T = 16, Bm = 30;
-  var t = todayNum(), s = series(p, ind, t, 30), base = baselineOf(p, ind);
+  var t = todayNum(), s = series(p, ind, t, 30), base = refFor(p, ind, t);
   if (!s.length) return '<div class="nochart">No data in the last 30 days.</div>';
   var lo, hi, i;
   if (ind.type === 'choice') { lo = 0; hi = ind.options.length - 1; }
@@ -706,14 +800,14 @@ function chartSvg(p, ind) {
     [hi - (hi - lo) * 0.08, (hi + lo) / 2, lo + (hi - lo) * 0.08].forEach(function (v) {
       o += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="#1d2835"/><text x="' + (L - 8) + '" y="' + (Y(v) + 5) + '" text-anchor="end">' + v.toFixed(ind.dec) + '</text>';
     });
-    if (base != null) o += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(base) + '" y2="' + Y(base) + '" stroke="#7cc4ff" stroke-width="2" stroke-dasharray="7 5"/><text x="' + (W - R - 6) + '" y="' + (Y(base) - 6) + '" text-anchor="end" fill="#7cc4ff">your baseline</text>';
+    if (base != null) o += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(base) + '" y2="' + Y(base) + '" stroke="#7cc4ff" stroke-width="2" stroke-dasharray="7 5"/><text x="' + (W - R - 6) + '" y="' + (Y(base) - 6) + '" text-anchor="end" fill="#7cc4ff">' + (ind.rolling ? 'your usual level' : 'your baseline') + '</text>';
   }
   o += '<text x="' + L + '" y="' + (H - 8) + '">30 days ago</text><text x="' + (W - R) + '" y="' + (H - 8) + '" text-anchor="end">Today</text></g>';
   var path = '';
   s.forEach(function (x, k) { path += (k && x.d - s[k - 1].d <= ind.every * 2 ? 'L' : 'M') + X(x.d).toFixed(1) + ' ' + Y(x.v).toFixed(1); });
   o += '<path d="' + path + '" fill="none" stroke="#eef3f7" stroke-width="2"/>';
   s.forEach(function (x) {   /* point shape = status: circle nominal, triangle watch, square act, ring no data */
-    var st = evaluate(ind, x.v, base).status, cx = X(x.d), cy = Y(x.v), c = 'var(--' + st + ')';
+    var st = evaluate(ind, x.v, ind.rolling ? refFor(p, ind, x.d) : base).status, cx = X(x.d), cy = Y(x.v), c = 'var(--' + st + ')';
     if (st === 'watch') o += '<path d="M' + cx + ' ' + (cy - 8) + 'l8 14h-16z" fill="' + c + '" stroke="#000"/>';
     else if (st === 'act') o += '<rect x="' + (cx - 7) + '" y="' + (cy - 7) + '" width="14" height="14" fill="' + c + '" stroke="#000"/>';
     else if (st === 'nominal') o += '<circle cx="' + cx + '" cy="' + cy + '" r="5" fill="' + c + '" stroke="#000"/>';
@@ -724,11 +818,15 @@ function chartSvg(p, ind) {
 function cardHtml(p, a, withChart) {
   var ind = a.ind, act = actionFor(a), st = a.status;
   var baseTxt = ind.type === 'choice' ? 'Your normal: ' + ind.options[0].w
+    : ind.after ? ''
+    : ind.rolling ? (a.baseline != null ? 'Your usual level (previous ' + ind.rolling + ' days): ' + a.baseline.toFixed(ind.dec) + ' ' + ind.unit : 'Your usual level: not set yet (needs 3 readings in ' + ind.rolling + ' days). Fixed limits are used.')
     : (a.baseline != null ? 'Your baseline: ' + a.baseline.toFixed(ind.dec) + ' ' + ind.unit : 'Your baseline: not set yet (needs 3 readings)');
+  var cum = ind.cumulative ? cumulative(p, ind) : null;
+  var cumTxt = cum && cum.days ? 'Mission total: ' + cum.sum.toFixed(ind.dec) + ' ' + ind.unit + ' over ' + cum.days + ' measured days' + (cum.missing > 0 ? ' (' + cum.missing + ' days not measured, so the real total is higher)' : '') : '';
   var left = '<div class="level">' + esc(a.word) + '</div>' +
-    '<div class="value">' + (a.value == null ? 'No data' : esc(a.valueText) + ' <small>measured ' + ago(a.age) + '</small>') + '</div>' +
+    '<div class="value">' + (a.value == null ? (st === 'nominal' ? 'Nothing to report' : 'No data') : esc(a.valueText) + ' <small>measured ' + ago(a.age) + '</small>') + '</div>' +
     (a.note ? '<div class="meta">' + esc(a.note) + '</div>' : '') +
-    '<div class="meta">' + esc(baseTxt) + '</div><div class="meta">' + trendHtml(a.trend) + '</div>' +
+    (baseTxt ? '<div class="meta">' + esc(baseTxt) + '</div>' : '') + (cumTxt ? '<div class="meta">' + esc(cumTxt) + '</div>' : '') + '<div class="meta">' + trendHtml(a.trend) + '</div>' +
     '<div class="why">' + esc(ind.why) + '</div>';
   var right = '<div class="action"><div class="action-h">WHAT TO DO NOW</div><div class="action-t">' + esc(act.t) + '</div>' +
     '<div class="action-w">Who handles it: <b>' + OWNERS[act.who] + '</b></div>' +

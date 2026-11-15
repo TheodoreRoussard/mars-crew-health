@@ -29,7 +29,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 2,
      "co2": 2.7
     }
@@ -49,7 +49,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.8,
      "co2": 2.9,
      "vision": 0,
@@ -73,7 +73,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 2,
      "co2": 3.5
     }
@@ -93,7 +93,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.7,
      "co2": 2.9
     }
@@ -113,7 +113,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.6,
      "co2": 2.7
     }
@@ -133,7 +133,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.9,
      "co2": 2.6
     }
@@ -153,7 +153,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.9,
      "co2": 3.1
     }
@@ -173,7 +173,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.7,
      "co2": 3
     }
@@ -193,7 +193,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.7,
      "co2": 3.3,
      "vision": 0,
@@ -217,7 +217,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 2.1,
      "co2": 3
     }
@@ -237,7 +237,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.4,
      "co2": 2.6
     }
@@ -257,7 +257,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.8,
      "co2": 3.1
     }
@@ -277,7 +277,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.9,
      "co2": 3.3
     }
@@ -297,9 +297,13 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 1,
      "rad": 2.1,
-     "co2": 2.4
+     "co2": 2.4,
+     "eva_dur": 7.8,
+     "eva_air": 1,
+     "eva_eyes": 0,
+     "eva_hands": 0
     }
    },
    {
@@ -317,9 +321,10 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.9,
-     "co2": 2.7
+     "co2": 2.7,
+     "eva_air": 0
     }
    },
    {
@@ -337,7 +342,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.7,
      "co2": 3.4,
      "vision": 0,
@@ -361,7 +366,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.7,
      "co2": 3.5
     }
@@ -381,7 +386,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 14.2,
      "co2": 2.2
     }
@@ -401,7 +406,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 4.6,
      "co2": 2.8
     }
@@ -421,7 +426,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.9,
      "co2": 3.3
     }
@@ -441,9 +446,13 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 1,
+     "eva_done": 1,
      "rad": 1.6,
-     "co2": 3
+     "co2": 3,
+     "eva_dur": 6.5,
+     "eva_air": 0,
+     "eva_eyes": 0,
+     "eva_hands": 1
     }
    },
    {
@@ -461,9 +470,10 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 2,
-     "co2": 2.8
+     "co2": 2.8,
+     "eva_hands": 1
     }
    },
    {
@@ -481,13 +491,14 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.7,
      "co2": 3.3,
      "vision": 0,
      "grip": 44,
      "ucal": 0,
-     "medkit": 0
+     "medkit": 0,
+     "eva_hands": 0
     }
    },
    {
@@ -505,7 +516,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 2.1,
      "co2": 4.7
     }
@@ -525,7 +536,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.6,
      "co2": 3.1
     }
@@ -545,7 +556,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.8,
      "co2": 2.6
     }
@@ -565,7 +576,7 @@
      "immune": 0,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 2.1,
      "co2": 3.2
     }
@@ -585,7 +596,7 @@
      "immune": 1,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.9,
      "co2": 2.6
     }
@@ -605,7 +616,7 @@
      "immune": 1,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.9,
      "co2": 2.4
     }
@@ -625,7 +636,7 @@
      "immune": 1,
      "gut": 0,
      "dcs": 0,
-     "eva": 0,
+     "eva_done": 0,
      "rad": 1.9,
      "co2": 3.3,
      "vision": 0,
