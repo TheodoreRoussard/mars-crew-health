@@ -3,8 +3,9 @@
   "private": true,
   "description": "Offline single-file health monitor for a Mars crew. No dependencies: these scripts only run the checks.",
   "scripts": {
-    "test": "node tests/static.js && node tools/make-sample.js --check && node tests/behaviour.js && node tests/features.cjs",
+    "test": "node tests/static.js && node tools/make-sample.js --check && node tests/behaviour.js && node tests/features.cjs && node tests/history.cjs",
     "sample": "node tools/make-sample.js"
   }
 }
+
 

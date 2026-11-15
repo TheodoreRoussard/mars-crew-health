@@ -153,6 +153,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-
 .demo-note{border-left:4px solid var(--focus);font-size:.85rem}
 .explanation{font-size:.9rem;line-height:1.4}
 .card-grid>div{overflow:auto}
+.history-row{display:flex;align-items:center;gap:.8rem;width:100%;padding:.5rem;border:2px solid transparent}.history-row.sel{border-color:var(--focus)}.history-row .details{flex:1;min-width:0}.history-row.removed{color:var(--dim)}.history-row time{font-size:.85rem;color:var(--dim)}
 </style>
 </head>
 <body>
@@ -168,7 +169,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-
 'use strict';
 /*==CORE-BEGIN==  Pure data and rules. No DOM. Checked separately in Node. */
 var APP = 'crew-health-monitor';
-var VERSION = 1;
+var VERSION = 2;
 var STATUS = {
   nominal: {word: 'OK',      rank: 1},
   watch:   {word: 'Watch',   rank: 2},
@@ -443,7 +444,7 @@ function newId() { return 'a' + Date.now().toString(36) + Math.floor(Math.random
 
 /* ---------- storage (never throws) ---------- */
 var demoSession = null;
-var KEY = 'crewHealth.v1';
+var KEY = 'crewHealth.v2';
 var store = {app: APP, version: VERSION, profiles: {}, lastExport: {}, dateOffset: 0};
 var saveFailed = false, loadWarning = '';
 
@@ -471,14 +472,30 @@ function sanitizeProfile(r) {
       if (vals.eva_done === undefined) vals.eva_done = src.eva ? 1 : 0;
       if (src.eva && vals.eva_hands === undefined) vals.eva_hands = src.eva;
     }
-    byDate[e.date] = {date: e.date, values: vals};
+    var entry = {date: e.date, values: vals};
+    if (Array.isArray(e.readings)) {
+      entry.readings = [];
+      var ids = {};
+      e.readings.forEach(function (r) {
+        if (!r || typeof r !== 'object') return;
+        var ind = indById(r.indicator);
+        if (!ind || !validValue(ind, r.value)) return;
+        var id = typeof r.id === 'string' && /^[\w-]{1,80}$/.test(r.id) && !ids[r.id] ? r.id : newId();
+        ids[id] = true;
+        entry.readings.push({id:id, indicator:ind.id, value:r.value,
+          recordedAt: validTimestamp(r.recordedAt) ? r.recordedAt : null,
+          removedAt: validTimestamp(r.removedAt) ? r.removedAt : null});
+      });
+      rebuildValues(entry);
+    }
+    byDate[e.date] = entry;
   });
   p.entries = Object.keys(byDate).sort().map(function (k) { return byDate[k]; });
   return p;
 }
 function loadStore() {
   var raw = null;
-  try { raw = localStorage.getItem(KEY); } catch (e) { saveFailed = true; return; }
+  try { raw = localStorage.getItem(KEY) || localStorage.getItem('crewHealth.v1'); } catch (e) { saveFailed = true; return; }
   if (!raw) return;
   try {
     var o = JSON.parse(raw);
@@ -512,7 +529,10 @@ function series(p, ind, endDay, days) {
 function lastReading(p, ind, endDay) {
   for (var i = p.entries.length - 1; i >= 0; i--) {
     var d = dayOf(p.entries[i].date), v = p.entries[i].values[ind.id];
-    if (d <= endDay && validValue(ind, v)) return {d: d, v: v};
+    if (d <= endDay && validValue(ind, v)) {
+      var reading = latestInEntry(p.entries[i], ind.id);
+      return {d:d, v:v, id:reading ? reading.id : 'legacy-' + ind.id, recordedAt:reading ? reading.recordedAt : null};
+    }
   }
   return null;
 }
@@ -532,7 +552,7 @@ function fmtValue(ind, v) {
 }
 function staleAfter(ind) { return ind.every > 1 ? ind.every + 1 : 1; }
 /* True when the newest reading is dated after "today": the device clock is behind, so no age can be trusted. */
-function clockWrong(p) { var e = p.entries[p.entries.length - 1]; return !!e && dayOf(e.date) > todayNum(); }
+function clockWrong(p) { return p.entries.some(function (e) { return Object.keys(e.values).length > 0 && dayOf(e.date) > todayNum(); }); }
 /* Reference a reading taken on 'day' is compared with: rolling usual level, or the personal baseline. */
 function refFor(p, ind, day) {
   if (!ind.rolling) return baselineOf(p, ind);
@@ -557,7 +577,7 @@ function lastEventDay(p, gate, t) {
 }
 function assess(p, ind) {
   var t = todayNum(), last = lastReading(p, ind, t), base = refFor(p, ind, last ? last.d : t);
-  var a = {ind: ind, status: 'nodata', word: 'No data', note: 'Never measured', value: null, valueText: '', age: null, day: null, baseline: base, trend: null};
+  var a = {recordedAt:last ? last.recordedAt : null, ind: ind, status: 'nodata', word: 'No data', note: 'Never measured', value: null, valueText: '', age: null, day: null, baseline: base, trend: null};
   if (clockWrong(p)) { a.word = 'Date is wrong'; a.note = 'Set today’s date first (Settings: key 0, then S)'; return a; }
   if (ind.after) {                       /* event follow-up: only meaningful relative to the last logged spacewalk */
     var gate = indById(ind.after), g = lastReading(p, gate, t), ev = lastEventDay(p, gate, t);
@@ -628,8 +648,97 @@ function setValue(p, ind, v) {
   var date = isoOf(todayNum()), e = null;
   for (var i = 0; i < p.entries.length; i++) if (p.entries[i].date === date) e = p.entries[i];
   if (!e) { e = {date: date, values: {}}; p.entries.push(e); p.entries.sort(function (x, y) { return x.date < y.date ? -1 : x.date > y.date ? 1 : 0; }); }
-  e.values[ind.id] = v;
+  ensureReadings(e);
+  e.readings.push({id:newId() + '-' + e.readings.length, indicator:ind.id, value:v, recordedAt:new Date().toISOString(), removedAt:null});
+  rebuildValues(e);
   saveStore();
+}
+
+/* The journal is append-only; values remains a daily projection for status and charts.
+   Array order is capture order, including identical timestamps and clock corrections. */
+function validTimestamp(value) {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value) &&
+    isFinite(Date.parse(value)) && new Date(value).toISOString() === value;
+}
+function ensureReadings(entry) {
+  if (Array.isArray(entry.readings)) return;
+  entry.readings = [];
+  INDICATORS.forEach(function (ind) {
+    if (validValue(ind, entry.values[ind.id])) entry.readings.push({id:'legacy-' + ind.id,
+      indicator:ind.id, value:entry.values[ind.id], recordedAt:null, removedAt:null});
+  });
+}
+function rebuildValues(entry) {
+  var values = {};
+  entry.readings.forEach(function (r) { if (!r.removedAt) values[r.indicator] = r.value; });
+  entry.values = entry.values || {};
+  Object.keys(entry.values).forEach(function (id) { delete entry.values[id]; });
+  Object.keys(values).forEach(function (id) { entry.values[id] = values[id]; });
+}
+function latestInEntry(entry, indicator) {
+  if (!Array.isArray(entry.readings)) return null;
+  for (var i = entry.readings.length - 1; i >= 0; i--) {
+    var r = entry.readings[i];
+    if (r.indicator === indicator && !r.removedAt) return r;
+  }
+  return null;
+}
+function timeLabel(timestamp) {
+  return timestamp ? new Date(timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'}) : 'Time not recorded';
+}
+function historyItems(p, indicator) {
+  var items = [];
+  for (var i = p.entries.length - 1; i >= 0; i--) {
+    var entry = p.entries[i];
+    ensureReadings(entry);
+    for (var j = entry.readings.length - 1; j >= 0; j--) {
+      var r = entry.readings[j];
+      if (!indicator || r.indicator === indicator) items.push({date:entry.date, id:r.id, reading:r});
+    }
+  }
+  return items;
+}
+function openHistory(indicator) { ui.history = {indicator:indicator}; ui.sel = 0; ui.msg = null; }
+function renderHistory(p) {
+  var ind = ui.history.indicator ? indById(ui.history.indicator) : null;
+  var items = historyItems(p, ind ? ind.id : null), rows = '';
+  ui.items = items;
+  ui.sel = Math.min(ui.sel, Math.max(0, items.length - 1));
+  items.forEach(function (item, i) {
+    var r = item.reading, indicator = indById(r.indicator), e = p.entries.filter(function (x) { return x.date === item.date; })[0];
+    var latest = latestInEntry(e, r.indicator), removed = !!r.removedAt;
+    rows += '<div class="history-row row' + (i === ui.sel ? ' sel' : '') + (removed ? ' removed' : '') + '" data-click="pick:' + i + '"><div class="details"><b>' +
+      esc(indicator.label + ': ' + fmtValue(indicator, r.value)) + '</b><br><time>' + esc(item.date + ' · ' + timeLabel(r.recordedAt)) + '</time>' +
+      '<div>' + (removed ? 'Removed from calculations' : latest && latest.id === r.id ? 'Latest active reading for this day' : 'Earlier reading — kept in history') + '</div></div>' +
+      '<button type="button" data-click="reading:' + i + '">' + (removed ? 'Restore' : 'Remove') + '</button></div>';
+  });
+  return '<h1>History' + (ind ? ' · ' + esc(ind.label) : '') + '</h1><div class="sub">Every entry is kept. The latest active reading per day is used for status and daily trends. Times use this device’s clock; older imports may have no time.</div>' +
+    '<div class="list">' + (rows || '<div class="box">No readings yet. Record one in Check-in (2).</div>') + '</div>';
+}
+function changeReading(p, date, id, removed) {
+  var entry = p.entries.filter(function (e) { return e.date === date; })[0];
+  if (!entry) return false;
+  ensureReadings(entry);
+  var r = entry.readings.filter(function (x) { return x.id === id; })[0];
+  if (!r) return false;
+  r.removedAt = removed ? new Date().toISOString() : null;
+  rebuildValues(entry);
+  var prefix = p.id + '|' + r.indicator + '|';
+  Object.keys(acked).forEach(function (key) { if (key.indexOf(prefix) === 0) delete acked[key]; });
+  Object.keys(announced).forEach(function (key) { if (key.indexOf(prefix) === 0) delete announced[key]; });
+  saveStore(); refreshAlarms();
+  return true;
+}
+function askRemoveReading(item) {
+  var p = active();
+  if (!p || !item) return;
+  var r = item.reading, ind = indById(r.indicator), remove = !r.removedAt;
+  ui.modal = {title:remove ? 'Remove this reading?' : 'Restore this reading?', sel:0,
+    text:p.name + ' · ' + ind.label + ': ' + fmtValue(ind, r.value) + ' · ' + item.date + ' · ' + timeLabel(r.recordedAt) + '. ' +
+      (remove ? 'Only this entry will be excluded. The previous active reading, if any, will be used. You can restore this entry from History.' : 'This entry will be included again in its original position. Statuses and daily trends will be recalculated.'),
+    options:[{label:'Cancel — keep current data'}, {label:remove ? 'Remove this reading' : 'Restore this reading', fn:function () {
+      if (changeReading(p, item.date, item.id, remove)) say(remove ? 'Reading removed from calculations. Restore is available in History.' : 'Reading restored.');
+    }}]};
 }
 
 /* Baselines are explicit references, with provenance retained in backups. */
@@ -806,7 +915,8 @@ function refreshAlarms() {
   ui.pending = [];
   crew().forEach(function (p) {
     alertsOf(assessAll(p)).forEach(function (a) {
-      var key = p.id + '|' + a.ind.id + '|' + a.status + '|' + a.day + '|' + t;
+      var latest = lastReading(p, a.ind, t);
+      var key = p.id + '|' + a.ind.id + '|' + a.status + '|' + a.day + '|' + (latest ? latest.id : '') + '|' + t;
       if (acked[key]) return;
       ui.pending.push({a: a, key: key, p: p});
       if (a.status === 'act') hasAct = true;
@@ -826,10 +936,12 @@ function acknowledge() { ui.pending.forEach(function (x) { acked[x.key] = true; 
 
 /* ---------- session and profile actions ---------- */
 function goHome() {
+  ui.history = null;
   var i = Object.keys(store.profiles).indexOf(ui.activeId);
   ui.screen = 'home'; ui.activeId = null; ui.sel = i < 0 ? 0 : i; ui.card = null; ui.ci = null; ui.msg = null;
 }
 function openProfile(id) {
+  ui.history = null;
   if (!store.profiles[id]) return;
   if (ui.screen !== 'main') ui.view = 'overview';        /* switching between astronauts keeps the same view, like browser tabs */
   ui.screen = 'main'; ui.activeId = id; ui.sel = 0; ui.card = null; ui.ci = null; ui.msg = null;
@@ -900,7 +1012,7 @@ function importText(text) {
   var o;
   try { o = JSON.parse(text); } catch (e) { return say('That file is damaged or is not a backup file. Nothing was changed.', true); }
   if (!o || typeof o !== 'object' || o.app !== APP) return say('That file is not a Crew Health backup. Nothing was changed.', true);
-  if (o.version !== VERSION) return say('That backup was made by a different version of this tool. Nothing was changed.', true);
+  if (o.version !== 1 && o.version !== VERSION) return say('That backup was made by a different version of this tool. Nothing was changed.', true);
   var raw = Array.isArray(o.profiles) ? o.profiles : (o.profile ? [o.profile] : []), byId = {}, list = [];
   if (!raw.length) return say('That backup has no astronaut in it. Nothing was changed.', true);
   for (var i = 0; i < raw.length; i++) {              /* validate everything before touching storage */
@@ -1034,10 +1146,11 @@ function cardHtml(p, a, withChart) {
   var cum = ind.cumulative ? cumulative(p, ind) : null;
   var cumTxt = cum && cum.days ? 'Mission total: ' + cum.sum.toFixed(ind.dec) + ' ' + ind.unit + ' over ' + cum.days + ' measured days' + (cum.missing > 0 ? ' (' + cum.missing + ' days not measured, so the real total is higher)' : '') : '';
   var left = '<div class="level">' + esc(a.word) + '</div>' +
-    '<div class="value">' + (a.value == null ? (st === 'nominal' ? 'Nothing to report' : 'No data') : esc(a.valueText) + ' <small>measured ' + ago(a.age) + '</small>') + '</div>' +
+    '<div class="value">' + (a.value == null ? (st === 'nominal' ? 'Nothing to report' : 'No data') : esc(a.valueText) + ' <small>measured ' + ago(a.age) + (a.recordedAt ? ' at ' + esc(timeLabel(a.recordedAt)) : ' · time not recorded') + '</small>') + '</div>' +
     (a.note ? '<div class="meta">' + esc(a.note) + '</div>' : '') +
     (baseTxt ? '<div class="meta">' + esc(baseTxt) + '</div>' : '') + (cumTxt ? '<div class="meta">' + esc(cumTxt) + '</div>' : '') + '<div class="meta">' + trendHtml(a.trend) + '</div>' +
     '<div class="box explanation"><h2>Why this status?</h2>' + esc(explainStatus(p, a)) + '</div>' +
+    '<button type="button" data-click="history:' + ind.id + '">History / remove a reading</button>' +
     '<div class="why">' + esc(ind.why) + '</div>' + (ind.ref ? '<div class="why refline">' + esc(ind.ref) + '</div>' : '');
   var right = '<div class="action"><div class="action-h">WHAT TO DO NOW</div><div class="action-t">' + esc(act.t) + '</div>' +
     '<div class="action-w">Who handles it: <b>' + OWNERS[act.who] + '</b></div>' +
@@ -1050,7 +1163,7 @@ function cardHtml(p, a, withChart) {
 function keysHtml(list) {
   return list.map(function (k) { return k === '|' ? '<span class="sep"></span>' : '<span data-click="key:' + k[2] + '"' + (k[3] ? ' class="on"' : '') + '><kbd>' + k[0] + '</kbd>' + esc(k[1]) + '</span>'; }).join('');
 }
-function navKeys() { return VIEWS.map(function (v, i) { return [String(i + 1), v.name, String(i + 1), ui.view === v.id && !ui.card]; }).concat([['B', 'Baselines', 'b']]); }
+function navKeys() { return VIEWS.map(function (v, i) { return [String(i + 1), v.name, String(i + 1), ui.view === v.id && !ui.card]; }).concat([['B', 'Baselines', 'b'], ['H', 'History', 'h']]); }
 
 function topBar() {
   var h = '<header' + (crew().length > 4 ? ' class="many"' : '') + '><span class="tab' + (ui.screen !== 'main' ? ' on' : '') + '" data-click="key:0"><kbd>0</kbd>Crew</span>';
@@ -1257,7 +1370,10 @@ function renderMain() {
   var p = active();
   if (!p) { goHome(); return renderHome(); }
   var all = assessAll(p), body, foot, c = ui.ci;
-  if (ui.view === 'checkin' && c) {
+  if (ui.history) {
+    body = renderHistory(p);
+    foot = [['Esc', 'Back', 'Escape'], ['↑ ↓', 'Select reading', 'ArrowDown'], ['Enter', 'Remove / restore selected', 'Enter']];
+  } else if (ui.view === 'checkin' && c) {
     body = renderCheckin(p);
     if (c.phase === 'ask') foot = (indById(c.steps[c.i]).type === 'choice' ? [['1-4', 'or ↑ ↓ Choose', 'ArrowDown']] : [['0-9', 'Type the number', 'x']]).concat([['Enter', 'Confirm', 'Enter'], ['Esc', 'Back to the question list (answers so far are saved)', 'Escape']]);
     else foot = [['Enter', c.phase === 'done' ? 'Go to Overview' : 'Next', 'Enter'], ['Esc', 'Back to the question list', 'Escape']];
@@ -1312,7 +1428,7 @@ function move(k, n) {
   if (k === 'ArrowUp') { ui.sel = (ui.sel + n - 1) % n; return true; }
   return false;
 }
-function setView(id) { ui.view = id; ui.sel = 0; ui.card = null; ui.ci = null; ui.msg = null; }
+function setView(id) { ui.history = null; ui.view = id; ui.sel = 0; ui.card = null; ui.ci = null; ui.msg = null; }
 function runCommand(it) {
   var cmd = it.cmd;
   if (cmd === 'export') exportBackup(it.ids);
@@ -1344,6 +1460,13 @@ function handleKey(k, inInput) {
     }
     return k === 'Tab' || k === 'ShiftTab' ? 'block' : false;
   }
+  if (ui.history) {
+    if (k === 'Escape') { ui.history = null; ui.sel = 0; return true; }
+    if (isAck && ui.pending.length) { acknowledge(); return true; }
+    if (move(k, ui.items.length)) return true;
+    if (k === 'Enter') { askRemoveReading(ui.items[ui.sel]); return true; }
+    return true;
+  }
   if (ui.screen === 'main' && ui.view === 'checkin' && ui.ci) {       /* answering a question: digits and letters belong to it */
     var c = ui.ci, ind = c.phase === 'ask' ? indById(c.steps[c.i]) : null;
     if (k === 'Escape') { ui.ci = null; return true; }
@@ -1353,7 +1476,7 @@ function handleKey(k, inInput) {
       acknowledge(); return true;
     }
     if (c.phase === 'done') { if (k === 'Enter') setView('overview'); return true; }
-    if (c.phase === 'result') { if (k === 'Enter') ciNext(); return true; }
+    if (c.phase === 'result') { if (k === 'h' || k === 'H') openHistory(c.steps[c.i]); else if (k === 'Enter') ciNext(); return true; }
     if (ind.type === 'choice') {
       var n = ind.options.length + 1;
       if (k === 'ArrowDown') { c.sel = (c.sel + 1) % n; return true; }
@@ -1368,6 +1491,7 @@ function handleKey(k, inInput) {
   }
   if (isAck && !inInput && ui.pending.length) { acknowledge(); return true; }
   if (k === 'd' || k === 'D') { chooseDemo(); return true; }
+  if ((k === 'h' || k === 'H') && active()) { openHistory(ui.card ? ui.card.ids[ui.card.i] : null); return true; }
   if ((k === 'b' || k === 'B') && active()) { openBaselines(active()); return true; }
   if ((k === 'x' || k === 'X') && demoSession) { exitDemo(); return true; }
   if (k === 'Tab') { cycleTab(1); return true; }
@@ -1433,7 +1557,9 @@ document.addEventListener('click', function (e) {
     wakeAudio();
     if (!el || el === document.body || !el.getAttribute) return;
     var cmd = el.getAttribute('data-click').split(':');
-    if (cmd[0] === 'baseline-cancel') ui.baseline = null;
+    if (cmd[0] === 'history') openHistory(cmd[1] || null);
+    else if (cmd[0] === 'reading') askRemoveReading(ui.items[+cmd[1]]);
+    else if (cmd[0] === 'baseline-cancel') ui.baseline = null;
     else if (cmd[0] === 'open') openProfile(cmd[1]);
     else if (cmd[0] === 'pick') {
       var i = +cmd[1];
@@ -1451,4 +1577,5 @@ render();
 </script>
 </body>
 </html>
+
 

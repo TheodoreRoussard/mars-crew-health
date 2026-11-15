@@ -27,7 +27,7 @@ const SAM='sample-okafor',ANA='sample-ruiz',KEN='sample-mori',LENA='sample-fisch
 // 1. empty device, unsafe imports
 let a=mk(false);
 ok(a.html().includes('No astronaut on this device yet')&&a.html().includes('Sound is off'),'empty crew page, sound-off notice');
-for(const bad of ['{oops','null','[]','{"app":"x"}',JSON.stringify({app:APPID,version:2,profile:{}}),JSON.stringify({app:APPID,version:1,profiles:[]}),JSON.stringify({app:APPID,version:1,profile:{name:'',entries:[]}}),JSON.stringify({app:APPID,version:1,profile:{name:'Z',entries:'no'}}),JSON.stringify({app:APPID,version:1,profiles:[{name:'Good',entries:[]},{name:'',entries:[]}]})]) a.ctx.importText(bad);
+for(const bad of ['{oops','null','[]','{"app":"x"}',JSON.stringify({app:APPID,version:3,profile:{}}),JSON.stringify({app:APPID,version:1,profiles:[]}),JSON.stringify({app:APPID,version:1,profile:{name:'',entries:[]}}),JSON.stringify({app:APPID,version:1,profile:{name:'Z',entries:'no'}}),JSON.stringify({app:APPID,version:1,profiles:[{name:'Good',entries:[]},{name:'',entries:[]}]})]) a.ctx.importText(bad);
 ok(Object.keys(a.get('store.profiles')).length===0&&!a.get('crashed'),'9 malformed files rejected (one bad astronaut rejects the whole file), nothing stored');
 a.ctx.importText(JSON.stringify({app:APPID,version:1,profile:{id:'h1',name:'<img src=x onerror=1>',baselines:{hr:'x',mass:1e9},entries:[{date:'2026-02-31',values:{hr:60}},{date:'2026-11-14',values:{hr:'60',spo2:300,temp:null,mood:7,bp:120}},null,5]}}));
 let h=a.P('h1'); ok(h.entries.length===1&&JSON.stringify(h.entries[0].values)==='{"bp":120}'&&Object.keys(h.baselines).length===0,'old single-astronaut file accepted; invalid dates/values/baselines dropped');
@@ -73,7 +73,7 @@ a.key('Escape'); ok(a.get('ui.screen')==='home','Esc leaves Backup');
   d.key('Enter'); ok(!!d.P(SAM),'Cancel on the second question keeps Sam');
   d.get('store.lastExport["'+SAM+'"]="2026-11-01"');
   openRemove(); d.key('ArrowDown'); d.key('Enter'); d.key('ArrowDown'); d.key('Enter');
-  ok(!d.P(SAM)&&d.ctx.crew().length===3&&!d.get('store.lastExport["'+SAM+'"]')&&JSON.parse(d.mem['crewHealth.v1']).profiles[SAM]===undefined,'confirming removes Sam, his backup date, and saves');
+  ok(!d.P(SAM)&&d.ctx.crew().length===3&&!d.get('store.lastExport["'+SAM+'"]')&&JSON.parse(d.mem[d.ctx.KEY]).profiles[SAM]===undefined,'confirming removes Sam, his backup date, and saves');
   ok(!d.get('ui.pending').some(x=>x.p.id===SAM)&&!d.html().includes('tab-n">Sam Okafor')&&d.html().includes('Removed Sam Okafor'),'Sam’s alarms and tab are gone, message confirms');
   d.key('Escape'); ok(!d.html().includes('ACT NOW'),'crew page no longer shows Sam’s Act alarm'); }
 
@@ -86,7 +86,7 @@ a.inputs['ci-inp']={value:'abc'}; a.key('Enter'); ok(a.get('ui.ci.err').includes
 a.inputs['ci-inp']={value:'99'}; a.key('Enter'); ok(a.get('ui.ci.phase')==='ask','out-of-range rejected');
 a.inputs['ci-inp']={value:''}; a.key('Enter'); ok(a.get('ui.ci.skipArmed'),'empty needs a second Enter');
 a.inputs['ci-inp']={value:'38,0'}; a.key('Enter'); ok(a.get('ui.ci.phase')==='result'&&a.html().includes('Slight fever'),'38,0 accepted -> Watch result');
-ok(JSON.parse(a.mem['crewHealth.v1']).profiles[LENA].entries.slice(-1)[0].values.temp===38,'value saved immediately');
+ok(JSON.parse(a.mem[a.ctx.KEY]).profiles[LENA].entries.slice(-1)[0].values.temp===38,'value saved immediately');
 a.key('Enter'); ok(a.get('ui.ci')===null&&a.get('ui.view')==='checkin'&&a.html().includes('Done today')&&a.ctx.dueSteps(a.P(LENA)).length===dueN-1,'after one question: back to the list, that question is Done today');
 a.get('ui.sel='+iTemp); a.key('Enter'); a.key('Escape'); ok(a.get('ui.ci')===null&&a.get('ui.view')==='checkin','Esc during a question returns to the list');
 a.get('ui.sel=0'); a.key('Enter'); ok(a.get('ui.ci.all')===true&&a.get('ui.ci.steps.length')===dueN-1,'"Answer all" asks every due question');
@@ -152,4 +152,5 @@ for(let i=0;i<20000;i++){ c.inputs['ci-inp']={value:vals[Math.floor(rnd()*vals.l
 ok(!c.get('crashed'),'20000 random keys, '+Object.keys(seen).length+' distinct screen states reached: no crash'); ok(!/undefined|NaN|\[object/.test(c.html()),'no "undefined"/"NaN" leaked into the page');
 
 console.log(process.exitCode?'\nSOME CHECKS FAILED':'\nAll '+passed+' behaviour checks passed');
+
 

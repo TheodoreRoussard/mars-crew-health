@@ -28,6 +28,10 @@ jobs:
         run: node tools/make-sample.js --check
       - name: Behaviour checks and keyboard fuzz
         run: node tests/behaviour.js
+      - name: Demo, baselines and measurement history
+        run: |
+          node tests/features.cjs
+          node tests/history.cjs
 
   browser:
     name: Opens from file:// in Chromium
@@ -43,3 +47,11 @@ jobs:
           grep -q 'No astronaut on this device yet' dom.html || { echo "The crew page did not render"; exit 1; }
           grep -q '<div id="crash" hidden' dom.html || { echo "The crash screen is showing"; exit 1; }
           echo "Rendered the crew page from file:// with no crash."
+      - name: Repeat, remove and restore a measurement in Chromium
+        run: |
+          set -euo pipefail
+          node tests/browser-history.cjs
+          timeout 120 google-chrome --headless=new --no-sandbox --disable-gpu \
+            --virtual-time-budget=3000 --dump-dom "file://$PWD/.history-browser.html" > history-dom.html
+          grep -q 'id="history-test-result">PASS browser history:' history-dom.html || { cat history-dom.html; exit 1; }
+
