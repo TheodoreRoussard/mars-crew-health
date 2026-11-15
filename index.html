@@ -138,8 +138,11 @@ header .snd-off{margin-left:.8rem;white-space:nowrap;color:var(--watch);font-wei
 .dialog .inp{font-size:1.6rem;width:100%;text-align:left}
 .body-svg{height:100%;max-height:100%;flex:none}
 .body-wrap{flex:.55;display:flex;align-items:center;justify-content:center;min-height:0}
-.reg{fill:var(--c);fill-opacity:.3;stroke:var(--c);stroke-width:3}
-.reg.on{stroke:#fff;stroke-width:6;fill-opacity:.55}
+.reg{fill:var(--c);fill-opacity:.18;stroke:var(--c);stroke-width:3}
+.reg.on{stroke:#fff;stroke-width:6;fill-opacity:.4}
+.reg.suit{fill:none;stroke-width:2;stroke-dasharray:6 5}
+.reg.suit.on{fill:none;stroke-dasharray:none}
+.reg-t{fill:var(--text);font-size:14px;font-weight:700;text-anchor:middle;pointer-events:none;paint-order:stroke;stroke:var(--bg);stroke-width:5px;stroke-linejoin:round}
 #crash{position:fixed;inset:0;z-index:9;background:#000;color:var(--text);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;font-size:1.5rem;text-align:center;padding:2rem}
 #crash[hidden]{display:none}
 /* multi-line prose gets more leading; single-line rows and headlines stay compact to fit 720p */
@@ -1341,6 +1344,9 @@ function renderGrouped(p, all, groups, field, withBody) {
       r('immune', '<rect x="62" y="172" width="76" height="70" rx="12"/>') +
       r('muscles', '<rect x="24" y="88" width="26" height="150" rx="13"/>') + r('muscles', '<rect x="150" y="88" width="26" height="150" rx="13"/>') +
       r('muscles', '<rect x="62" y="250" width="34" height="162" rx="14"/>') + r('muscles', '<rect x="104" y="250" width="34" height="162" rx="14"/>') +
+      r('eva', '<rect x="5" y="3" width="190" height="414" rx="34"/>').replace('class="reg ', 'class="reg suit ') +   /* the suit: an outline around the whole body */
+      '<text class="reg-t" x="100" y="47">Head</text><text class="reg-t" x="100" y="130">Heart</text><text class="reg-t" x="100" y="212">Gut</text>' +
+      '<text class="reg-t" x="100" y="336">Muscles</text><text class="reg-t st-' + regSt.eva + '" x="30" y="26" style="fill:var(--c)">Suit</text>' +
       '</svg></div>';
   }
   return '<div class="cols">' + side + '<div class="list">' + html + '</div></div>';
