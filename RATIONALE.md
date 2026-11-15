@@ -18,7 +18,7 @@
 | 30-day SVG trend chart with baseline line. Point shape shows status | Slow changes: bone, body mass, SANS, fitness |
 | Two distinct sounds. Watch: two soft notes. Act: fast harsh pulses every 8 s until acknowledged. Always with a banner | Screen breaks, or nobody is looking |
 | The first key press or click turns the sound on; a notice says so until then | Browsers allow sound only after a user action |
-| "No data" for missing, impossible or old values, and for all values when the clock is behind the data | Fail safe: an old "Nominal" is a wrong status |
+| "No data" for missing, impossible or old values, and for all values when the clock is behind the data | Fail safe: an old "OK" is a wrong status |
 | Single `index.html`: no network, no libraries, no build | Runs from `file://` on a Raspberry Pi 4. Fewer parts to fail |
 | JSON backup of the whole crew or of one astronaut, in Settings on the crew page. Loading is validated before anything is replaced. Confirmation defaults to Cancel | Pi, drive, keyboard or cable breaks. A bad file cannot erase good data |
 | Backup reminder after 7 days | A backup only helps if it is recent |
