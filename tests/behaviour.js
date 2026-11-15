@@ -1,6 +1,4 @@
-{ const d=mk(false); d.ctx.importText(sample); d.ctx.render(); d.key('b');
-  ok(d.get('ui.items.length')===2&&!d.html().includes('only ')&&d.get('ui.items[0].cmd')==='export','Backup offers one whole-crew backup and Load, no per-astronaut backup');
-  d.key('Enter'); ok(/Backup file made: crew-health-whole-crew-\d{4}-\d\d-\d\d\.json \(4 astronauts\)/.test(d.html())&&[SAM,ANA,KEN,LENA].every(id=>d.get('store.lastExport["'+id+'"]')),'Make a backup saves the whole crew in one file and dates every astronaut'); }// Behaviour tests: run the real page script from index.html in Node with a minimal fake DOM,
+// Behaviour tests: run the real page script from index.html in Node with a minimal fake DOM,
 // check what the crew would see and hear, then fuzz the keyboard. No dependencies. Run: node tests/behaviour.js
 const fs=require('fs'),vm=require('vm'),path=require('path');
 const root=path.join(__dirname,'..');
@@ -64,6 +62,10 @@ a.key('s'); ok(a.get('ui.screen')==='settings'&&a.html().includes('<h1>Settings<
 a.key('Escape'); ok(a.get('ui.screen')==='home','Esc leaves Settings');
 a.key('b'); ok(a.get('ui.screen')==='backup'&&a.html().includes('<h1>Backup</h1>')&&a.html().includes('Make a backup file: whole crew (5)')&&a.html().includes('Load a backup file')&&a.html().includes('last backup')&&!a.html().includes('Set today’s date'),'B on the crew page opens Backup, with only backup items');
 a.key('Escape'); ok(a.get('ui.screen')==='home','Esc leaves Backup');
+
+{ const d=mk(false); d.ctx.importText(sample); d.ctx.render(); d.key('b');
+  ok(d.get('ui.items.length')===2&&!d.html().includes('only ')&&d.get('ui.items[0].cmd')==='export','Backup offers one whole-crew backup and Load, no per-astronaut backup');
+  d.key('Enter'); ok(/Backup file made: crew-health-whole-crew-\d{4}-\d\d-\d\d\.json \(4 astronauts\)/.test(d.html())&&[SAM,ANA,KEN,LENA].every(id=>d.get('store.lastExport["'+id+'"]')),'Make a backup saves the whole crew in one file and dates every astronaut'); }
 
 // 3b. remove an astronaut: two confirmations, both default to Cancel
 { const d=mk(false); d.ctx.importText(sample); d.ctx.render(); d.key('s');
