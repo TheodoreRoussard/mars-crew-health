@@ -110,5 +110,53 @@ check('demo journal changes never modify saved crew data',()=>{
  const r=c.historyItems(d,'temp')[0];c.changeReading(d,r.date,r.id,true);
  assert.equal(memory[c.KEY],saved);c.exitDemo();assert.equal(c.store.profiles.test,p);
 });
+check('chart retains all same-day captures and places them by local capture time',()=>{
+ const q=c.sanitizeProfile({id:'chart',name:'Chart',entries:[{date:day,values:{temp:36.6}}]});
+ c.setValue(q,temp,38.7);c.setValue(q,temp,37.9);
+ const rs=q.entries[0].readings;
+ rs[1].recordedAt=new Date(2026,10,15,8,0).toISOString();
+ rs[2].recordedAt=new Date(2026,10,15,16,0).toISOString();
+ const points=c.chartReadings(q,temp,c.todayNum(),30), svg=c.chartSvg(q,temp);
+ assert.equal(points.length,3);assert.equal(c.series(q,temp,c.todayNum(),30).length,1);
+ assert.equal(points[1].x,c.todayNum()+8/24);assert.equal(points[2].x,c.todayNum()+16/24);
+ assert.equal((svg.match(/class="chart-reading"/g)||[]).length,3);
+ assert.ok(svg.includes('Time not recorded'));assert.ok(svg.includes('38.7'));assert.ok(svg.includes('37.9'));
+ rs[1].removedAt=new Date().toISOString();
+ assert.equal(c.chartReadings(q,temp,c.todayNum(),30).length,2);
+ assert.equal((c.chartSvg(q,temp).match(/class="chart-reading"/g)||[]).length,2);
+ rs[1].removedAt=null;assert.equal(c.chartReadings(q,temp,c.todayNum(),30).length,3);
+});
+check('chart window includes 30 days, excludes future dates and retains legacy points',()=>{
+ const q=c.sanitizeProfile({name:'Window',entries:[-30,-29,-1,0,1].map(n=>({date:c.isoOf(c.todayNum()+n),values:{temp:37}}))});
+ assert.deepEqual(Array.from(c.chartReadings(q,temp,c.todayNum(),30),r=>r.d),[c.todayNum()-29,c.todayNum()-1,c.todayNum()]);
+});
+check('numeric chart extremes, constant values and every choice stay finite and inside the SVG',()=>{
+ for(const ind of c.INDICATORS){
+  const values=ind.type==='choice'?Array.from(ind.options,(_,i)=>i):[ind.min,ind.max];
+  for(const readings of [values,[values[0]],[values[0],values[0]]]){
+   const q={id:'bounds',name:'Bounds',baselines:{},entries:[]};
+   readings.forEach(v=>c.setValue(q,ind,v));
+   const svg=c.chartSvg(q,ind);
+   assert.ok(!/NaN|Infinity|undefined/.test(svg),ind.id);
+   const points=[...svg.matchAll(/<g class="chart-reading"[^>]*><title>.*?<\/title>(.*?)<\/g>/g)];
+   assert.equal(points.length,readings.length);
+   for(const [,shape] of points){
+    const x=+(shape.match(/(?:cx|x)="([\d.]+)"/)||shape.match(/d="M([\d.]+)/))[1];
+    const y=+(shape.match(/(?:cy|y)="([\d.]+)"/)||shape.match(/d="M[\d.]+ ([\d.]+)/))[1];
+    assert.ok(x>=8&&x<=632&&y>=8&&y<=226,ind.id+' '+shape);
+   }
+  }
+ }
+});
+check('chart keeps coincident captures and breaks lines when the device clock moves backwards',()=>{
+ const q={id:'clock',name:'Clock',baselines:{},entries:[]};
+ [37,37,38].forEach(v=>c.setValue(q,temp,v));
+ const rs=q.entries[0].readings;
+ rs[0].recordedAt=rs[1].recordedAt=new Date(2026,10,15,16).toISOString();
+ rs[2].recordedAt=new Date(2026,10,15,8).toISOString();
+ const svg=c.chartSvg(q,temp);
+ assert.equal((svg.match(/class="chart-reading"/g)||[]).length,3);
+ assert.match(svg,/<path d="M[\d.]+ [\d.]+L[\d.]+ [\d.]+M[\d.]+ [\d.]+" fill="none"/);
+});
 assert.equal(c.crashed,false);
 console.log(`All ${count} history checks passed`);

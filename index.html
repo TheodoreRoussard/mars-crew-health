@@ -654,7 +654,7 @@ function setValue(p, ind, v) {
   saveStore();
 }
 
-/* The journal is append-only; values remains a daily projection for status and charts.
+/* The journal is append-only; values remains a daily projection for status and totals.
    Array order is capture order, including identical timestamps and clock corrections. */
 function validTimestamp(value) {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value) &&
@@ -712,7 +712,7 @@ function renderHistory(p) {
       '<div>' + (removed ? 'Removed from calculations' : latest && latest.id === r.id ? 'Latest active reading for this day' : 'Earlier reading — kept in history') + '</div></div>' +
       '<button type="button" data-click="reading:' + i + '">' + (removed ? 'Restore' : 'Remove') + '</button></div>';
   });
-  return '<h1>History' + (ind ? ' · ' + esc(ind.label) : '') + '</h1><div class="sub">Every entry is kept. The latest active reading per day is used for status and daily trends. Times use this device’s clock; older imports may have no time.</div>' +
+  return '<h1>History' + (ind ? ' · ' + esc(ind.label) : '') + '</h1><div class="sub">Every entry is kept. Charts show every active reading; status uses the latest active reading. Times use this device’s clock; older imports may have no time.</div>' +
     '<div class="list">' + (rows || '<div class="box">No readings yet. Record one in Check-in (2).</div>') + '</div>';
 }
 function changeReading(p, date, id, removed) {
@@ -735,7 +735,7 @@ function askRemoveReading(item) {
   var r = item.reading, ind = indById(r.indicator), remove = !r.removedAt;
   ui.modal = {title:remove ? 'Remove this reading?' : 'Restore this reading?', sel:0,
     text:p.name + ' · ' + ind.label + ': ' + fmtValue(ind, r.value) + ' · ' + item.date + ' · ' + timeLabel(r.recordedAt) + '. ' +
-      (remove ? 'Only this entry will be excluded. The previous active reading, if any, will be used. You can restore this entry from History.' : 'This entry will be included again in its original position. Statuses and daily trends will be recalculated.'),
+      (remove ? 'Only this entry will be excluded. The previous active reading, if any, will be used. You can restore this entry from History.' : 'This entry will be included again in its original position. Statuses and charts will be recalculated.'),
     options:[{label:'Cancel — keep current data'}, {label:remove ? 'Remove this reading' : 'Restore this reading', fn:function () {
       if (changeReading(p, item.date, item.id, remove)) say(remove ? 'Reading removed from calculations. Restore is available in History.' : 'Reading restored.');
     }}]};
@@ -1099,9 +1099,30 @@ function groupHtml(name, list) {
   var w = worst(list);
   return '<div class="grp st-' + w + '">' + icon(w) + '<span>' + esc(name) + '</span><span class="g-word">' + STATUS[w].word + '</span></div>';
 }
+/* Chart every active capture; keep series() daily for baselines and dose totals.
+   Use the entry's effective date and the device's local time of capture. Legacy
+   readings sit at midday only for layout; their labels never invent a time. */
+function chartReadings(p, ind, endDay, days) {
+  var out = [];
+  p.entries.forEach(function (entry) {
+    var d = dayOf(entry.date);
+    if (d <= endDay - days || d > endDay) return;
+    ensureReadings(entry);
+    entry.readings.forEach(function (r) {
+      if (r.indicator !== ind.id || r.removedAt || !validValue(ind, r.value)) return;
+      var stamp = validTimestamp(r.recordedAt) ? r.recordedAt : null, fraction = 0.5;
+      if (stamp) {
+        var date = new Date(stamp);
+        fraction = (date.getHours() * 3600000 + date.getMinutes() * 60000 + date.getSeconds() * 1000 + date.getMilliseconds()) / 86400000;
+      }
+      out.push({d:d, x:d + fraction, v:r.value, id:r.id, date:entry.date, recordedAt:stamp});
+    });
+  });
+  return out;
+}
 function chartSvg(p, ind) {
-  var W = 640, H = 240, L = ind.type === 'choice' ? 118 : 70, R = 16, T = 16, Bm = 30;
-  var t = todayNum(), s = series(p, ind, t, 30), base = refFor(p, ind, t);
+  var W = 640, H = 240, L = ind.type === 'choice' ? 118 : 80, R = 20, T = 24, Bm = 40;
+  var t = todayNum(), s = chartReadings(p, ind, t, 30), base = refFor(p, ind, t);
   if (!s.length) return '<div class="nochart">No data in the last 30 days.</div>';
   var lo, hi, i;
   if (ind.type === 'choice') { lo = 0; hi = ind.options.length - 1; }
@@ -1112,9 +1133,11 @@ function chartSvg(p, ind) {
     var padv = (hi - lo) * 0.12 || Math.max(1, Math.abs(hi) * 0.05);
     lo -= padv; hi += padv;
   }
-  var X = function (d) { return L + (d - (t - 29)) / 29 * (W - L - R); };
+  var first = s[0], last = s[0];
+  s.forEach(function (x) { if (x.x < first.x) first = x; if (x.x > last.x) last = x; });
+  var X = function (d) { return L + 10 + (last.x === first.x ? 0.5 : (d - first.x) / (last.x - first.x)) * (W - L - R - 20); };
   var Y = function (v) { return T + (hi - v) / (hi - lo) * (H - T - Bm); };
-  var o = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="30 day trend"><g font-size="15" fill="#aab7c4">';
+  var o = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(ind.label + ': ' + s.length + ' active readings in the last 30 days') + '"><g font-size="15" fill="#aab7c4">';
   o += '<rect x="' + L + '" y="' + T + '" width="' + (W - L - R) + '" height="' + (H - T - Bm) + '" fill="#0a0f14" stroke="#30404f"/>';
   if (ind.type === 'choice') {
     for (i = 0; i <= hi; i++) o += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(i) + '" y2="' + Y(i) + '" stroke="#30404f"/><text x="' + (L - 8) + '" y="' + (Y(i) + 5) + '" text-anchor="end">' + esc(ind.options[i].w) + '</text>';
@@ -1124,18 +1147,27 @@ function chartSvg(p, ind) {
     });
     if (base != null) o += '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(base) + '" y2="' + Y(base) + '" stroke="#7cc4ff" stroke-width="2" stroke-dasharray="7 5"/><text x="' + (L + 6) + '" y="' + (Y(base) - 6) + '" fill="#7cc4ff">' + (ind.rolling ? 'your usual level' : 'your baseline') + '</text>';
   }
-  o += '<text x="' + L + '" y="' + (H - 8) + '">30 days ago</text><text x="' + (W - R) + '" y="' + (H - 8) + '" text-anchor="end">Today</text></g>';
+  function axisLabel(x) { return x.date.slice(5) + (first.d === last.d && x.recordedAt ? ' ' + timeLabel(x.recordedAt) : ''); }
+  o += '<text x="' + L + '" y="' + (H - 8) + '">' + esc(axisLabel(first)) + '</text>';
+  if (last.x !== first.x) o += '<text x="' + (W - R) + '" y="' + (H - 8) + '" text-anchor="end">' + esc(axisLabel(last)) + '</text>';
+  o += '</g>';
   var path = '';
-  s.forEach(function (x, k) { path += (k && x.d - s[k - 1].d <= ind.every * 2 ? 'L' : 'M') + X(x.d).toFixed(1) + ' ' + Y(x.v).toFixed(1); });
+  s.forEach(function (x, k) { path += (k && x.x >= s[k - 1].x && x.d - s[k - 1].d <= ind.every * 2 && (x.d !== s[k - 1].d || x.recordedAt && s[k - 1].recordedAt) ? 'L' : 'M') + X(x.x).toFixed(1) + ' ' + Y(x.v).toFixed(1); });
   o += '<path d="' + path + '" fill="none" stroke="#eef3f7" stroke-width="2"/>';
   s.forEach(function (x) {   /* point shape = status: circle nominal, triangle watch, square act, ring no data */
-    var st = evaluate(ind, x.v, ind.rolling ? refFor(p, ind, x.d) : base).status, cx = X(x.d), cy = Y(x.v), c = 'var(--' + st + ')';
+    var st = evaluate(ind, x.v, ind.rolling ? refFor(p, ind, x.d) : base).status, cx = X(x.x), cy = Y(x.v), c = 'var(--' + st + ')';
+    var label = x.date + ' · ' + timeLabel(x.recordedAt) + ' · ' + fmtValue(ind, x.v) + ' · ' + STATUS[st].word;
+    o += '<g class="chart-reading" tabindex="0" role="img" aria-label="' + esc(label) + '"><title>' + esc(label) + '</title>';
     if (st === 'watch') o += '<path d="M' + cx + ' ' + (cy - 8) + 'l8 14h-16z" fill="' + c + '" stroke="#000"/>';
     else if (st === 'act') o += '<rect x="' + (cx - 7) + '" y="' + (cy - 7) + '" width="14" height="14" fill="' + c + '" stroke="#000"/>';
     else if (st === 'nominal') o += '<circle cx="' + cx + '" cy="' + cy + '" r="5" fill="' + c + '" stroke="#000"/>';
     else o += '<circle cx="' + cx + '" cy="' + cy + '" r="5" fill="#000" stroke="' + c + '" stroke-width="2"/>';
+    o += '</g>';
   });
-  return o + '</svg><div class="chart-cap">Last 30 days. Circle = OK, triangle = Watch, square = Act.</div>';
+  return o + '</svg><div class="chart-cap">' + s.length + ' readings · last 30 days · fitted time axis. ' +
+    (ind.type === 'choice' ? '' : 'Linear auto-scale (' + esc(ind.unit) + '). ') +
+    'Hover: value/time · H: full history. ' + (s.some(function (x) { return !x.recordedAt; }) ? 'Unknown times placed at midday. ' : '') +
+    'Circle = OK, triangle = Watch, square = Act.</div>';
 }
 function cardHtml(p, a, withChart) {
   var ind = a.ind, act = actionFor(a), st = a.status;
