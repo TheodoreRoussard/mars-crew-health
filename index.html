@@ -913,12 +913,8 @@ function beep(f, at, dur, type, vol) {
   g.gain.linearRampToValueAtTime(0.0001, at + dur);
   o.connect(g); g.connect(c.destination); o.start(at); o.stop(at + dur + 0.02);
 }
-/* Watch = two slow, soft rising notes. Act = six fast, harsh alternating pulses. Different rhythm AND pitch. */
-function playWatch() {
-  pulseCrew('watch');
-  if (!audio.ok) return;
-  try { var t = audio.ctx.currentTime + 0.05; beep(523, t, 0.35, 'sine', 0.25); beep(659, t + 0.45, 0.45, 'sine', 0.25); } catch (e) {}
-}
+/* Only Act makes a sound: six fast, harsh alternating pulses. Watch is shown on screen (colour, shape, word, pulse)
+   but stays silent, so a sound always means "act now". */
 function playAct() {
   pulseCrew('act');
   if (!audio.ok) return;
@@ -993,7 +989,7 @@ function refreshAlarms() {
     if (!actTimer) actTimer = setInterval(function () {
       if (ui.pending.some(function (x) { return x.a.status === 'act'; })) playAct(); else stopActLoop();
     }, 8000);
-  } else { stopActLoop(); if (newWatch) playWatch(); }
+  } else { stopActLoop(); if (newWatch) pulseCrew('watch'); }
 }
 function stopActLoop() { if (actTimer) { clearInterval(actTimer); actTimer = null; } }
 function acknowledge() { ui.pending.forEach(function (x) { acked[x.key] = true; }); ui.pending = []; crewPulse = {act:null,watch:null}; stopActLoop(); }
@@ -1335,8 +1331,7 @@ function backupItems() {
 function settingsItems() {
   return [{cmd: 'new', label: 'Add a new astronaut'}].concat(crew().length ? [{cmd: 'remove', label: 'Remove an astronaut'}] : []).concat([
     {cmd: 'date', label: 'Set today’s date'},
-    {cmd: 'tw', label: 'Test the Watch sound (two soft notes)'},
-    {cmd: 'ta', label: 'Test the Act sound (fast harsh beeps)'}]);
+    {cmd: 'ta', label: 'Test the alarm sound (fast harsh beeps)'}]);
 }
 function renderMenu(title, items, aside) {
   var rows = '';
@@ -1551,8 +1546,7 @@ function runCommand(it) {
   else if (cmd === 'new') askNewAstronaut();
   else if (cmd === 'remove') askRemoveAstronaut();
   else if (cmd === 'date') askDate();
-  else if (cmd === 'tw') { initAudio(); playWatch(); say(audio.ok ? 'Watch sound played: two soft rising notes.' : 'Sound is not available on this device.', !audio.ok); }
-  else if (cmd === 'ta') { initAudio(); playAct(); say(audio.ok ? 'Act sound played: fast harsh beeps.' : 'Sound is not available on this device.', !audio.ok); }
+  else if (cmd === 'ta') { initAudio(); playAct(); say(audio.ok ? 'Alarm sound played: fast harsh beeps.' : 'Sound is not available on this device.', !audio.ok); }
 }
 function handleKey(k, inInput) {
   var isAck = (k === 'a' || k === 'A');

@@ -16,7 +16,7 @@
 | Guided daily check-in: one measurement per screen, interpreted at once. A question list lets you answer everything due or any single question. Weekly checks appear only when due | Long mission, daily use, no medical training |
 | Body view and Hazards view open the same card | One layout to learn. All 11 risks and 5 hazards are reachable |
 | 30-day SVG trend chart with baseline line. Point shape shows status | Slow changes: bone, body mass, SANS, fitness |
-| Two distinct sounds. Watch: two soft notes. Act: fast harsh pulses every 8 s until acknowledged. Affected crew cards pulse from the same start time, with a steady colored border for reduced motion; no global banner | Identifies the affected astronaut directly. Sound still works across views when nobody is looking |
+| One sound, for Act only: fast harsh pulses every 8 s until acknowledged. Watch is silent and shown on screen, so a sound always means act now. Affected crew cards pulse from the same start time, with a steady colored border for reduced motion; no global banner | Identifies the affected astronaut directly. Sound still works across views when nobody is looking |
 | The first key press or click turns the sound on; a notice says so until then | Browsers allow sound only after a user action |
 | "No data" for missing, impossible or old values, and for all values when the clock is behind the data | Fail safe: an old "OK" is a wrong status |
 | Single `index.html`: no network, no libraries, no build | Runs from `file://` on a Raspberry Pi 4. Fewer parts to fail |
