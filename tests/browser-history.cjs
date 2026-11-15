@@ -18,12 +18,15 @@ const script = `
     openProfile('browser'); render();
     enterValue('38.7'); enterValue('36.7');
     assert(active().entries[0].readings.length === 2, 'Repeated entry lost a reading');
+    // Check-in results omit the chart; inspect the indicator card, then return.
+    ui.card = {ids:['temp'],i:0}; render();
     assert(document.querySelectorAll('.chart-reading').length === 2, 'Chart omitted a same-day reading');
     Array.from(document.querySelectorAll('.chart-reading')).forEach(function (point) {
       var box = point.getBBox();
       assert(box.x >= 0 && box.y >= 0 && box.x + box.width <= 640 && box.y + box.height <= 240, 'Chart point clipped');
       assert(point.querySelector('title').textContent.indexOf('202') >= 0, 'Chart point missing timestamp label');
     });
+    ui.card = null; render();
     document.querySelector('[data-click="history:temp"]').click();
     assert(document.querySelectorAll('.history-row').length === 2, 'History rows missing');
     assert(document.querySelector('.history-row time').textContent.indexOf('Time not recorded') < 0, 'Timestamp missing');
