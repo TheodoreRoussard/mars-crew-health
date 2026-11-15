@@ -66,7 +66,7 @@ Les mesures cliniques des astronautes (tension, pouls, masse, vision, sommeil) n
 
 Trois lectures :
 
-1. **À emplacement fixe, la dose quotidienne est très stable** : l'écart-type vaut 6 % de la moyenne. Un jour qui s'écarte nettement du niveau habituel est donc un vrai signal.
+1. **À emplacement fixe, la dose quotidienne est très stable** : l'écart-type vaut environ 6 % de la moyenne. Un jour qui s'écarte nettement du niveau habituel est donc un vrai signal.
 2. **L'emplacement dans le vaisseau change la dose d'environ 20 %.** Les cinq jours les plus hauts de l'année tombent tous en mai, quand l'instrument était ailleurs dans le même module, à altitude de station inchangée. Sans l'emplacement enregistré avec chaque mesure, on aurait pris ce mois pour une hausse de radiation.
 3. **Cette année ne dit rien sur les tempêtes solaires** : l'instrument n'a presque jamais classé le Soleil comme source dominante en 2014.
 
