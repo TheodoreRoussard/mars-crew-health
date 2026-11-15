@@ -8,9 +8,19 @@ const script=`
   stopActLoop();acked={};announced={};crewPulse={act:null,watch:null};
   store={app:APP,version:VERSION,profiles:{},lastExport:{},dateOffset:0};
   demoSession={store:store,guide:'Browser test'};
+  goHome();refreshAlarms();render();
+  assert(document.querySelectorAll('header .tab').length===1 && !document.querySelector('header .hint'),'Empty crew still shows Tab Next');
+  assert(!document.querySelector('header .snd kbd'),'Sound button still shows a shortcut');
+  document.querySelector('header .snd').click();
+  assert(audio.ok && !audio.muted,'First button click did not enable sound');
+  document.querySelector('header .snd').click();
+  assert(audio.muted,'Button click did not mute');
+  key('m');key('M');assert(audio.muted,'Removed shortcut changed sound');
+  document.querySelector('header .snd').click();assert(!audio.muted,'Button click did not unmute');
   function add(id,values){var p=sanitizeProfile({id:id,name:id,entries:[{date:isoOf(todayNum()),values:values}]});store.profiles[id]=p;return p;}
   var red=add('Red',{temp:39,bp:180,spo2:85,rad:20,exercise:120,immune:1}),yellow=add('Yellow',{temp:38});
   add('Green',{temp:37});add('Empty',{});goHome();refreshAlarms();render();
+  assert(document.querySelector('header .hint'),'Multiple tabs lost Tab Next');
   assert(!document.querySelector('.alarm'),'Global banner remains');
   assert(document.querySelector('main').textContent.indexOf('Unacknowledged')<0,'Unacknowledged line remains');
   assert(document.querySelectorAll('.crew-card.alert-live').length===2,'Wrong astronaut cards highlighted');
