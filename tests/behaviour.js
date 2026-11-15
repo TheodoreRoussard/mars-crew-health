@@ -58,6 +58,20 @@ a.key('Enter'); a.key('5'); a.key('6'); ok(a.get('ui.view')==='trends','key 6 no
 a.key('0'); a.key('s'); ok(a.get('ui.screen')==='settings'&&a.html().includes('<h1>Settings</h1>')&&a.html().includes('Make a backup file: whole crew (5)')&&a.html().includes('only Sam Okafor')&&a.html().includes('Set today’s date'),'S on the crew page opens Settings');
 a.key('Escape'); ok(a.get('ui.screen')==='home','Esc leaves Settings');
 
+// 3b. remove an astronaut: two confirmations, both default to Cancel
+{ const d=mk(false); d.ctx.importText(sample); d.ctx.render(); d.key('s');
+  const openRemove=()=>{ d.get('ui.sel='+d.get('ui.items.findIndex(function(x){return x.cmd==="remove"})')); d.key('Enter'); };
+  openRemove(); ok(d.get('ui.modal.title')==='Remove an astronaut'&&d.get('ui.modal.sel')===0&&d.get('ui.modal.options.length')===5,'Remove opens a picker with Cancel first and one line per astronaut');
+  d.key('ArrowUp'); ok(d.get('ui.modal.sel')===4,'ArrowUp in a dialog moves up (wraps to the last option)');
+  d.key('Escape'); openRemove(); d.key('Enter'); ok(d.ctx.crew().length===4&&d.get('ui.modal')===null,'Cancel in the picker removes nobody');
+  openRemove(); d.key('ArrowDown'); d.key('Enter'); ok(d.get('ui.modal.title')==='Remove Sam Okafor?'&&d.get('ui.modal.sel')===0&&d.get('ui.modal.text').includes('30 days'),'picking Sam asks again, says how many days are lost, default is Cancel');
+  d.key('Enter'); ok(!!d.P(SAM),'Cancel on the second question keeps Sam');
+  d.get('store.lastExport["'+SAM+'"]="2026-11-01"');
+  openRemove(); d.key('ArrowDown'); d.key('Enter'); d.key('ArrowDown'); d.key('Enter');
+  ok(!d.P(SAM)&&d.ctx.crew().length===3&&!d.get('store.lastExport["'+SAM+'"]')&&JSON.parse(d.mem['crewHealth.v1']).profiles[SAM]===undefined,'confirming removes Sam, his backup date, and saves');
+  ok(!d.get('ui.pending').some(x=>x.p.id===SAM)&&!d.html().includes('tab-n">Sam Okafor')&&d.html().includes('Removed Sam Okafor'),'Sam’s alarms and tab are gone, message confirms');
+  d.key('Escape'); ok(!d.html().includes('ACT NOW'),'crew page no longer shows Sam’s Act alarm'); }
+
 // 4. check-in: choose any question
 a.get('ui.sel=3'); a.key('Enter'); ok(a.get('ui.activeId')===LENA,'open Lena (check-in not done today)');
 a.key('2'); const dueN=a.ctx.dueSteps(a.P(LENA)).length; ok(a.html().includes('Answer all '+dueN+' questions that are due')&&a.html().includes('To do')&&a.get('ui.items[0].kind')==='all','check-in opens on the question list');
