@@ -75,7 +75,6 @@ header .dim{color:var(--dim)}
 .crew-card.alert-live{border-width:4px;border-color:var(--pulse-color)}
 .crew-card.alert-act{--pulse-color:var(--act)}
 .crew-card.alert-watch{--pulse-color:var(--watch)}
-.cc-pending{color:var(--pulse-color);font-size:.85em;font-weight:700}
 .notice{padding:.25rem 1rem;background:var(--panel2);border-bottom:1px solid var(--line);color:var(--text);flex:none}
 .notice b{color:var(--watch)}
 main{flex:1;min-height:0;padding:.6rem 1rem;display:flex;flex-direction:column;gap:.5rem}
@@ -110,6 +109,7 @@ h2{font-size:1rem;margin:0;color:var(--dim);font-weight:600;text-transform:upper
 .grp .g-word{color:var(--c)}
 /* OK rows recede (icon keeps the colour) so Watch and Act stand out */
 .row.st-nominal .r-word,.grp.st-nominal .g-word{color:var(--dim);font-weight:500}
+.row.text-status.st-nominal .r-word,.grp.text-status.st-nominal .g-word{color:var(--nominal);font-weight:600}
 header .snd-off{margin-left:.8rem;white-space:nowrap;color:var(--watch);font-weight:700}
 .box{background:var(--panel);border-radius:.4rem;padding:.6rem .8rem}
 .count{display:flex;align-items:center;gap:.5rem;font-size:1.05rem;color:var(--c);font-weight:700}
@@ -884,9 +884,11 @@ function icon(st) {
   else s += '<circle cx="12" cy="12" r="9.5" fill="none" stroke="' + c + '" stroke-width="2.2" stroke-dasharray="4 3"/><rect x="7" y="10.8" width="10" height="2.4" fill="' + c + '"/>';
   return s + '</svg>';
 }
-function trendHtml(t) {
+function textStatusView() { return ui.view === 'body' || ui.view === 'hazards' || ui.view === 'trends'; }
+function trendHtml(t, textOnly) {
   if (!t) return 'Trend: not enough data yet';
   var rot = t === 'up' ? -40 : t === 'down' ? 40 : 0, word = t === 'up' ? 'Rising' : t === 'down' ? 'Falling' : 'Steady';
+  if (textOnly) return 'Trend: ' + word;
   return '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(' + rot + ' 12 12)"><path d="M3 12h15M12.5 5.5L19 12l-6.5 6.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></g></svg>Trend: ' + word;
 }
 
@@ -1150,16 +1152,16 @@ function ciConfirm() {
 }
 
 /* ---------- rendering ---------- */
-function rowHtml(a, i, big) {
+function rowHtml(a, i, big, textOnly) {
   var st = a.status;
   var word = st === 'nodata' ? a.word : STATUS[st].word + ' · ' + a.word;
   var val = st === 'nodata' ? a.note : (a.ind.type === 'choice' ? (a.age ? ago(a.age) : '') : a.valueText)   /* a yes/no answer has no number: show its age only when it is not from today */;
-  return '<div class="row st-' + st + (i === ui.sel ? ' sel' : '') + (big ? ' big' : '') + '" data-click="pick:' + i + '">' + icon(st) +
+  return '<div class="row st-' + st + (i === ui.sel ? ' sel' : '') + (big ? ' big' : '') + (textOnly ? ' text-status' : '') + '" data-click="pick:' + i + '">' + (textOnly ? '' : icon(st)) +
     '<span class="r-label">' + esc(a.ind.label) + '</span><span class="r-word">' + esc(word) + '</span><span class="r-val">' + esc(val) + '</span></div>';
 }
 function groupHtml(name, list, hideIcon) {
   var w = worst(list);
-  return '<div class="grp st-' + w + '">' + (hideIcon ? '' : icon(w)) + '<span>' + esc(name) + '</span><span class="g-word">' + STATUS[w].word + '</span></div>';
+  return '<div class="grp st-' + w + (hideIcon ? ' text-status' : '') + '">' + (hideIcon ? '' : icon(w)) + '<span>' + esc(name) + '</span><span class="g-word">' + STATUS[w].word + '</span></div>';
 }
 /* Chart every active capture; keep series() daily for baselines and dose totals.
    Use the entry's effective date and the device's local time of capture. Legacy
@@ -1224,9 +1226,16 @@ function chartSvg(p, ind) {
   o += '<text x="' + L + '" y="' + (H - 8) + '">' + esc(axisLabel(first)) + '</text>';
   if (last.x !== first.x) o += '<text x="' + (W - R) + '" y="' + (H - 8) + '" text-anchor="end">' + esc(axisLabel(last)) + '</text>';
   o += '</g>';
-  var path = '';
-  s.forEach(function (x, k) { path += (k && x.x >= s[k - 1].x && x.d - s[k - 1].d <= ind.every * 2 && (x.d !== s[k - 1].d || x.recordedAt && s[k - 1].recordedAt) ? 'L' : 'M') + X(x.x).toFixed(1) + ' ' + Y(x.v).toFixed(1); });
-  o += '<path d="' + path + '" fill="none" stroke="#eef3f7" stroke-width="2"/>';
+  var path = '', estimated = '';
+  s.forEach(function (x, k) {
+    var prev = k ? s[k - 1] : null, point = X(x.x).toFixed(1) + ' ' + Y(x.v).toFixed(1);
+    var near = prev && x.d - prev.d <= ind.every * 2;
+    var unknown = near && (!prev.recordedAt || !x.recordedAt);
+    path += (near && !unknown && x.x >= prev.x ? 'L' : 'M') + point;
+    if (unknown) estimated += 'M' + X(prev.x).toFixed(1) + ' ' + Y(prev.v).toFixed(1) + 'L' + point;
+  });
+  o += '<path class="chart-line" d="' + path + '" fill="none" stroke="#eef3f7" stroke-width="2"/>';
+  if (estimated) o += '<path class="chart-estimated" d="' + estimated + '" fill="none" stroke="#eef3f7" stroke-width="2" stroke-dasharray="5 4"/>';
   s.forEach(function (x) {   /* point shape = status: circle nominal, triangle watch, square act, ring no data */
     var st = evaluate(ind, x.v, ind.rolling ? refFor(p, ind, x.d) : base).status, cx = X(x.x), cy = Y(x.v), c = 'var(--' + st + ')';
     var label = x.date + ' · ' + timeLabel(x.recordedAt) + ' · ' + fmtValue(ind, x.v) + ' · ' + STATUS[st].word;
@@ -1239,7 +1248,7 @@ function chartSvg(p, ind) {
   });
   return o + '</svg><div class="chart-cap">' + s.length + ' readings · last 30 days · fitted time axis. ' +
     (ind.type === 'choice' ? '' : 'Linear auto-scale (' + esc(ind.unit) + '). ') +
-    'Hover: value/time · H: full history. ' + (s.some(function (x) { return !x.recordedAt; }) ? 'Unknown times placed at midday. ' : '') +
+    'Hover: value/time · H: full history. ' + (s.some(function (x) { return !x.recordedAt; }) ? 'Unknown times at midday; dashed links = approximate timing. ' : '') +
     (okBand ? 'Green band = OK range today. ' : '') + 'Circle = OK, triangle = Watch, square = Act.</div>';
 }
 function cardHtml(p, a, withChart) {
@@ -1253,7 +1262,7 @@ function cardHtml(p, a, withChart) {
   var left = '<div class="level">' + esc(a.word) + '</div>' +
     '<div class="value">' + (a.value == null ? (st === 'nominal' ? 'Nothing to report' : 'No data') : esc(a.valueText) + ' <small>measured ' + ago(a.age) + (a.recordedAt ? ' at ' + esc(timeLabel(a.recordedAt)) : ' · time not recorded') + '</small>') + '</div>' +
     (a.note ? '<div class="meta">' + esc(a.note) + '</div>' : '') +
-    (baseTxt ? '<div class="meta">' + esc(baseTxt) + '</div>' : '') + (cumTxt ? '<div class="meta">' + esc(cumTxt) + '</div>' : '') + '<div class="meta">' + trendHtml(a.trend) + '</div>' +
+    (baseTxt ? '<div class="meta">' + esc(baseTxt) + '</div>' : '') + (cumTxt ? '<div class="meta">' + esc(cumTxt) + '</div>' : '') + '<div class="meta">' + trendHtml(a.trend, textStatusView()) + '</div>' +
     '<div class="box explanation"><h2>Why this status?</h2>' + esc(explainStatus(p, a)) + '</div>' +
     '<button type="button" data-click="history:' + ind.id + '">History / remove a reading</button>' +
     '<div class="why">' + esc(ind.why) + '</div>' + (ind.ref ? '<div class="why refline">' + esc(ind.ref) + '</div>' : '');
@@ -1261,7 +1270,7 @@ function cardHtml(p, a, withChart) {
     '<div class="action-w">Who handles it: <b>' + OWNERS[act.who] + '</b></div>' +
     (act.who === 'earth' ? '<div class="delay">Earth is far away: a message takes up to about 20 minutes each way, so expect 40 minutes or more for an answer. <b>While you wait:</b> ' + esc(act.wait || 'tell the crew medical officer.') + '</div>' : '') +
     '</div>' + (withChart ? '<div class="chart">' + chartSvg(p, ind) + '</div>' : '');
-  return '<div class="card st-' + st + '"><div class="card-top">' + icon(st) + '<div class="card-status">' + STATUS[st].word + '</div>' +
+  return '<div class="card st-' + st + '"><div class="card-top">' + (textStatusView() ? '' : icon(st)) + '<div class="card-status">' + STATUS[st].word + '</div>' +
     '<div><div class="card-name">' + esc(ind.label) + '</div><div class="card-risk">Risk: ' + esc(ind.risk) + '</div></div></div>' +
     '<div class="card-grid"><div>' + left + '</div><div>' + right + '</div></div></div>';
 }
@@ -1305,7 +1314,6 @@ function renderHome() {
       if (k) counts += '<span class="cc-n st-' + st + '">' + icon(st) + k + ' ' + STATUS[st].word + '</span>';
     });
     html += '<div class="crew-card st-' + w + (i === ui.sel ? ' sel' : '') + (pending ? ' alert-live alert-' + pending : '') + '"' + (pending ? ' data-alert-level="' + pending + '"' : '') + ' data-click="pick:' + i + '">' +
-      (pending ? '<div class="cc-pending">Unacknowledged ' + STATUS[pending].word + ' · A: acknowledge</div>' : '') +
       '<div class="cc-top">' + icon(w) + '<div class="cc-id"><div class="cc-name">' + esc(p.name) + '</div><div class="cc-role">' + esc(p.role) + '</div></div><div class="cc-status">' + title + '</div></div>' +
       (acts.length ? '<ul class="cc-acts' + (acts.length > 3 ? ' many' : '') + '">' + acts.map(function (a) { return '<li>' + icon('act') + '<span><b>' + esc(a.ind.label.replace(/ \(.*\)$/, '')) + '<span class="p">' + esc((a.ind.label.match(/ \(.*\)$/) || [''])[0]) + '</span></b><span class="w">: ' + esc(a.word) + '</span></span></li>'; }).join('') + '</ul>' +
           '<div class="cc-do">Do now: ' + esc(act.t) + '</div>' + (acts.length === 1 ? '<div class="cc-who">Who handles it: ' + OWNERS[act.who] + '</div>' : '')
@@ -1389,8 +1397,8 @@ function renderGrouped(p, all, groups, field, withBody) {
   groups.forEach(function (g) {
     var list = all.filter(function (a) { return a.ind[field] === g.id; });
     regSt[g.id] = worst(list);
-    html += groupHtml(g.name, list, withBody);
-    list.forEach(function (a) { if (items.length === ui.sel) selGroup = g.id; html += rowHtml(a, items.length); items.push({kind: 'ind', id: a.ind.id}); });
+    html += groupHtml(g.name, list, true);
+    list.forEach(function (a) { if (items.length === ui.sel) selGroup = g.id; html += rowHtml(a, items.length, false, true); items.push({kind: 'ind', id: a.ind.id}); });
   });
   if (ui.sel >= items.length) ui.sel = items.length - 1;
   ui.items = items;
@@ -1414,12 +1422,12 @@ function renderTrends(p, all) {
   var rank = {act:0, watch:1, nominal:2, nodata:3};
   all = all.slice().sort(function (a, b) { return rank[a.status] - rank[b.status] || a.ind.label.localeCompare(b.ind.label, 'en'); });
   var items = [], rows = '';
-  all.forEach(function (a, i) { rows += rowHtml(a, i); items.push({kind: 'ind', id: a.ind.id}); });
+  all.forEach(function (a, i) { rows += rowHtml(a, i, false, true); items.push({kind: 'ind', id: a.ind.id}); });
   if (ui.sel >= items.length) ui.sel = items.length - 1;
   ui.items = items;
   var a = all[ui.sel];
-  return '<div class="cols"><div class="list compact" style="flex:1.1">' + rows + '</div><div class="side"><div class="box st-' + a.status + '"><div class="count">' + icon(a.status) + STATUS[a.status].word + ' · ' + esc(a.word) + '</div>' +
-    '<div style="font-size:1.2rem;font-weight:700">' + esc(a.ind.label) + '</div><div class="meta">' + trendHtml(a.trend) + '</div></div><div class="chart">' + chartSvg(p, a.ind) + '</div></div></div>';
+  return '<div class="cols"><div class="list compact" style="flex:1.1">' + rows + '</div><div class="side"><div class="box st-' + a.status + '"><div class="count">' + STATUS[a.status].word + ' · ' + esc(a.word) + '</div>' +
+    '<div style="font-size:1.2rem;font-weight:700">' + esc(a.ind.label) + '</div><div class="meta">' + trendHtml(a.trend, true) + '</div></div><div class="chart">' + chartSvg(p, a.ind) + '</div></div></div>';
 }
 function renderCheckin(p) {
   var c = ui.ci;

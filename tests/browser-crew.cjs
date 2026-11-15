@@ -9,9 +9,10 @@ const script=`
   store={app:APP,version:VERSION,profiles:{},lastExport:{},dateOffset:0};
   demoSession={store:store,guide:'Browser test'};
   function add(id,values){var p=sanitizeProfile({id:id,name:id,entries:[{date:isoOf(todayNum()),values:values}]});store.profiles[id]=p;return p;}
-  var red=add('Red',{temp:39,bp:180,spo2:85,rad:20}),yellow=add('Yellow',{temp:38});
+  var red=add('Red',{temp:39,bp:180,spo2:85,rad:20,exercise:120,immune:1}),yellow=add('Yellow',{temp:38});
   add('Green',{temp:37});add('Empty',{});goHome();refreshAlarms();render();
   assert(!document.querySelector('.alarm'),'Global banner remains');
+  assert(document.querySelector('main').textContent.indexOf('Unacknowledged')<0,'Unacknowledged line remains');
   assert(document.querySelectorAll('.crew-card.alert-live').length===2,'Wrong astronaut cards highlighted');
   assert(document.querySelectorAll('.crew-card.alert-act').length===1,'Red card missing');
   assert(document.querySelectorAll('.crew-card.alert-watch').length===1,'Yellow card missing');
@@ -30,8 +31,15 @@ const script=`
   openProfile('Red');setView('trends');render();
   assert(ui.items[0].id==='spo2','Trends did not start with alphabetically first Act');
   key('Enter');assert(ui.card.ids[ui.card.i]==='spo2','Opened indicator differs from selected trend');
-  key('3');assert(Array.from(document.querySelectorAll('.grp')).every(function(e){return !e.querySelector('svg');}),'Body header icons remain');
-  assert(document.querySelector('.list .row svg'),'Body measurement icons removed');
+  ['3','4','5'].forEach(function(viewKey){
+   key(viewKey);assert(!document.querySelector('main .ico'),'Status pictogram remains in view '+viewKey);
+   assert(document.querySelector('header .ico'),'Tab pictograms removed');
+   var nominal=document.querySelector('main .row.st-nominal .r-word');
+   assert(nominal && getComputedStyle(nominal).color==='rgb(74, 222, 128)','OK text is not green');
+   assert(getComputedStyle(document.querySelector('main .row.st-watch .r-word')).color==='rgb(255, 191, 36)','Watch text is not amber');
+   assert(getComputedStyle(document.querySelector('main .row.st-act .r-word')).color==='rgb(255, 107, 94)','Act text is not red');
+   key('Enter');assert(!document.querySelector('main .ico'),'Detail card pictogram remains');
+  });
   assert(!document.querySelector('.alarm'),'Banner returned in profile');
   assert(!crashed,'Crash screen active');
   result.textContent='PASS browser crew: '+count+' assertions';
