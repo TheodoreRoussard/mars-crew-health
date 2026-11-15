@@ -45,10 +45,17 @@ ok(a.html().includes('grid-template-columns:repeat(2,1fr);grid-template-rows:rep
   ok(!/\d+ Act</.test(card)&&card.includes('6 Watch'),'Act is never reduced to a count on the card; Watch stays a count'); }
 ok(a.get('ui.pending.length')>0&&a.beeps.length===0&&a.html().includes('alert-live alert-act')&&!a.html().includes('class="alarm'),'before any key: affected crew card is marked, no banner and no sound yet');
 a.key('ArrowRight'); ok(a.beeps.length===6&&a.beeps.every(b=>b.type==='square')&&a.html().includes('Sound on'),'first key press turns sound on: Act = 6 square pulses');
+{ const m=mk(false); m.ctx.importText(sample); m.ctx.render();
+  ok(m.html().includes('class="snd off" data-click="key:m"')&&m.html().includes('Sound off'),'header has a Sound button, off before the first key');
+  m.key('m'); ok(m.get('audio.ok')&&!m.get('audio.muted')&&m.beeps.length===6&&m.html().includes('Sound on'),'M as the very first key turns the sound on (it does not mute it straight away)');
+  m.key('m'); m.tick(); ok(m.get('audio.muted')&&m.beeps.length===6&&m.html().includes('Sound off')&&m.html().includes('Press M to turn the sound back on')&&m.get('ui.pending.length')>0,'M mutes: the 8 s repeat is silent, alerts stay pending and a notice says how to turn it back on');
+  m.key('M'); ok(!m.get('audio.muted')&&m.beeps.length===12&&m.html().includes('Sound on'),'M again turns the sound on and the pending Act alarm sounds at once');
+  m.ctx.askNewAstronaut(); m.ctx.handleKey('m',true); ok(!m.get('audio.muted'),'typing m in a text field does not mute'); }
 a.tick(); ok(a.beeps.length===12,'Act repeats on the 8 s timer');
 a.key('Enter'); ok(a.get('ui.screen')==='main'&&a.get('ui.activeId')===ANA&&a.get('ui.pending').some(x=>x.p.id===SAM)&&!a.html().includes('class="alarm'),'inside another profile crew alarms remain pending without a banner');
 const np=a.get('ui.pending.length'); a.key('a'); a.tick(); ok(a.get('ui.pending.length')===0&&a.beeps.length===12&&!a.html().includes('ALARM'),'A acknowledges all '+np+' crew alerts and silences the sound');
-a.beeps.length=0; a.ctx.playWatch(); ok(a.beeps.length===2&&a.beeps.every(b=>b.type==='sine')&&a.beeps[1].t-a.beeps[0].t>0.4,'Watch sound = 2 slow sine notes');
+{ const w=mk(false); w.ctx.importText(sample); delete w.get('store.profiles')[SAM]; w.ctx.refreshAlarms(); w.key('ArrowRight');
+  ok(w.get('ui.pending.length')>0&&w.get('ui.pending').every(x=>x.a.status==='watch')&&w.beeps.length===0&&typeof w.ctx.playWatch==='undefined'&&w.get('crewPulse.watch')!==null,'Watch alerts are silent: no beep, the card still pulses'); }
 a.get('ui.prompt=null'); a.ctx.askNewAstronaut(); a.inputs['prompt-inp']={value:'Zoé Martin'}; a.key('Enter');
 ok(a.html().includes('Personal baselines') && a.get('ui.baseline') !== null, 'new astronaut opens optional baseline form');
 a.key('Escape'); a.key('0');

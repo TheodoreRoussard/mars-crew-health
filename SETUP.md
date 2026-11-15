@@ -8,7 +8,7 @@ Print this page and keep it next to the screen. All keys are also shown on scree
 2. In Chromium settings, under Downloads, turn on **"Ask where to save each file"**, so backups can go straight to the USB stick.
 3. The first screen is the **crew page**. Press `S` for Settings.
 4. Choose **Add a new astronaut**, type the name, press `Enter`. The optional personal-baseline form opens: enter known references with their date and source, or choose Cancel / skip. Repeat for each crew member.
-5. Test both sounds in Settings. Set the speaker volume so they are heard across the room.
+5. Test the alarm sound in Settings. Set the speaker volume so it is heard across the room. Only Act alarms make a sound; Watch alerts are shown on screen.
 6. Check the date at the top right. If it is wrong, choose **Set today's date**. Repeat after every power cut: the Raspberry Pi has no battery clock.
 
 To try the tool with an example crew, press `B`, choose **Load a backup file** and pick `sample-data.json`.
@@ -23,8 +23,9 @@ To try the tool with an example crew, press `B`, choose **Load a backup file** a
 | `1` to `4` | Inside a profile: Overview, Check-in, Body & hazards, Trends |
 | `Esc` | Back |
 | `A` | Acknowledge an alarm |
+| `M` | Sound on / off (also the button at the top right). Alerts stay on screen when the sound is off |
 | `B` | Backup: make or load a backup file (from the crew page) |
-| `S` | Settings: astronauts, date, sound tests (from the crew page) |
+| `S` | Settings: astronauts, date, sound test (from the crew page) |
 
 Open your profile, press `2`, then either answer everything that is due or pick a single question.
 
@@ -49,7 +50,7 @@ Keep a copy of `index.html` on both sticks: the whole tool is that one file. Eac
 | "This device is NOT saving" | Make a backup file now, then move to the spare device. |
 | "The clock looks wrong" / "Date is wrong" | In Settings, choose **Set today's date**. Statuses stay "No data" until you do. |
 | Loading says "Nothing was changed" | The file is damaged. Use the other USB stick. |
-| "Sound is off" | Press any key. If it says sound is not available, check the speaker. Alerts are always on screen too. |
+| "Sound is off" | Press `M` or any key. If it says sound is not available, check the speaker. Alerts are always on screen too. |
 
 ## 5. Good to know
 

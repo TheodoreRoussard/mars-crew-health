@@ -57,7 +57,7 @@ Each indicator card now includes **Why this status?** It explains the recorded v
 - **Action-oriented overview:** prioritizes alerts and shows a next step and its responsible person.
 - **Body & hazards view:** every measurement listed once by body system, beside tiles for six body systems and the five mission hazards. The selected measurement lights the tiles it belongs to.
 - **Personal baselines and trends:** heart rate, body mass, and grip strength are evaluated relative to a baseline; indicator cards show 30-day SVG charts.
-- **Visual and audible alerts:** affected crew cards show red or yellow borders. Finite visual pulses share the sound's start time; Act repeats every eight seconds until acknowledged with **A**. Reduced-motion users get steady borders. Acknowledging stops the pulses and sound without clearing the underlying status. Sound still covers the whole crew on every screen; the global alert banner has been removed.
+- **Visual and audible alerts:** affected crew cards show red or yellow borders. Only Act makes a sound; Watch is silent. Finite visual pulses share the sound's start time; Act repeats every eight seconds until acknowledged with **A**. Reduced-motion users get steady borders. Acknowledging stops the pulses and sound without clearing the underlying status. Sound still covers the whole crew on every screen; the global alert banner has been removed.
 - **Prioritized Trends:** Act first, then Watch, OK, and No data; indicators within each group are alphabetical. Body & hazards and Trends use text statuses: green OK, amber Watch, red Act and gray No data. Their lists, headings and detail cards omit status pictograms; astronaut tabs keep their original symbols.
 - **Concrete next steps:** advice starts with an immediate action and includes medical escalation where appropriate. Low temperature and fever, or mass gain and loss, get different guidance. See [action guidance and sources](ACTION-GUIDANCE.md).
 - **Local profiles and backups:** measurements are saved in the browser, with JSON export/import for transfer between devices.
@@ -77,7 +77,8 @@ Measurements are entered manually. The prototype does not connect directly to se
 | **0** | Crew page |
 | **Tab / Shift+Tab** | Next / previous crew tab |
 | **B** | On the crew page: Backup (make or load a backup file). Inside a profile: personal baselines |
-| **S** | Settings from the crew page: profiles, date, and sound tests |
+| **S** | Settings from the crew page: profiles, date, and sound test |
+| **M** | Sound on / off (also the button in the top bar) |
 | **D** | Start demo from the crew page; switch scenario during a demo |
 | **X** | Exit demo and restore the saved crew |
 | **↑ / ↓** | Choose an item |
