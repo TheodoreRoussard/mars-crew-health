@@ -55,10 +55,10 @@ Each indicator card now includes **Why this status?** It explains the recorded v
 - **23 indicators:** vital signs, symptoms, fitness, wellbeing, radiation, cabin CO2, and medical-kit readiness.
 - **Four clear statuses:** OK, Watch, Act, and No data, represented by words, colors, and shapes.
 - **Action-oriented overview:** prioritizes alerts and shows a next step and its responsible person.
-- **Body and Hazards views:** explore measurements by body region or by the five mission hazards.
+- **Body & hazards view:** every measurement listed once by body system, beside tiles for six body systems and the five mission hazards. The selected measurement lights the tiles it belongs to.
 - **Personal baselines and trends:** heart rate, body mass, and grip strength are evaluated relative to a baseline; indicator cards show 30-day SVG charts.
 - **Visual and audible alerts:** affected crew cards show red or yellow borders. Finite visual pulses share the sound's start time; Act repeats every eight seconds until acknowledged with **A**. Reduced-motion users get steady borders. Acknowledging stops the pulses and sound without clearing the underlying status. Sound still covers the whole crew on every screen; the global alert banner has been removed.
-- **Prioritized Trends:** Act first, then Watch, OK, and No data; indicators within each group are alphabetical. Body, Hazards and Trends use text statuses: green OK, amber Watch, red Act and gray No data. Their lists, headings and detail cards omit status pictograms; astronaut tabs keep their original symbols.
+- **Prioritized Trends:** Act first, then Watch, OK, and No data; indicators within each group are alphabetical. Body & hazards and Trends use text statuses: green OK, amber Watch, red Act and gray No data. Their lists, headings and detail cards omit status pictograms; astronaut tabs keep their original symbols.
 - **Concrete next steps:** advice starts with an immediate action and includes medical escalation where appropriate. Low temperature and fever, or mass gain and loss, get different guidance. See [action guidance and sources](ACTION-GUIDANCE.md).
 - **Local profiles and backups:** measurements are saved in the browser, with JSON export/import for transfer between devices.
 - **Data-quality handling:** missing or stale readings, missing baselines, and a device date behind the recorded data are surfaced instead of presenting a normal status.
@@ -72,9 +72,8 @@ Measurements are entered manually. The prototype does not connect directly to se
 | --- | --- |
 | **1** | Overview |
 | **2** | Check-in |
-| **3** | Body |
-| **4** | Hazards |
-| **5** | Trends |
+| **3** | Body & hazards |
+| **4** | Trends |
 | **0** | Crew page |
 | **Tab / Shift+Tab** | Next / previous crew tab |
 | **B** | On the crew page: Backup (make or load a backup file). Inside a profile: personal baselines |
@@ -98,7 +97,7 @@ Measurements are entered manually. The prototype does not connect directly to se
 | Wellbeing | Sleep duration, mood |
 | Environment and readiness | Daily radiation dose, cabin CO2, medical kit |
 
-Eyesight, grip strength, urine calcium, and medical-kit checks are scheduled weekly; routine indicators are scheduled daily. Suit-work follow-up questions appear after a logged event; unresolved symptoms are checked again. The Hazards view groups indicators under **space radiation, hostile closed environment, isolation and confinement, distance from Earth, and altered gravity**.
+Eyesight, grip strength, urine calcium, and medical-kit checks are scheduled weekly; routine indicators are scheduled daily. Suit-work follow-up questions appear after a logged event; unresolved symptoms are checked again. The hazard tiles of the Body & hazards view cover **space radiation, hostile closed environment, isolation and confinement, distance from Earth, and altered gravity**.
 
 ## Multiple readings and correcting mistakes
 

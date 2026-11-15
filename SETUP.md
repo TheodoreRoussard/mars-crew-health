@@ -20,7 +20,7 @@ To try the tool with an example crew, press `B`, choose **Load a backup file** a
 | `0` | Crew page: every astronaut at a glance |
 | `Tab` | Next astronaut (the names are tabs in the top bar) |
 | `Enter` | Open the selected astronaut, or confirm |
-| `1` to `5` | Inside a profile: Overview, Check-in, Body, Hazards, Trends |
+| `1` to `4` | Inside a profile: Overview, Check-in, Body & hazards, Trends |
 | `Esc` | Back |
 | `A` | Acknowledge an alarm |
 | `B` | Backup: make or load a backup file (from the crew page) |

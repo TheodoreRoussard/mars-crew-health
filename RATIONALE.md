@@ -14,7 +14,7 @@
 | Spacewalks are logged as events: "suit work since last check-in?", then duration and three symptom questions, repeated daily until the symptom is gone | Risk: EVA injury. NASA's EVA log records one line per sortie; its most frequent crew problems are suit CO2, eye irritation and fogging, heat, gloves |
 | Earth escalations state the delay (about 20 min each way) and what to do while waiting | Hazard: distance from Earth |
 | Guided daily check-in: one measurement per screen, interpreted at once. A question list lets you answer everything due or any single question. Weekly checks appear only when due | Long mission, daily use, no medical training |
-| Body view and Hazards view open the same card | One layout to learn. All 11 risks and 5 hazards are reachable |
+| One Body & hazards view: every check listed once by body system, with tiles for 6 body systems and 5 space hazards; the selected check lights the body tile and the hazard tile it belongs to | The two old views showed mostly the same checks twice. One screen to learn, and it shows which hazard is behind a body problem. All 11 risks and 5 hazards are reachable |
 | 30-day SVG trend chart with baseline line. Point shape shows status | Slow changes: bone, body mass, SANS, fitness |
 | Two distinct sounds. Watch: two soft notes. Act: fast harsh pulses every 8 s until acknowledged. Affected crew cards pulse from the same start time, with a steady colored border for reduced motion; no global banner | Identifies the affected astronaut directly. Sound still works across views when nobody is looking |
 | The first key press or click turns the sound on; a notice says so until then | Browsers allow sound only after a user action |

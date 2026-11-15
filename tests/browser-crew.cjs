@@ -31,7 +31,7 @@ const script=`
   openProfile('Red');setView('trends');render();
   assert(ui.items[0].id==='spo2','Trends did not start with alphabetically first Act');
   key('Enter');assert(ui.card.ids[ui.card.i]==='spo2','Opened indicator differs from selected trend');
-  ['3','4','5'].forEach(function(viewKey){
+  ['3','4'].forEach(function(viewKey){
    key(viewKey);assert(!document.querySelector('main .ico'),'Status pictogram remains in view '+viewKey);
    assert(document.querySelector('header .ico'),'Tab pictograms removed');
    var nominal=document.querySelector('main .row.st-nominal .r-word');
