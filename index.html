@@ -98,12 +98,13 @@ h2{font-size:1rem;margin:0;color:var(--dim);font-weight:600;text-transform:upper
 .cols>.list{flex:1.6}
 .cols>aside,.cols>.side{flex:1;min-width:0;display:flex;flex-direction:column;gap:.5rem}
 .list{overflow:auto;min-height:0}
-.row{display:flex;align-items:center;gap:.6rem;padding:.12rem .5rem;border:2px solid transparent;border-radius:.35rem;cursor:pointer;font-size:.95rem}
+.row{display:flex;align-items:center;gap:.6rem;padding:.12rem .5rem;border:2px solid transparent;border-bottom-color:var(--panel2);border-radius:.35rem;cursor:pointer;font-size:.95rem}
 .row.sel{border-color:var(--focus);background:var(--panel2)}
 .row .r-label{flex:1.2;font-weight:600;min-width:0}
 .row .r-word{flex:1.5;color:var(--c);font-weight:700;min-width:0}
-.row .r-val{flex:.8;color:var(--dim);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row.big{font-size:1.15rem;padding:.45rem .7rem}
+.row .r-val{flex:0 0 6.5em;color:var(--dim);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.row.st-nodata .r-val{flex:.8 1 0}   /* "no data" rows explain why there, so they keep a flexible column */
+.row.big{font-size:1.1rem;padding:.45rem .7rem}
 .compact .row{font-size:.9rem}
 .compact .r-val{display:none}
 .compact .r-label,.compact .r-word{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1107,7 +1108,7 @@ function ciConfirm() {
 function rowHtml(a, i, big) {
   var st = a.status;
   var word = st === 'nodata' ? a.word : STATUS[st].word + ' · ' + a.word;
-  var val = st === 'nodata' ? a.note : (a.ind.type === 'choice' ? (a.age == null ? '' : ago(a.age)) : a.valueText);
+  var val = st === 'nodata' ? a.note : (a.ind.type === 'choice' ? (a.age ? ago(a.age) : '') : a.valueText)   /* a yes/no answer has no number: show its age only when it is not from today */;
   return '<div class="row st-' + st + (i === ui.sel ? ' sel' : '') + (big ? ' big' : '') + '" data-click="pick:' + i + '">' + icon(st) +
     '<span class="r-label">' + esc(a.ind.label) + '</span><span class="r-word">' + esc(word) + '</span><span class="r-val">' + esc(val) + '</span></div>';
 }
