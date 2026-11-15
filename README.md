@@ -116,7 +116,7 @@ Indicator definitions, ranges, schedules, status bands, and suggested actions ar
 
 Use the same browser profile and file location for daily use. Do not rely on private browsing or clear browser storage: doing so can remove saved measurements.
 
-From the crew page, use **B → Make a backup file** to export the whole crew or an individual profile. Each device keeps its own data; there is no automatic synchronization. Importing a backup for an existing profile asks before replacing its data, with **Cancel** selected by default.
+From the crew page, use **B → Make a backup file** to export the whole crew in one file. Older one-astronaut backup files can still be loaded. Each device keeps its own data; there is no automatic synchronization. Importing a backup for an existing profile asks before replacing its data, with **Cancel** selected by default.
 
 The app includes a backup reminder and a date-offset setting for devices with an incorrect clock. Local storage and exported JSON files are not encrypted by the application.
 
