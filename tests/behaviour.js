@@ -48,7 +48,8 @@ a.key('ArrowRight'); ok(a.beeps.length===6&&a.beeps.every(b=>b.type==='square')&
 a.tick(); ok(a.beeps.length===12,'Act repeats on the 8 s timer');
 a.key('Enter'); ok(a.get('ui.screen')==='main'&&a.get('ui.activeId')===ANA&&a.get('ui.pending').some(x=>x.p.id===SAM)&&!a.html().includes('class="alarm'),'inside another profile crew alarms remain pending without a banner');
 const np=a.get('ui.pending.length'); a.key('a'); a.tick(); ok(a.get('ui.pending.length')===0&&a.beeps.length===12&&!a.html().includes('ALARM'),'A acknowledges all '+np+' crew alerts and silences the sound');
-a.beeps.length=0; a.ctx.playWatch(); ok(a.beeps.length===2&&a.beeps.every(b=>b.type==='sine')&&a.beeps[1].t-a.beeps[0].t>0.4,'Watch sound = 2 slow sine notes');
+{ const w=mk(false); w.ctx.importText(sample); delete w.get('store.profiles')[SAM]; w.ctx.refreshAlarms(); w.key('ArrowRight');
+  ok(w.get('ui.pending.length')>0&&w.get('ui.pending').every(x=>x.a.status==='watch')&&w.beeps.length===0&&typeof w.ctx.playWatch==='undefined'&&w.get('crewPulse.watch')!==null,'Watch alerts are silent: no beep, the card still pulses'); }
 a.get('ui.prompt=null'); a.ctx.askNewAstronaut(); a.inputs['prompt-inp']={value:'Zoé Martin'}; a.key('Enter');
 ok(a.html().includes('Personal baselines') && a.get('ui.baseline') !== null, 'new astronaut opens optional baseline form');
 a.key('Escape'); a.key('0');
