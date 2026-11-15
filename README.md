@@ -79,6 +79,7 @@ Measurements are entered manually. The prototype does not connect directly to se
 | **Tab / Shift+Tab** | Next / previous crew tab |
 | **B** | On the crew page: Backup (make or load a backup file). Inside a profile: personal baselines |
 | **S** | Settings from the crew page: profiles, date, and sound test |
+| **M** | Sound on / off (also the button in the top bar) |
 | **D** | Start demo from the crew page; switch scenario during a demo |
 | **X** | Exit demo and restore the saved crew |
 | **↑ / ↓** | Choose an item |

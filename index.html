@@ -110,7 +110,9 @@ h2{font-size:1rem;margin:0;color:var(--dim);font-weight:600;text-transform:upper
 /* OK rows recede (icon keeps the colour) so Watch and Act stand out */
 .row.st-nominal .r-word,.grp.st-nominal .g-word{color:var(--dim);font-weight:500}
 .row.text-status.st-nominal .r-word,.grp.text-status.st-nominal .g-word{color:var(--nominal);font-weight:600}
-header .snd-off{margin-left:.8rem;white-space:nowrap;color:var(--watch);font-weight:700}
+header .snd{font:inherit;margin-left:.8rem;padding:.15rem .6rem;min-height:1.9rem;white-space:nowrap;background:none;border:2px solid var(--line);border-radius:.35rem;color:var(--dim);cursor:pointer}
+header .snd.off{color:var(--watch);border-color:var(--watch);font-weight:700}
+header.many .snd{margin-left:.5rem;font-size:.85rem}
 .box{background:var(--panel);border-radius:.4rem;padding:.6rem .8rem}
 .count{display:flex;align-items:center;gap:.5rem;font-size:1.05rem;color:var(--c);font-weight:700}
 .count span{color:var(--text);font-weight:400}
@@ -893,7 +895,7 @@ function trendHtml(t, textOnly) {
 }
 
 /* ---------- audio (Web Audio API, no files) ---------- */
-var audio = {ctx: null, ok: false, tried: false};
+var audio = {ctx: null, ok: false, tried: false, muted: false, woke: false};   /* woke: this very key press or click turned the sound on */
 function initAudio() {
   audio.tried = true;
   try {
@@ -917,7 +919,7 @@ function beep(f, at, dur, type, vol) {
    but stays silent, so a sound always means "act now". */
 function playAct() {
   pulseCrew('act');
-  if (!audio.ok) return;
+  if (!audio.ok || audio.muted) return;
   try { var t = audio.ctx.currentTime + 0.05; for (var i = 0; i < 3; i++) { beep(988, t + i * 0.42, 0.14, 'square', 0.18); beep(740, t + i * 0.42 + 0.17, 0.14, 'square', 0.18); } } catch (e) {}
 }
 
@@ -976,7 +978,7 @@ function refreshAlarms() {
       if (acked[key]) return;
       ui.pending.push({a: a, key: key, p: p});
       if (a.status === 'act') hasAct = true;
-      if (audio.ok && !announced[key]) { announced[key] = true; if (a.status === 'act') newAct = true; else newWatch = true; }
+      if (audio.ok && !audio.muted && !announced[key]) { announced[key] = true; if (a.status === 'act') newAct = true; else newWatch = true; }
     });
   });
   ui.pending.sort(function (x, y) { return (y.a.status === 'act' ? 1 : 0) - (x.a.status === 'act' ? 1 : 0); });
@@ -1281,11 +1283,12 @@ function topBar() {
     var w = worst(assessAll(p)), on = ui.screen === 'main' && ui.activeId === p.id;
     h += '<span class="tab st-' + w + (on ? ' on' : '') + '" data-click="open:' + p.id + '" title="' + STATUS[w].word + '">' + icon(w) + '<span class="tab-n">' + esc(p.name) + '</span>' + (on ? '<span class="tab-w">' + STATUS[w].word + '</span>' : '') + '</span>';
   });
-  return h + '<span class="hint" data-click="key:Tab"><kbd>Tab</kbd>Next</span><span class="sp"></span><span class="dim">' + niceDate(todayNum()) + '</span>' + (audio.ok ? '<span class="dim">Sound on</span>' : '<span class="snd-off">Sound off</span>') + '</header>';
+  return h + '<span class="hint" data-click="key:Tab"><kbd>Tab</kbd>Next</span><span class="sp"></span><span class="dim">' + niceDate(todayNum()) + '</span>' + '<button type="button" class="snd' + (audio.ok && !audio.muted ? '' : ' off') + '" data-click="key:m"><kbd>M</kbd>' + (audio.ok ? (audio.muted ? 'Sound off' : 'Sound on') : audio.tried ? 'No sound' : 'Sound off') + '</button></header>';
 }
 function noticesHtml() {
   var notes = [], h = '<div class="notice">Prototype: illustrative rules and actions; not clinically validated.</div>';
   if (demoSession) h += '<div class="notice demo-note"><b>DEMO · Fictional data · Changes are temporary.</b> ' + esc(demoSession.guide) + ' <button type="button" data-click="key:d">D · Change scenario</button> <button type="button" data-click="key:x">X · Exit demo</button></div>';
+  if (audio.ok && audio.muted) notes.push('Sound is off: alarms are shown on screen only. Press M to turn the sound back on.');
   if (!audio.ok) notes.push(audio.tried ? 'Sound is not available on this device. Alerts are shown on screen only.' : 'Sound is off. Press any key to turn the alarm sound on.');
   if (saveFailed) notes.push('This device is NOT saving. Make a backup file now (Backup: key 0, then B) and switch to the spare device.');
   if (loadWarning) notes.push(loadWarning);
@@ -1550,6 +1553,7 @@ function runCommand(it) {
 }
 function handleKey(k, inInput) {
   var isAck = (k === 'a' || k === 'A');
+  if ((k === 'm' || k === 'M') && !inInput && !ui.prompt) { toggleSound(); return true; }
   if (ui.baseline) { if (k === 'Escape') { ui.baseline = null; return true; } return false; }
   if (ui.modal) {
     var m = ui.modal;
@@ -1647,13 +1651,22 @@ function handleKey(k, inInput) {
   return false;
 }
 /* Browsers allow sound only after a user action: the first key press or click anywhere turns it on. */
-function wakeAudio() { if (!audio.ok && !audio.tried) { initAudio(); if (audio.ok) refreshAlarms(); } }
+function wakeAudio() { if (!audio.ok && !audio.tried) { initAudio(); if (audio.ok) { audio.woke = true; refreshAlarms(); } } }
+/* M or the header button. Muting lasts until M is pressed again or the page is reloaded; alerts stay on screen. */
+function toggleSound() {
+  if (audio.woke) return;                                  /* this press already turned the sound on: do not mute it again */
+  if (!audio.ok) { initAudio(); if (!audio.ok) { say('Sound is not available on this device. Alerts are shown on screen only.', true); return; } audio.muted = true; }
+  audio.muted = !audio.muted;
+  if (audio.muted) say('Sound is off. Alarms are shown on screen only. Press M to turn it back on.', true);
+  else { say('Sound is on.'); ui.pending.forEach(function (x) { delete announced[x.key]; }); refreshAlarms(); }   /* pending Act alarms sound again at once */
+}
 document.addEventListener('keydown', function (e) {
   if (crashed) { if (e.key === 'r' || e.key === 'R') location.reload(); return; }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   var t = e.target, inInput = !!(t && t.tagName === 'INPUT' && t.type !== 'file');
   var key = e.key === 'Tab' ? (e.shiftKey ? 'ShiftTab' : 'Tab') : e.key;
   var r = guard(function () { wakeAudio(); return handleKey(key, inInput); });
+  audio.woke = false;
   if (r) e.preventDefault();
   if (r === true || (!inInput && !ui.baseline)) render();
 });
@@ -1676,6 +1689,7 @@ document.addEventListener('click', function (e) {
       handleKey('Enter', false);
     } else handleKey(cmd[1], false);
   });
+  audio.woke = false;
   render();
 });
 window.addEventListener('error', function (e) { crash(e && e.error); });

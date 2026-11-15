@@ -23,6 +23,7 @@ To try the tool with an example crew, press `B`, choose **Load a backup file** a
 | `1` to `5` | Inside a profile: Overview, Check-in, Body, Hazards, Trends |
 | `Esc` | Back |
 | `A` | Acknowledge an alarm |
+| `M` | Sound on / off (also the button at the top right). Alerts stay on screen when the sound is off |
 | `B` | Backup: make or load a backup file (from the crew page) |
 | `S` | Settings: astronauts, date, sound test (from the crew page) |
 
@@ -49,7 +50,7 @@ Keep a copy of `index.html` on both sticks: the whole tool is that one file. Eac
 | "This device is NOT saving" | Make a backup file now, then move to the spare device. |
 | "The clock looks wrong" / "Date is wrong" | In Settings, choose **Set today's date**. Statuses stay "No data" until you do. |
 | Loading says "Nothing was changed" | The file is damaged. Use the other USB stick. |
-| "Sound is off" | Press any key. If it says sound is not available, check the speaker. Alerts are always on screen too. |
+| "Sound is off" | Press `M` or any key. If it says sound is not available, check the speaker. Alerts are always on screen too. |
 
 ## 5. Good to know
 
