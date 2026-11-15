@@ -78,18 +78,22 @@ a.key('s'); ok(a.get('ui.screen')==='settings'&&a.html().includes('<h1>Settings<
 a.key('Escape'); ok(a.get('ui.screen')==='home','Esc leaves Settings');
 a.key('b'); ok(a.get('ui.screen')==='backup'&&a.html().includes('<h1>Backup</h1>')&&a.html().includes('Make a backup file: whole crew (5)')&&a.html().includes('Load a backup file')&&a.html().includes('last backup')&&!a.html().includes('Set today’s date'),'B on the crew page opens Backup, with only backup items');
 a.key('Escape'); ok(a.get('ui.screen')==='home','Esc leaves Backup');
-// 3c. Body & hazards: one view, every check once, tiles for 6 body systems and 5 hazards
+// 3c. Body & hazards: one view, every check once, beside the 5 space hazards explained in plain text
 { const d=mk(false); d.ctx.importText(sample); d.ctx.startSession(SAM); d.key('3');
   const ids=d.get('ui.items.map(function(x){return x.id}).join()').split(','), all=d.get('INDICATORS.map(function(i){return i.id}).join()').split(',');
   ok(d.get('ui.view')==='body'&&ids.length===all.length&&new Set(ids).size===ids.length&&all.every(i=>ids.includes(i)),'key 3: every check ('+all.length+') is listed exactly once');
   ok(d.get('VIEWS.length')===4&&!d.html().includes('>Hazards<')&&d.html().includes('Body &amp; hazards'),'Hazards is no longer a separate view');
-  const tiles=d.html().split('class="tile ').length-1, h=d.html();
-  ok(tiles===11&&['Head &amp; eyes','Heart &amp; lungs','Muscles &amp; bones','Immunity &amp; gut','Suit work','Sleep &amp; mood','Radiation','Closed cabin','Isolation','Far from Earth','Gravity'].every(n=>h.includes('t-name">'+n)),'11 tiles: 6 body systems and 5 space hazards, each named');
-  ok(/tile st-act[^>]*>(?:(?!class="tile).)*Immunity &amp; gut(?:(?!class="tile).)*Act · Body temperature/.test(h)&&/tile st-act[^>]*>(?:(?!class="tile).)*Closed cabin/.test(h),'a tile on Act names its worst check; the same fever shows on its body tile and its hazard tile');
-  d.get('ui.sel='+ids.indexOf('hr')); d.ctx.render(); const lit=d.html().split('class="tile ').slice(1).filter(t=>/^st-\w+ lit/.test(t)).map(t=>t.match(/t-name">([^<]+)/)[1]);
-  ok(lit.join()==='Heart &amp; lungs,Gravity','selecting Resting heart rate lights its body tile and its hazard tile: '+lit.join());
-  d.get('ui.sel='+ids.indexOf('eva_air')); d.ctx.render(); const lit2=d.html().split('class="tile ').slice(1).filter(t=>/^st-\w+ lit/.test(t)).length;
-  ok(lit2===1,'a suit check lights only its body tile (it has no hazard)');
+  const hz=()=>d.html().split('class="haz ').slice(1).map(t=>t.split('class="list"')[0]), H=hz();
+  ok(!d.html().includes('class="tile')&&H.length===5&&['Radiation','Closed cabin','Isolation','Far from Earth','Gravity'].every((n,k)=>H[k].includes('<span>'+n+'</span>')&&/class="hz-why">[^<]{20,}\.</.test(H[k])),'no tiles: the 5 space hazards are listed in a fixed order, each with one explaining sentence');
+  const named=all.filter(id=>d.get('indById("'+id+'").hazard')).every(id=>H.filter(t=>t.includes(d.get('esc(indById("'+id+'").label.replace(/ \\(.*\\)$/,""))'))).length>=1);
+  ok(named,'every check that belongs to a hazard is named under it');
+  ok(/^st-act/.test(H[1])&&/hz-line st-act"><span class="hz-st">Act<\/span><span><b>Body temperature<\/b> · High fever/.test(H[1])&&/hz-line quiet st-nominal[^>]*><span class="hz-st">OK<\/span><span>[^<]*Cabin air CO2/.test(H[1]),'Closed cabin is on Act, names the fever with its finding, and groups its OK checks on one line');
+  d.get('ui.sel='+ids.indexOf('hr')); d.ctx.render(); const lit=hz().map((t,k)=>/hz-line st-watch hz-sel"><span class="hz-st">Watch<\/span><span><b>Resting heart rate/.test(t)?k:-1).filter(k=>k>=0);
+  ok(lit.join()==='4'&&d.html().split('hz-sel').length===2,'selecting Resting heart rate marks its line under Gravity only');
+  d.get('ui.sel='+ids.indexOf('grip')); d.ctx.render();
+  ok(/hz-line quiet st-nominal hz-sel">(?:(?!<\/div>).)*<span class="hz-on">Grip strength<\/span>/.test(hz()[4]),'a selected OK check is marked inside the OK line of its hazard');
+  d.get('ui.sel='+ids.indexOf('eva_air')); d.ctx.render();
+  ok(!d.html().includes('hz-sel')&&!d.html().includes('hz-on'),'a suit check marks nothing (it has no hazard)');
   d.get('ui.sel=0'); d.key('Enter'); let seen=new Set(); for(let i=0;i<all.length;i++){ seen.add(d.get('ui.card.ids[ui.card.i]')); d.key('ArrowRight'); }
   ok(seen.size===all.length,'Enter opens the card and the arrows page through all '+all.length+' checks'); }
 

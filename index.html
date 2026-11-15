@@ -153,17 +153,18 @@ header.many .snd{margin-left:.5rem;font-size:.85rem}
 .veil{position:fixed;inset:0;background:#000c;display:flex;align-items:center;justify-content:center;z-index:5}
 .dialog{background:var(--panel);border:3px solid var(--focus);border-radius:.5rem;padding:1.2rem 1.5rem;width:min(40rem,92vw);display:flex;flex-direction:column;gap:.7rem;align-items:flex-start}
 .dialog .inp{font-size:1.6rem;width:100%;text-align:left}
-.map{flex:1.15;min-width:0;display:flex;gap:.6rem}
-.map-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:.35rem}
-.tile{flex:1;min-height:0;display:flex;align-items:center;gap:.6rem;padding:.2rem .6rem;background:var(--panel);border:2px solid var(--line);border-radius:.4rem;overflow:hidden}
-.tile.st-watch,.tile.st-act{border-color:var(--c)}
-.tile.lit{background:var(--panel2);outline:2px solid var(--focus);outline-offset:1px}   /* outside the border, so a lit tile keeps its status colour */
-.tile .sys{flex:none;width:1.9rem;height:1.9rem;fill:none;stroke:var(--dim);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.tile.lit .sys{stroke:var(--text)}
-.t-txt{min-width:0}
-.t-name{font-weight:700;font-size:.95rem}
-.t-word{font-size:.85rem;font-weight:700;color:var(--c);line-height:1.2}
-.tile.st-nominal .t-word,.tile.st-nodata .t-word{font-weight:500}
+.haz-col{flex:1;min-width:0;min-height:0;overflow:auto;display:flex;flex-direction:column}
+.haz{padding:.2rem .1rem .25rem;border-bottom:1px solid var(--line)}
+.haz:last-child{border-bottom:0}
+.hz-head{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;font-weight:700;font-size:1rem;line-height:1.25}
+.hz-w{color:var(--c);font-size:.85rem;text-transform:uppercase;letter-spacing:.05em}
+.hz-why{color:var(--dim);font-size:.8rem;line-height:1.25}
+.hz-line{display:flex;gap:.5rem;font-size:.85rem;line-height:1.25;padding:0 .4rem;border-left:3px solid transparent}
+.hz-st{flex:none;width:3.7rem;color:var(--c);font-weight:700}
+.hz-line.quiet{color:var(--dim)}
+.hz-line.quiet .hz-st{font-weight:500}
+.hz-line.hz-sel{border-left-color:var(--focus);background:var(--panel2);color:var(--text)}   /* the check selected in the list */
+.hz-on{color:var(--text);font-weight:700}
 #crash{position:fixed;inset:0;z-index:9;background:#000;color:var(--text);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;font-size:1.5rem;text-align:center;padding:2rem}
 #crash[hidden]{display:none}
 /* multi-line prose gets more leading; single-line rows and headlines stay compact to fit 720p */
@@ -1394,28 +1395,29 @@ function renderOverview(p, all) {
     '<div class="cols"><div class="list">' + rows + '</div><aside><div class="box"><h2>All ' + all.length + ' checks</h2>' + counts + '</div>' +
     '<div class="box"><h2>Backup</h2>Last backup file: <b>' + bk + '</b>' + (overdue ? '<br><b style="color:var(--watch)">Make a backup this week (Backup: key 0, then B).</b>' : '') + '</div></aside></div>';
 }
-/* One view for body systems and space hazards. Every check is listed once, grouped by body system; the tiles on the
-   left show the worst status of each system and of each hazard, and the selected check lights the two it belongs to. */
-var MAP_BODY = [
-  {id: 'head',    name: 'Head & eyes',     d: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'},
-  {id: 'heart',   name: 'Heart & lungs',   d: '<path d="M12 20.5s-8-5-8-10.7A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8 2.8c0 5.7-8 10.7-8 10.7z"/>'},
-  {id: 'muscles', name: 'Muscles & bones', d: '<path d="M8.2 5.2a2.6 2.6 0 1 0-3 3l10.6 10.6a2.6 2.6 0 1 0 3-3z"/><path d="M5.2 8.2a2.6 2.6 0 1 0 3-3M18.8 15.8a2.6 2.6 0 1 0-3 3"/>'},
-  {id: 'immune',  name: 'Immunity & gut',  d: '<path d="M12 3l8 3v6c0 4.8-3.4 8-8 9-4.6-1-8-4.2-8-9V6z"/><path d="M12 8.5v7M8.5 12h7"/>'},
-  {id: 'eva',     name: 'Suit work',       d: '<circle cx="12" cy="10.5" r="7.5"/><rect x="7.5" y="7.5" width="9" height="5.5" rx="2.5"/><path d="M6 21h12M9 17.5V21M15 17.5V21"/>'},
-  {id: 'mind',    name: 'Sleep & mood',    d: '<path d="M19.5 14.5A8 8 0 1 1 9.5 4.5a6.5 6.5 0 0 0 10 10z"/>'}
-];
+/* One view for body systems and space hazards. Every check is listed once, grouped by body system. Beside the list,
+   each of the five space hazards is explained in one plain sentence, with the checks it affects and their status today. */
 var MAP_HAZARD = [
-  {id: 'radiation', name: 'Radiation',      d: '<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3.2M12 18.3v3.2M2.5 12h3.2M18.3 12h3.2M5.3 5.3l2.3 2.3M16.4 16.4l2.3 2.3M5.3 18.7l2.3-2.3M16.4 7.6l2.3-2.3"/>'},
-  {id: 'closed',    name: 'Closed cabin',   d: '<rect x="3" y="6" width="18" height="12" rx="6"/><circle cx="12" cy="12" r="2.6"/>'},
-  {id: 'isolation', name: 'Isolation',      d: '<circle cx="12" cy="9" r="3"/><path d="M6.5 19a5.5 5.5 0 0 1 11 0"/><circle cx="12" cy="12" r="10" stroke-dasharray="3 3.2"/>'},
-  {id: 'distance',  name: 'Far from Earth', d: '<circle cx="6.5" cy="16.5" r="4"/><circle cx="19" cy="5" r="2"/><path d="M10 13l6-5.5" stroke-dasharray="2 2.6"/>'},
-  {id: 'gravity',   name: 'Gravity',        d: '<path d="M12 3v11M7.5 9.5L12 14l4.5-4.5M4 20h16"/>'}
+  {id: 'radiation', name: 'Radiation',      why: 'Radiation adds up over the whole mission.'},
+  {id: 'closed',    name: 'Closed cabin',   why: 'The crew shares the same air, water and germs.'},
+  {id: 'isolation', name: 'Isolation',      why: 'Months in a small space wear down sleep and mood.'},
+  {id: 'distance',  name: 'Far from Earth', why: 'Help is months away: problems are treated on board.'},
+  {id: 'gravity',   name: 'Gravity',        why: 'Without weight, heart, bones, balance and eyes change.'}
 ];
 function mapGroupOf(ind) { return ind.region || (ind.hazard === 'isolation' ? 'mind' : 'cabin'); }
-function mapTile(t, list, lit) {
-  var w = worst(list), alerts = alertsOf(list), word = STATUS[w].word + (alerts.length ? ' · ' + alerts[0].ind.label.replace(/ \(.*\)$/, '') + (alerts.length > 1 ? ' +' + (alerts.length - 1) + ' more' : '') : '');
-  return '<div class="tile st-' + w + (lit ? ' lit' : '') + '"><svg class="sys" viewBox="0 0 24 24" aria-hidden="true">' + t.d + '</svg>' +
-    '<div class="t-txt"><div class="t-name">' + esc(t.name) + '</div><div class="t-word">' + esc(word) + '</div></div></div>';
+function hazardHtml(t, list, selInd) {
+  var w = worst(list), out = '';
+  function short(a) { return esc(a.ind.label.replace(/ \(.*\)$/, '')); }
+  alertsOf(list).forEach(function (a) {   /* one line per alert, Act first */
+    out += '<div class="hz-line st-' + a.status + (a.ind === selInd ? ' hz-sel' : '') + '"><span class="hz-st">' + STATUS[a.status].word + '</span><span><b>' + short(a) + '</b> · ' + esc(a.word) + '</span></div>';
+  });
+  ['nominal', 'nodata'].forEach(function (st) {   /* quiet checks share one line, so five hazards fit on a 720p screen */
+    var q = list.filter(function (a) { return a.status === st; }), on = false;
+    if (!q.length) return;
+    var names = q.map(function (a) { if (a.ind === selInd) on = true; return a.ind === selInd ? '<span class="hz-on">' + short(a) + '</span>' : short(a); }).join(', ');
+    out += '<div class="hz-line quiet st-' + st + (on ? ' hz-sel' : '') + '"><span class="hz-st">' + STATUS[st].word + '</span><span>' + names + '</span></div>';
+  });
+  return '<div class="haz st-' + w + '"><div class="hz-head"><span>' + esc(t.name) + '</span><span class="hz-w">' + STATUS[w].word + '</span></div><div class="hz-why">' + esc(t.why) + '</div>' + out + '</div>';
 }
 function renderMap(p, all) {
   var groups = REGIONS.concat([{id: 'mind', name: 'Sleep and mood'}, {id: 'cabin', name: 'Cabin and supplies'}]);
@@ -1428,10 +1430,9 @@ function renderMap(p, all) {
   });
   if (ui.sel >= items.length) ui.sel = items.length - 1;
   ui.items = items;
-  var body = '', haz = '';
-  MAP_BODY.forEach(function (t) { body += mapTile(t, all.filter(function (a) { return mapGroupOf(a.ind) === t.id; }), !!selInd && mapGroupOf(selInd) === t.id); });
-  MAP_HAZARD.forEach(function (t) { haz += mapTile(t, all.filter(function (a) { return a.ind.hazard === t.id; }), !!selInd && selInd.hazard === t.id); });
-  return '<div class="cols"><div class="map"><div class="map-col"><h2>Body</h2>' + body + '</div><div class="map-col"><h2>Space hazards</h2>' + haz + '</div></div><div class="list">' + html + '</div></div>';
+  var haz = '';
+  MAP_HAZARD.forEach(function (t) { haz += hazardHtml(t, all.filter(function (a) { return a.ind.hazard === t.id; }), selInd); });
+  return '<div class="cols"><div class="haz-col"><h2>Space hazards today</h2>' + haz + '</div><div class="list">' + html + '</div></div>';
 }
 function renderTrends(p, all) {
   var rank = {act:0, watch:1, nominal:2, nodata:3};
