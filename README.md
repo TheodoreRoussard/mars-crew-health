@@ -195,7 +195,7 @@ These values come from low Earth orbit. On the way to Mars there are no radiatio
 
 The catalogue also holds Curiosity's radiation measurements on Mars (MSL RAD), ISS microbial surveys, crew immune and gene-expression studies, the MARS500 isolation study and bed-rest studies. They justify why indicators such as immunity, isolation and fitness are tracked, but they come from lab samples analysed on the ground, so they do not give thresholds that can be read on board. Astronaut clinical measurements (blood pressure, pulse, mass, vision, sleep) are not on the open portal; NASA's [Life Sciences Portal](https://nlsp.nasa.gov) points to the archive that holds them.
 
-The full working notes are in [DATA-SOURCES.md](DATA-SOURCES.md) (in French).
+The full working notes, including the survey of every reviewed dataset, are in [DATA-SOURCES.md](DATA-SOURCES.md).
 
 ## Limitations
 
@@ -255,7 +255,7 @@ The team reviewed, tested (`npm test`) and takes responsibility for all AI-assis
 | [SETUP.md](SETUP.md) | Setup, daily use, backups, and recovery |
 | [RATIONALE.md](RATIONALE.md) | Design decisions and risk coverage |
 | [ACTION-GUIDANCE.md](ACTION-GUIDANCE.md) | Sources behind each suggested action |
-| [DATA-SOURCES.md](DATA-SOURCES.md) | Full NASA dataset working notes (in French; English summary in [NASA data used](#nasa-data-used)) |
+| [DATA-SOURCES.md](DATA-SOURCES.md) | Full NASA dataset survey, analysis and gaps between NASA practice and the tool |
 | [tools/](tools/) | Sample-crew generator and the NASA ISS dose extract it uses |
 
 ## Development checks

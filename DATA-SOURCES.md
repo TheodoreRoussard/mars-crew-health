@@ -1,107 +1,107 @@
-# Données NASA exploitables pour le Crew Health Monitor
+# NASA data usable for the Crew Health Monitor
 
-Source : catalogue `https://data.nasa.gov/dataset/` (36 518 jeux), interrogé le 14 novembre 2026 avec une soixantaine de recherches par mots-clés, une ou plusieurs par risque et par danger du brief.
+Source: the `https://data.nasa.gov/dataset/` catalogue (36,518 datasets), queried on 14 November 2026 with about sixty keyword searches, one or more for each risk and hazard in the challenge brief.
 
-Méthode et limites :
+Method and limits:
 
-- Les colonnes « pourquoi » et « contexte » reprennent la description publiée par la NASA pour chaque jeu. Quand la fiche ne donne pas de raison, c'est indiqué par « (déduit) » : la raison est alors mon interprétation.
-- Pour le mot « astronaut » (178 résultats), tous les résultats ont été parcourus ; pour les autres recherches, seuls les 12 premiers.
-- Seuls deux jeux ont été ouverts et analysés : la dosimétrie ISS (année 2014) et le journal des sorties extravéhiculaires. Les autres sont décrits d'après leur fiche.
-- Une recherche par mots-clés peut manquer des jeux mal décrits. « Rien trouvé » veut dire « rien trouvé avec ces mots », pas « n'existe pas ».
+- The “why” and “context” columns restate the description NASA publishes for each dataset. When the record gives no reason, this is marked “(inferred)”: the reason is then our interpretation.
+- For the keyword “astronaut” (178 results), every result was reviewed; for the other searches, only the first 12.
+- Only two datasets were opened and analysed: ISS dosimetry (year 2014) and the extravehicular activity log. The others are described from their catalogue record.
+- A keyword search can miss poorly described datasets. “Nothing found” means “nothing found with these keywords”, not “does not exist”.
 
-## 1. Verdict par risque et par danger
+## 1. Verdict by risk and hazard
 
-| Risque ou danger | Ce que le catalogue contient | Exploitable pour l'outil ? |
+| Risk or hazard | What the catalogue contains | Usable for the tool? |
 |---|---|---|
-| Radiation spatiale | Dosimétrie ISS en continu (TEPC), dosimétrie Curiosity à la surface de Mars (RAD), dosimètres de petits satellites. Six autres fiches RAD (données brutes et calibrées) n'ont aucun fichier attaché ; je n'ai pas vérifié si elles couvrent le trajet Terre-Mars | **Oui, directement** (chiffres réels, voir §3) |
-| Sorties extravéhiculaires (EVA) | Journal de 375 sorties américaines et russes, 1965-2013 | **Oui, directement** (voir §3) |
-| Interactions hôte-microbes | Microbes des surfaces de l'ISS, de la capsule Dragon, de la peau, de la bouche et des selles d'équipages | Pour le protocole de collecte, pas pour des seuils |
-| Système immunitaire | Salive d'astronautes (réactivation virale), expression de gènes dans le sang avant et après vol, répertoire d'anticorps IgM pendant un vol long, ARN du plasma | Pour justifier l'indicateur, pas pour des seuils |
-| Isolement et confinement | Simulation MARS500 (520 jours, 6 personnes) : humeur, biochimie, microbiote | Pour le protocole, données brutes en séquençage |
-| Forme physique, muscle | Études d'alitement de 21 jours et plus chez l'humain, avec ou sans exercice et protéines | Pour justifier l'indicateur |
-| Hypoxie | Alitement en air appauvri (étude PlanHab, équivalent 4 000 m) | Pour le contexte de mesure |
-| SANS (yeux) | Souris et rats : pression intraoculaire, pression intracrânienne, rétine | Indirect (animal) |
-| Os | Rongeurs en vol : densité et microarchitecture osseuses | Indirect (animal) |
-| Cardiovasculaire | Cœur de souris après 30 jours sur l'ISS, cellules en culture | Non |
-| Alimentation | Cultures de salades sur l'ISS (masse récoltée, nutriments, sécurité microbienne) | Non : rien sur ce que mange l'équipage |
-| Sensorimoteur | Un jeu sur l'escargot | Non |
-| Gravité altérée | Rongeurs suspendus, cellules humaines en microgravité simulée | Non |
-| Environnement clos (CO2, air, eau, bruit) | Rien sur l'air de cabine ; les résultats sont des mesures de l'atmosphère terrestre. Un seul jeu humain : expression de gènes dans les follicules de cheveux d'astronautes de l'ISS | Non |
-| Maladie de décompression | Rien | Non |
-| Distance de la Terre (kit médical, autonomie) | Rien | Non |
-| Vigilance de l'équipage (hors brief) | 18 pilotes en simulateur : EEG, ECG, respiration, conductance de la peau | Hors sujet pour un suivi quotidien |
+| Space radiation | Continuous ISS dosimetry (TEPC), Curiosity dosimetry on the surface of Mars (RAD), small-satellite dosimeters. Six other RAD records (raw and calibrated data) have no attached file; we did not check whether they cover the Earth–Mars cruise | **Yes, directly** (real figures, see §3) |
+| Extravehicular activity (EVA) | Log of 375 US and Russian spacewalks, 1965–2013 | **Yes, directly** (see §3) |
+| Host–microorganism interactions | Microbes from ISS surfaces, the Dragon capsule, and crew skin, mouth and stool | For the sampling protocol, not for thresholds |
+| Immune system | Astronaut saliva (viral reactivation), blood gene expression before and after flight, IgM antibody repertoire during a long flight, plasma RNA | To justify the indicator, not for thresholds |
+| Isolation and confinement | MARS500 simulation (520 days, 6 people): mood, biochemistry, microbiome | For the protocol; raw sequencing data |
+| Fitness, muscle | Human bed-rest studies of 21 days or more, with or without exercise and protein | To justify the indicator |
+| Hypoxia | Bed rest in thin air (PlanHab study, equivalent to 4,000 m) | For measurement context |
+| SANS (eyes) | Mice and rats: intraocular pressure, intracranial pressure, retina | Indirect (animal) |
+| Bone | Rodents in flight: bone density and microarchitecture | Indirect (animal) |
+| Cardiovascular | Mouse hearts after 30 days on the ISS, cultured cells | No |
+| Nutrition | Lettuce crops on the ISS (harvested mass, nutrients, microbial safety) | No: nothing on what the crew eats |
+| Sensorimotor | One dataset on snails | No |
+| Altered gravity | Suspended rodents, human cells in simulated microgravity | No |
+| Closed environment (CO2, air, water, noise) | Nothing on cabin air; the results are measurements of Earth’s atmosphere. One human dataset: gene expression in hair follicles of ISS astronauts | No |
+| Decompression sickness | Nothing | No |
+| Distance from Earth (medical kit, autonomy) | Nothing | No |
+| Crew alertness (outside the brief) | 18 pilots in a simulator: EEG, ECG, breathing, skin conductance | Not relevant to daily monitoring |
 
-Les mesures cliniques des astronautes (tension, pouls, masse, vision, sommeil) ne sont pas sur ce portail. La fiche « NASA Life Sciences Portal (NLSP) » renvoie vers l'archive qui les contient, de Mercury (1961) à l'ISS : `https://nlsp.nasa.gov`.
+Astronaut clinical measurements (blood pressure, pulse, mass, vision, sleep) are not on this portal. The “NASA Life Sciences Portal (NLSP)” record points to the archive that holds them, from Mercury (1961) to the ISS: `https://nlsp.nasa.gov`.
 
-## 2. Relevé : quoi, pourquoi, dans quel contexte, comment
+## 2. Survey: what, why, in what context, how
 
-| Jeu | Ce qui est mesuré | Pourquoi | Contexte | Comment c'est utilisé |
+| Dataset | What is measured | Why | Context | How it is used |
 |---|---|---|---|---|
-| ISS TEPC, Dose Analyzer | Débit de dose absorbée (µGy/min) et de dose équivalente (µSv/min), position de la station, source dominante (cosmique, ceintures, solaire), emplacement de l'instrument dans la station | « Gérer la dose reçue par l'équipage », parce que les débits en orbite sont quelques centaines de fois ceux du sol | Instrument placé dans le module de service et déplacé à l'occasion (un mois à un autre emplacement en 2014), une mesure par minute en continu | Par le groupe d'analyse des radiations du centre Johnson, pour suivre le risque en temps réel |
-| MSL RAD Level 2 | Débit de dose, spectre d'énergie des particules, neutrons et rayons gamma, avec un indicateur de qualité par mesure | Caractériser le rayonnement à la surface de Mars (déduit) | Instrument du rover Curiosity | Versions « filtrée qualité » et « toutes données » publiées côte à côte |
-| EVA US and Russia | Numéro, pays, équipage, véhicule, date, durée, objectif et incidents en texte libre | Tenir la chronologie des sorties (déduit ; la fiche ne donne qu'une définition) | Une ligne par sortie, de Gemini à l'ISS | Registre historique ; les problèmes de santé n'apparaissent que s'ils ont perturbé la sortie |
-| ISS Microbial Observatory | Bactéries et champignons de 8 emplacements, par lingettes, 2 séances à 3 mois d'écart | Hypothèse : la population microbienne change dans le temps avec l'activité de l'équipage et dépend de l'endroit | Station vue comme un milieu bâti fermé | Séquençage au sol après retour des échantillons |
-| SpaceX Inspiration4 | Prélèvements de 10 zones du corps, selles, 9 surfaces de la capsule | Suivre le microbiote de l'équipage et de la cabine (déduit) | 4 personnes, 3 jours ; prélèvements avant (J-92, J-44, J-3), pendant (jours 2 et 3) et après le vol | Séquençage au sol ; le plan de prélèvement permet de comparer chaque personne à elle-même |
-| Salive d'astronautes | Microbiote salivaire | Chercher un changement lié au vol et une signature associée à la réactivation de virus | Astronautes en mission | Séquençage au sol |
-| Gènes du sang, astronautes | 234 gènes de réponse au stress | Les astronautes deviennent plus sensibles aux infections | 6 astronautes, 10 jours avant le vol et 2-3 h après le retour | Comparaison avant/après par personne |
-| MARS500 | Méthylation de l'ADN, état d'humeur, biochimie, microbiote intestinal | Comprendre l'adaptation à un isolement long | 6 membres d'équipage, 520 jours de simulation au sol, suivi prolongé après la sortie | Suivi longitudinal de chaque personne |
-| Alitement (PlanHab et autres) | Biopsies musculaires, protéines du plasma | Comprendre la perte musculaire et tester des parades (exercice, protéines) | Volontaires alités 21 jours ou plus, parfois en air appauvri (14,1 % d'oxygène). Dans PlanHab, chaque sujet passe par toutes les conditions ; dans l'étude sur des femmes, trois groupes distincts sont comparés | Comparaison entre conditions, chez le même sujet ou entre groupes selon l'étude |
-| Yeux de rongeurs | Pression intraoculaire (tonomètre), pression intracrânienne (télémétrie), IRM, tissus de la rétine | Expliquer les changements de vision observés chez les astronautes | Souris 35 jours sur l'ISS ; rats suspendus au sol | Recherche de mécanisme, pas de surveillance |
-| Pilotes en simulateur | EEG 20 canaux, ECG, respiration, conductance de la peau, à 256 Hz | Entraîner des modèles à détecter trois états d'attention | 18 pilotes, exercices au sol puis vol complet en simulateur | Apprentissage automatique (concours Kaggle) |
+| ISS TEPC, Dose Analyzer | Absorbed dose rate (µGy/min) and dose-equivalent rate (µSv/min), station position, dominant source (cosmic, belts, solar), instrument location in the station | “To manage the dose received by the crew”, because dose rates in orbit are a few hundred times those on the ground | Instrument located in the Service Module and occasionally moved (one month at another location in 2014), one measurement per minute, continuously | By the Johnson Space Center radiation analysis group, to track the risk in real time |
+| MSL RAD Level 2 | Dose rate, particle energy spectrum, neutrons and gamma rays, with a quality flag per measurement | To characterise radiation on the surface of Mars (inferred) | Instrument on the Curiosity rover | “Quality-filtered” and “all data” versions published side by side |
+| EVA US and Russia | Number, country, crew, vehicle, date, duration, purpose and incidents in free text | To keep a chronology of spacewalks (inferred; the record only gives a definition) | One line per sortie, from Gemini to the ISS | Historical register; health problems appear only if they disrupted the sortie |
+| ISS Microbial Observatory | Bacteria and fungi from 8 locations, by surface wipes, 2 sessions 3 months apart | Hypothesis: the microbial population changes over time with crew activity and depends on location | The station seen as a closed built environment | Sequenced on the ground after samples return |
+| SpaceX Inspiration4 | Swabs from 10 body sites, stool, 9 capsule surfaces | To track the crew and cabin microbiome (inferred) | 4 people, 3 days; samples before (L-92, L-44, L-3), during (days 2 and 3) and after flight | Sequenced on the ground; the sampling plan lets each person be compared with themselves |
+| Astronaut saliva | Salivary microbiome | To look for a flight-related change and a signature associated with viral reactivation | Astronauts on missions | Sequenced on the ground |
+| Blood genes, astronauts | 234 stress-response genes | Astronauts become more susceptible to infection | 6 astronauts, 10 days before flight and 2–3 h after landing | Before/after comparison for each person |
+| MARS500 | DNA methylation, mood, biochemistry, gut microbiome | To understand adaptation to long isolation | 6 crew members, 520 days of ground simulation, extended follow-up after leaving | Longitudinal follow-up of each person |
+| Bed rest (PlanHab and others) | Muscle biopsies, plasma proteins | To understand muscle loss and test countermeasures (exercise, protein) | Volunteers in bed rest for 21 days or more, sometimes in thin air (14.1 % oxygen). In PlanHab, each subject goes through every condition; in the study of women, three separate groups are compared | Comparison between conditions, within the same subject or between groups depending on the study |
+| Rodent eyes | Intraocular pressure (tonometer), intracranial pressure (telemetry), MRI, retinal tissue | To explain vision changes observed in astronauts | Mice 35 days on the ISS; rats suspended on the ground | Mechanism research, not monitoring |
+| Pilots in a simulator | 20-channel EEG, ECG, breathing, skin conductance, at 256 Hz | To train models to detect three attention states | 18 pilots, ground exercises then a full simulated flight | Machine learning (Kaggle competition) |
 
-## 3. Ce que montrent les deux jeux analysés
+## 3. What the two analysed datasets show
 
-### Dosimétrie ISS, année 2014 (352 jours avec au moins 80 % de couverture)
+### ISS dosimetry, year 2014 (352 days with at least 80 % coverage)
 
-| Grandeur | Valeur |
+| Quantity | Value |
 |---|---|
-| Dose équivalente médiane, année entière | 0,69 mSv/jour |
-| Emplacement habituel (323 jours) : médiane, et 5e au 95e centile | 0,68 mSv/jour ; 0,62 à 0,75 |
-| Second emplacement (29 jours, du 1er au 29 mai) : médiane, et 5e au 95e centile | 0,83 mSv/jour ; 0,76 à 0,96 |
-| Variation médiane d'un jour au suivant | 0,02 mSv |
-| Dose absorbée médiane | 0,32 mGy/jour |
-| Rapport équivalente / absorbée | 2,2 |
-| Part des ceintures de radiation | 7 % du temps, 52 % de la dose |
-| Part du rayonnement cosmique | 93 % du temps, 48 % de la dose |
+| Median dose equivalent, whole year | 0.69 mSv/day |
+| Usual location (323 days): median, and 5th to 95th percentile | 0.68 mSv/day; 0.62 to 0.75 |
+| Second location (29 days, 1 to 29 May): median, and 5th to 95th percentile | 0.83 mSv/day; 0.76 to 0.96 |
+| Median day-to-day change | 0.02 mSv |
+| Median absorbed dose | 0.32 mGy/day |
+| Equivalent / absorbed ratio | 2.2 |
+| Share from the radiation belts | 7 % of the time, 52 % of the dose |
+| Share from cosmic radiation | 93 % of the time, 48 % of the dose |
 
-Trois lectures :
+Three takeaways:
 
-1. **À emplacement fixe, la dose quotidienne est très stable** : l'écart-type vaut environ 6 % de la moyenne. Un jour qui s'écarte nettement du niveau habituel est donc un vrai signal.
-2. **L'emplacement dans le vaisseau change la dose d'environ 20 %.** Les cinq jours les plus hauts de l'année tombent tous en mai, quand l'instrument était ailleurs dans le même module, à altitude de station inchangée. Sans l'emplacement enregistré avec chaque mesure, on aurait pris ce mois pour une hausse de radiation.
-3. **Cette année ne dit rien sur les tempêtes solaires** : l'instrument n'a presque jamais classé le Soleil comme source dominante en 2014.
+1. **At a fixed location, the daily dose is very stable**: the standard deviation is about 6 % of the mean. A day that clearly departs from the usual level is therefore a real signal.
+2. **The location in the spacecraft changes the dose by about 20 %.** The five highest days of the year all fall in May, when the instrument was elsewhere in the same module, at an unchanged station altitude. Without the location recorded with each measurement, that month would have been mistaken for a rise in radiation.
+3. **This year says nothing about solar storms**: the instrument almost never classified the Sun as the dominant source in 2014.
 
-Ces chiffres valent pour l'orbite basse. Vers Mars, il n'y a ni ceintures ni protection du champ magnétique terrestre : le niveau de fond sera différent, mais la méthode (niveau habituel stable à emplacement constant, alerte sur l'écart) reste valable.
+These figures apply to low Earth orbit. On the way to Mars there are no radiation belts and no protection from Earth’s magnetic field: the background level will be different, but the method (a stable usual level at a constant location, alerting on the departure from it) still holds.
 
-### Journal des sorties extravéhiculaires (375 sorties, 1965-2013)
+### Extravehicular activity log (375 spacewalks, 1965–2013)
 
-- Durée médiane : 6 h ; 90 % des sorties durent moins de 7 h 21 ; maximum 8 h 56.
-- La durée médiane est passée de moins d'une heure dans les années 1960 à 6 h 30 depuis 2000.
-- Incidents touchant la personne, relevés à la lecture des textes :
+- Median duration: 6 h; 90 % of sorties last less than 7 h 21 min; maximum 8 h 56 min.
+- The median duration rose from under one hour in the 1960s to 6 h 30 min since 2000.
+- Incidents affecting the person, identified by reading the notes:
 
-| Type d'incident | Sorties concernées |
+| Type of incident | Sorties affected |
 |---|---|
-| CO2 dans le scaphandre (hausse, cartouche épuisée, capteur en panne) | 9 |
-| Contamination à l'ammoniac ou décontamination du scaphandre | environ 6 |
-| Buée, irritation des yeux, vision gênée | 6 |
-| Gants endommagés ou coupés | 4 |
-| Fatigue ou surchauffe | 2 |
-| Eau dans le casque | 1 |
+| CO2 in the suit (rising level, depleted cartridge, failed sensor) | 9 |
+| Ammonia contamination or suit decontamination | about 6 |
+| Fogging, eye irritation, impaired vision | 6 |
+| Damaged or cut gloves | 4 |
+| Fatigue or overheating | 2 |
+| Water in the helmet | 1 |
 
-Lecture : les incidents consignés concernent l'air respiré, la vue et la chaleur plus que les mains et les épaules. Le journal ne mentionne ni maladie de décompression ni blessure musculaire : il enregistre ce qui a perturbé la sortie, pas l'état médical au retour.
+Takeaway: the recorded incidents concern breathing air, vision and heat more than hands and shoulders. The log mentions neither decompression sickness nor muscle injury: it records what disrupted the sortie, not the medical state on return.
 
-## 4. Écarts de cohérence entre ces pratiques et l'outil
+## 4. Gaps between these practices and the tool
 
-Les pistes 2 et 3 sont appliquées dans `index.html` ; les autres ne le sont pas.
+When this analysis was written, points 2 and 3 were applied in `index.html` and the others were not. Notes marked **Update** give the current state.
 
-Données NASA reprises telles quelles dans l'outil :
+NASA data used as-is in the tool:
 
-- **Fiches** : la fiche « Radiation dose » et la fiche « Spacewalk duration » affichent une ligne « NASA reference » tirée des deux analyses du §3.
-- **Équipage d'exemple** (`sample-data.json`) : les doses de radiation sont les 30 valeurs quotidiennes réelles du dosimètre ISS du 16 octobre au 14 novembre 2014 ; les durées de sortie sont celles des sorties n° 227 (30 août 2012, 8,3 h) et n° 231 (9 juillet 2013, 6,1 h). Toutes les autres valeurs de l'exemple sont inventées.
+- **Cards**: the “Radiation dose” card and the “Spacewalk duration” card display a “NASA reference” line taken from the two analyses in §3.
+- **Example crew** (`sample-data.json`): the radiation doses are the 30 real daily values from the ISS dosimeter from 16 October to 14 November 2014; the spacewalk durations are those of sorties no. 227 (30 August 2012, 8.3 h) and no. 231 (9 July 2013, 6.1 h). All other values in the example are invented.
 
-1. **Référence personnelle prise avant le vol.** Les études sur équipages (Inspiration4, gènes du sang, MARS500) prennent des mesures avant le vol ou avant l'isolement pour servir de point de comparaison. L'outil accepte déjà des références d'avant vol, mais seulement via le fichier JSON ; sans elles, il se rabat sur les 3 à 7 premières mesures en vol, donc sur un corps déjà en train de s'adapter. Il manque un écran de saisie des références à la création du profil.
-2. **Radiation : écart au niveau habituel, emplacement et cumul (appliqué, sauf l'emplacement).** L'outil comparait la dose du jour à des seuils fixes. Les données montrent un niveau de fond très stable à emplacement constant ; une alerte sur l'écart au niveau habituel des 7 derniers jours serait plus juste, à condition de comparer des mesures prises au même endroit. La NASA dit mesurer pour « gérer la dose » : il manque le cumul depuis le départ.
-3. **EVA : un événement, pas une question quotidienne (appliqué).** La NASA consigne une ligne par sortie avec sa durée. L'outil posait chaque jour une question sur les mains et les épaules. Il serait plus cohérent de demander « sortie aujourd'hui ? », puis la durée et les symptômes que le journal fait ressortir : maux de tête (CO2), vue, surchauffe, mains.
-4. **Mesure contre prélèvement.** Microbes et immunité sont suivis par des prélèvements analysés au sol, à dates fixes. Rien n'est interprétable à bord. L'outil peut garder ses questions sur les symptômes, mais ne doit pas laisser croire qu'il mesure le microbiote ; un simple rappel « prélèvement fait » serait le pendant cohérent.
-5. **Contexte de chaque mesure.** Les jeux d'instruments enregistrent où et comment la mesure a été prise (emplacement du dosimètre, indicateur de qualité). L'outil ne stocke qu'un nombre par jour. Le mois de mai 2014 montre le coût de cette absence : 20 % d'écart dû au seul emplacement. La même logique vaut pour le CO2 de cabine, relevé « dans cette pièce » sans que la pièce soit notée.
-6. **Oxygène de la cabine.** L'étude PlanHab décrit l'hypoxie par l'air respiré (fraction et pression partielle d'oxygène). L'outil suit l'oxygène du sang et le CO2 de la cabine, pas l'oxygène de la cabine.
-7. **Indicateurs sans appui dans ce catalogue.** Maladie de décompression, équilibre, kit médical, sommeil, tension, pouls et CO2 de cabine : leurs seuils restent des valeurs d'illustration, à étayer avec l'archive NLSP ou la littérature.
+1. **Personal reference taken before flight.** Crew studies (Inspiration4, blood genes, MARS500) take measurements before flight or before isolation to serve as a point of comparison. The tool already accepted pre-flight references, but only through the JSON file; without them, it falls back on the first 3 to 7 in-flight measurements, so on a body that is already adapting. A screen for entering references when creating a profile was missing. **Update:** a personal-baseline form now opens when a profile is created and with **B** inside a profile, with the reference date and source.
+2. **Radiation: departure from the usual level, location and cumulative dose (applied, except location).** The tool used to compare the day’s dose with fixed thresholds. The data show a very stable background at a constant location; an alert on the departure from the usual level over the last 7 days is more accurate, provided measurements taken at the same place are compared. NASA says it measures to “manage the dose”: the cumulative total since departure was missing. **Update:** the radiation card now shows the mission total.
+3. **EVA: an event, not a daily question (applied).** NASA records one line per sortie with its duration. The tool used to ask a daily question about hands and shoulders. It is more consistent to ask “spacewalk today?”, then the duration and the symptoms the log highlights: headache (CO2), vision, overheating, hands.
+4. **Measurement versus sampling.** Microbes and immunity are tracked through samples analysed on the ground, on fixed dates. Nothing can be interpreted on board. The tool can keep its symptom questions, but must not suggest that it measures the microbiome; a simple “sample taken” reminder would be the consistent counterpart.
+5. **Context of each measurement.** Instrument datasets record where and how the measurement was taken (dosimeter location, quality flag). The tool stored only one number per day. May 2014 shows the cost of that gap: a 20 % difference due to location alone. The same logic applies to cabin CO2, read “in this room” without recording which room. **Update:** each reading now keeps its own timestamp and several readings per day are kept; the measurement location is still not recorded.
+6. **Cabin oxygen.** The PlanHab study describes hypoxia through the air breathed (oxygen fraction and partial pressure). The tool tracks blood oxygen and cabin CO2, not cabin oxygen.
+7. **Indicators without support in this catalogue.** Decompression sickness, balance, medical kit, sleep, blood pressure, pulse and cabin CO2: their thresholds remain illustrative values, to be supported with the NLSP archive or the literature.
