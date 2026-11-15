@@ -18,6 +18,12 @@ const script = `
     openProfile('browser'); render();
     enterValue('38.7'); enterValue('36.7');
     assert(active().entries[0].readings.length === 2, 'Repeated entry lost a reading');
+    assert(document.querySelectorAll('.chart-reading').length === 2, 'Chart omitted a same-day reading');
+    Array.from(document.querySelectorAll('.chart-reading')).forEach(function (point) {
+      var box = point.getBBox();
+      assert(box.x >= 0 && box.y >= 0 && box.x + box.width <= 640 && box.y + box.height <= 240, 'Chart point clipped');
+      assert(point.querySelector('title').textContent.indexOf('202') >= 0, 'Chart point missing timestamp label');
+    });
     document.querySelector('[data-click="history:temp"]').click();
     assert(document.querySelectorAll('.history-row').length === 2, 'History rows missing');
     assert(document.querySelector('.history-row time').textContent.indexOf('Time not recorded') < 0, 'Timestamp missing');
@@ -37,6 +43,16 @@ const script = `
     key(document.body, 'h');
     assert(ui.history.indicator === 'temp', 'H did not open current indicator history');
     assert(!crashed, 'Crash screen active');
+    var extremes = {id:'extremes',name:'Extremes',baselines:{},entries:[]};
+    setValue(extremes, indById('hr'), 25); setValue(extremes, indById('hr'), 220);
+    var chart = document.createElement('div'); chart.className = 'chart';
+    chart.innerHTML = chartSvg(extremes, indById('hr')); document.body.appendChild(chart);
+    assert(chart.querySelectorAll('.chart-reading').length === 2, 'Extreme reading omitted');
+    Array.from(chart.querySelectorAll('.chart-reading')).forEach(function (point) {
+      var box = point.getBBox();
+      assert(box.x >= 0 && box.y >= 0 && box.x + box.width <= 640 && box.y + box.height <= 240, 'Extreme point clipped');
+    });
+    chart.remove();
     result.textContent = 'PASS browser history: ' + count + ' assertions';
   } catch (error) { result.textContent = 'FAIL browser history: ' + error.message; }
   stopActLoop(); document.body.appendChild(result);

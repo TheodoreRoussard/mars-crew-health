@@ -100,7 +100,11 @@ Eyesight, grip strength, urine calcium, and medical-kit checks are scheduled wee
 
 ## Multiple readings and correcting mistakes
 
-You can answer any check-in question again during the day. **Every new answer is appended with the device timestamp**, rather than replacing the previous answer. The latest active reading drives the current status. Daily charts, provisional baselines, and radiation totals use the latest active value for each day so repeated checks do not count as extra days or double-count the daily radiation dose.
+You can answer any check-in question again during the day. **Every new answer is appended with the device timestamp**, rather than replacing the previous answer. The latest active reading drives the current status. Charts plot **every active reading**, including repeated measurements on the same day. Provisional baselines and radiation totals still use the latest active value for each day so repeated checks do not count as extra days or double-count the daily radiation dose.
+
+Charts show readings from the last 30 days, with the time axis fitted to the available measurements. Horizontal positions combine the app's entry date with the capture time in the device's current timezone. Hover a point for its exact value and time, or press **H** to inspect the history when points overlap. Older readings without a timestamp are positioned at midday and labelled **Time not recorded**; this position is not a recorded measurement time. Lines break across long gaps, unknown same-day times, or a clock moving backwards.
+
+Numeric charts automatically scale to include all plotted values and the baseline, with padding around the extremes. The scale stays linear: widely separated values remain visible, but small changes can look flat beside a large outlier. Exact values remain available in the point labels and history. Removed readings disappear from the chart; restoring them brings their points back.
 
 Open an indicator card and click **History / remove a reading**, or press **H** inside a profile to see all indicators. Each row shows its date, time, value, and whether it is the latest active reading for that day.
 
